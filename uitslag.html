@@ -138,6 +138,13 @@ async function openDossier(bewaardeCode) {
       body: JSON.stringify({ admin_code: code })
     });
     const bezoeken = statsAntw.ok ? await statsAntw.json() : [];
+    const funnelAntw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_poll_funnel', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: code })
+    });
+    const funnel = {};
+    if (funnelAntw.ok) (await funnelAntw.json()).forEach(f => funnel[f.type] = Number(f.aantal));
     localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
     document.getElementById('resultaten').style.display = 'block';
@@ -174,7 +181,10 @@ async function openDossier(bewaardeCode) {
       const maxU = Math.max(...uren.map(u => u[1]));
       el.innerHTML = `
         <div class="kaartje"><span class="kop2">${bezoeken.length} bezoek(en)</span> van <b>${uniek}</b> toestel(len)<br>
-        <span class="meta">mediane kijktijd ${fmt(mediaan)} · ${lang} bleven 2+ min hangen · ${vluchtig} waren binnen 15 s weer weg (genoteerd)</span></div>
+        <span class="meta">mediane kijktijd ${fmt(mediaan)} · ${lang} bleven 2+ min hangen · ${vluchtig} waren binnen 15 s weer weg (genoteerd)</span>
+        ${funnel.poging ? `<br><span class="meta">stemknop: ${funnel.poging} poging(en) → ${funnel.gelukt || 0} gelukt` +
+          `${funnel.mislukt ? ` · ${funnel.mislukt} mislukt` : ''}` +
+          `${(funnel.poging - (funnel.gelukt || 0) - (funnel.mislukt || 0)) > 0 ? ` · ${funnel.poging - (funnel.gelukt || 0) - (funnel.mislukt || 0)} afgebroken` : ''}</span>` : ''}</div>
         <div class="kaartje"><span class="kop2">Drukste momenten</span><br>` +
         uren.map(([u, n]) => `<span class="meta" style="display:inline-block;width:5.5em">${u}</span>` +
           `<span style="display:inline-block;height:.7em;width:${Math.round(n / maxU * 55)}%;background:var(--amber);vertical-align:middle"></span> ${n}<br>`).join('') +

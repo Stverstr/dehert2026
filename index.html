@@ -197,7 +197,7 @@ body{
 @media (max-aspect-ratio: 9/10){
   .scene{align-items:center}
   .titelblok{padding-bottom:calc(64vw + 6vh)}
-  .pijl-omlaag{display:none}
+  .pijl-omlaag{bottom:1vh;font-size:1.3rem;color:var(--amber);text-shadow:0 0 12px rgba(0,0,0,.9);z-index:12}
   /* portret-regie: elementen naar het midden en groter (uitsnede: zie stelScèneAf) */
   .scene svg.landschap{transform:translateY(-12vh);animation:none}
   svg.landschap *{transform-box:view-box}
@@ -827,6 +827,17 @@ opties.forEach(o => o.addEventListener('click', () => {
   o.querySelector('input').checked = true;
 }));
 
+// funnel-metingen voor de jury (fire and forget)
+function meld(type) {
+  try {
+    fetch(SUPA_URL + '/rest/v1/hert_poll_events', {
+      method: 'POST',
+      headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ type, device_id: localStorage.getItem('hert2026_device') })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
 const form = document.getElementById('pollForm');
 const fout = document.getElementById('foutmelding');
 const knop = document.getElementById('verzendKnop');
@@ -843,16 +854,21 @@ form.addEventListener('submit', async e => {
   if (!naam) return toonFout('Naamloos stemmen? De jury lacht. Vul uw naam in.');
   knop.disabled = true;
   knop.textContent = 'Wordt genoteerd…';
-  // locatie: met toestemming — weigeren mag, maar komt in het dossier
-  const locatie = await new Promise(klaar => {
-    if (!navigator.geolocation) return klaar({ loc_status: 'niet beschikbaar' });
-    navigator.geolocation.getCurrentPosition(
-      pos => klaar({ lat: pos.coords.latitude, lon: pos.coords.longitude,
-                     loc_accuracy: Math.round(pos.coords.accuracy), loc_status: 'toegestaan' }),
-      fout => klaar({ loc_status: fout && fout.code === 1 ? 'geweigerd' : 'niet beschikbaar' }),
-      { timeout: 8000, maximumAge: 300000 }
-    );
-  });
+  // locatie: met toestemming — maar de stem mag hier NOOIT op blijven hangen.
+  // (wie de popup negeert, krijgt geen callback — vandaar de harde race van 6 s)
+  meld('poging');
+  const locatie = await Promise.race([
+    new Promise(klaar => {
+      if (!navigator.geolocation) return klaar({ loc_status: 'niet beschikbaar' });
+      navigator.geolocation.getCurrentPosition(
+        pos => klaar({ lat: pos.coords.latitude, lon: pos.coords.longitude,
+                       loc_accuracy: Math.round(pos.coords.accuracy), loc_status: 'toegestaan' }),
+        fout => klaar({ loc_status: fout && fout.code === 1 ? 'geweigerd' : 'niet beschikbaar' }),
+        { timeout: 5000, maximumAge: 300000 }
+      );
+    }),
+    new Promise(klaar => setTimeout(() => klaar({ loc_status: 'geen antwoord op de vraag' }), 6000))
+  ]);
   // anoniem toestel-ID: de jury ziet graag wie er "creatief" stemt
   let toestel = localStorage.getItem('hert2026_device');
   if (!toestel) {
@@ -872,11 +888,13 @@ form.addEventListener('submit', async e => {
         device_id: toestel, user_agent: navigator.userAgent.slice(0, 200), ...locatie })
     });
     if (!antw.ok) throw new Error('status ' + antw.status);
+    meld('gelukt');
     localStorage.setItem('hert2026_gestemd', '1');
     const boodschap = locatieBoodschap(locatie);
     if (boodschap) localStorage.setItem('hert2026_dankboodschap', boodschap);
     toonDank();
   } catch (err) {
+    meld('mislukt');
     knop.disabled = false;
     knop.textContent = 'Verzend naar de jury';
     toonFout('De duif is niet aangekomen. Probeer nog eens.');

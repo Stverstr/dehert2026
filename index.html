@@ -603,13 +603,29 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
 
   <!-- 🌪 blijf 10 seconden kijken — eigen laagje, zodat de scène zelf nooit hertekent -->
   <div class="cyclone-baan" aria-hidden="true">
+    <!-- volledig zelfvoorzienend: iOS Safari kan geen <use> over SVG-grenzen heen -->
     <svg viewBox="-150 -64 230 98">
       <title>🌪 te snel voor deze koers</title>
+      <defs>
+        <filter id="cy-zacht" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+        <filter id="cy-zachter" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="12"/></filter>
+        <g id="cy-renner">
+          <circle cx="0" cy="0" r="17" fill="none" stroke="currentColor" stroke-width="3.4"/>
+          <circle cx="62" cy="0" r="17" fill="none" stroke="currentColor" stroke-width="3.4"/>
+          <path d="M0 0 L24 2 L38 -14 L15 -16 Z" fill="currentColor"/>
+          <path d="M38 -14 L62 0 L52 -18 Z" fill="currentColor"/>
+          <path d="M24 2 L33 -2 L28 12 L20 10 Z" fill="currentColor"/>
+          <path d="M15 -16 C 20 -36 34 -42 46 -38 C 56 -35 60 -28 61 -22 L52 -18 C 44 -26 30 -26 24 -18 Z" fill="currentColor"/>
+          <circle cx="49" cy="-46" r="8.5" fill="currentColor"/>
+          <path d="M46 -38 L58 -26 L63 -30 L54 -40 Z" fill="currentColor"/>
+          <path d="M28 -20 L36 -4 L30 10 L24 8 L29 -4 L22 -14 Z" fill="currentColor"/>
+        </g>
+      </defs>
       <line x1="-140" y1="6" x2="-14" y2="6" stroke="#f5c542" stroke-width="6" opacity=".9"/>
       <line x1="-105" y1="-22" x2="-8" y2="-22" stroke="#4a63e0" stroke-width="6" opacity=".8"/>
-      <use href="#renner" filter="url(#zachter)" style="color:#f5c542"/>
-      <use href="#renner" filter="url(#zacht)" style="color:#4a63e0" opacity=".9"/>
-      <use href="#renner" style="color:#1c2a6e"/>
+      <use href="#cy-renner" filter="url(#cy-zachter)" style="color:#f5c542"/>
+      <use href="#cy-renner" filter="url(#cy-zacht)" style="color:#4a63e0" opacity=".9"/>
+      <use href="#cy-renner" style="color:#1c2a6e"/>
     </svg>
   </div>
 

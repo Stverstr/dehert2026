@@ -94,11 +94,17 @@ body{
 }
 
 /* een eenzame renner van een andere club, te snel voor deze koers */
-.cyclone-flits{animation:cycloneflits 10s linear 4s infinite}
+.cyclone-baan{
+  position:absolute;left:0;bottom:1.5vh;width:190px;z-index:4;
+  pointer-events:none;will-change:transform;
+  transform:translateX(-40vw);
+  animation:cycloneflits 10s linear 4s infinite;
+}
+.cyclone-baan svg{width:100%;height:auto;display:block;overflow:visible}
 @keyframes cycloneflits{
-  0%{transform:translateX(-180px)}
-  13%{transform:translateX(1780px)}
-  100%{transform:translateX(1780px)}
+  0%{transform:translateX(-40vw)}
+  13%{transform:translateX(115vw)}
+  100%{transform:translateX(115vw)}
 }
 .voetnoot{margin-top:1.6rem;font-size:.78rem;color:#49545c;font-style:italic}
 
@@ -186,9 +192,9 @@ body{
   svg.landschap .brug{transform-origin:250px 562px;transform:translate(40px,0) scale(1.5)}
   svg.landschap .cafe{transform-origin:1520px 560px;transform:translate(-250px,0) scale(1.35)}
   svg.landschap .maan{transform:translate(-330px,130px)}
-  svg.landschap .peloton-groen{transform-origin:220px 890px;transform:translate(300px,0) scale(1.35)}
-  svg.landschap .peloton-paars{transform-origin:1420px 890px;transform:translate(-300px,0) scale(1.35)}
-  svg.landschap .cyclone-flits>g{transform:translate(0px,822px) scale(1.65)}
+  svg.landschap .peloton-groen{transform-origin:220px 890px;transform:translate(255px,0) scale(1.25)}
+  svg.landschap .peloton-paars{transform-origin:1420px 890px;transform:translate(-255px,0) scale(1.25)}
+  .cyclone-baan{bottom:13svh;width:130px}
 }
 /* gsm's: geen zware GPU-lagen of vaste overlays (bronnen van 'beven') */
 @media (pointer: coarse), (hover: none){
@@ -386,6 +392,7 @@ footer{
 }
 footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscale(.4)}
 @media (prefers-reduced-motion: reduce){
+  .cyclone-baan{display:none}
   *{animation-duration:.01s !important;animation-delay:0s !important;transition-duration:.01s !important}
   .fluister,.hoofdtitel,.jaartal,.onheil,.pijl-omlaag{opacity:1}
 }
@@ -576,18 +583,6 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       </g>
     </g>
 
-    <!-- 🌪 blijf 10 seconden kijken -->
-    <g class="cyclone-flits">
-      <g transform="translate(0 842) scale(1.1)">
-        <title>🌪 te snel voor deze koers</title>
-        <line x1="-130" y1="-4" x2="-12" y2="-4" stroke="#f5c542" stroke-width="6" opacity=".9"/>
-        <line x1="-100" y1="-30" x2="-6" y2="-30" stroke="#4a63e0" stroke-width="6" opacity=".8"/>
-        <use href="#renner" filter="url(#zachter)" style="color:#f5c542"/>
-        <use href="#renner" filter="url(#zacht)" style="color:#4a63e0" opacity=".9"/>
-        <use href="#renner" style="color:#1c2a6e"/>
-      </g>
-    </g>
-
     <!-- DE BAROUDELLEN — paarse gloed, uit de mist rechts (rijden naar links) -->
     <g class="peloton-paars">
       <g transform="translate(1270 848) scale(-1.6 1.6)">
@@ -605,6 +600,18 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       </g>
     </g>
   </svg>
+
+  <!-- 🌪 blijf 10 seconden kijken — eigen laagje, zodat de scène zelf nooit hertekent -->
+  <div class="cyclone-baan" aria-hidden="true">
+    <svg viewBox="-150 -64 230 98">
+      <title>🌪 te snel voor deze koers</title>
+      <line x1="-140" y1="6" x2="-14" y2="6" stroke="#f5c542" stroke-width="6" opacity=".9"/>
+      <line x1="-105" y1="-22" x2="-8" y2="-22" stroke="#4a63e0" stroke-width="6" opacity=".8"/>
+      <use href="#renner" filter="url(#zachter)" style="color:#f5c542"/>
+      <use href="#renner" filter="url(#zacht)" style="color:#4a63e0" opacity=".9"/>
+      <use href="#renner" style="color:#1c2a6e"/>
+    </svg>
+  </div>
 
   <div class="mist m1"></div>
   <div class="mist m2"></div>

@@ -758,6 +758,31 @@ function stelScèneAf() {
 stelScèneAf();
 addEventListener('resize', stelScèneAf);
 
+// kijkcijfers voor de jury: anoniem bezoek + hartslag zolang de pagina open staat
+(async () => {
+  try {
+    let toestel = localStorage.getItem('hert2026_device');
+    if (!toestel) {
+      toestel = (crypto.randomUUID ? crypto.randomUUID() : 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+      localStorage.setItem('hert2026_device', toestel);
+    }
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_teaser_start', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_device: toestel, p_ua: navigator.userAgent })
+    });
+    const bezoekId = await antw.json();
+    setInterval(() => {
+      if (document.hidden) return;
+      fetch(SUPA_URL + '/rest/v1/rpc/hert_teaser_heartbeat', {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_id: bezoekId })
+      }).catch(() => {});
+    }, 20000);
+  } catch (e) { /* kijkcijfers zijn een bonus, nooit een blokkade */ }
+})();
+
 // kleine lettertjes, groot gelijk
 const VOETNOTEN = [
   "Een onafhankelijke blauw-gele waarnemer bekeek het parcours en noemde het, met liefde: \u2018schattig\u2019.",

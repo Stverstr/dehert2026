@@ -72,6 +72,9 @@ button:hover{filter:brightness(1.25)}
       <p class="namen" id="l-supporter"></p>
     </div>
 
+    <h2>📈 Kijkcijfers van de teaser</h2>
+    <div id="kijkcijfers"></div>
+
     <h2>🕵️ Verdachte praktijken</h2>
     <div id="verdacht"></div>
 
@@ -128,6 +131,12 @@ async function openDossier() {
     });
     if (!antw.ok) throw new Error();
     const stemmen = await antw.json();
+    const statsAntw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_teaser_stats', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: code })
+    });
+    const bezoeken = statsAntw.ok ? await statsAntw.json() : [];
     document.getElementById('slot').style.display = 'none';
     document.getElementById('resultaten').style.display = 'block';
 
@@ -140,6 +149,35 @@ async function openDossier() {
       document.getElementById('b-' + k).style.width = (per[k].length / max * 100) + '%';
       document.getElementById('l-' + k).textContent = per[k].map(v => v.name).join(' · ');
     }
+
+    // kijkcijfers
+    (() => {
+      const el = document.getElementById('kijkcijfers');
+      if (!bezoeken.length) { el.innerHTML = '<p class="leeg">Nog geen kijkers. De stilte voor de storm.</p>'; return; }
+      const uniek = new Set(bezoeken.map(b => b.device_id || 'x')).size;
+      const duur = b => Math.max(0, (new Date(b.last_seen_at) - new Date(b.started_at)) / 1000);
+      const duren = bezoeken.map(duur).sort((a, b) => a - b);
+      const mediaan = duren[Math.floor(duren.length / 2)];
+      const fmt = sec => sec < 60 ? Math.round(sec) + ' s' : Math.round(sec / 60) + ' min';
+      const lang = duren.filter(d => d >= 120).length;
+      const vluchtig = duren.filter(d => d < 15).length;
+      // drukte per uur
+      const perUur = {};
+      bezoeken.forEach(b => {
+        const t = new Date(b.started_at);
+        const sleutel = t.toLocaleDateString('nl-BE', { day: '2-digit', month: '2-digit' }) + ' ' + String(t.getHours()).padStart(2, '0') + 'u';
+        perUur[sleutel] = (perUur[sleutel] || 0) + 1;
+      });
+      const uren = Object.entries(perUur).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const maxU = Math.max(...uren.map(u => u[1]));
+      el.innerHTML = `
+        <div class="kaartje"><span class="kop2">${bezoeken.length} bezoek(en)</span> van <b>${uniek}</b> toestel(len)<br>
+        <span class="meta">mediane kijktijd ${fmt(mediaan)} · ${lang} bleven 2+ min hangen · ${vluchtig} waren binnen 15 s weer weg (genoteerd)</span></div>
+        <div class="kaartje"><span class="kop2">Drukste momenten</span><br>` +
+        uren.map(([u, n]) => `<span class="meta" style="display:inline-block;width:5.5em">${u}</span>` +
+          `<span style="display:inline-block;height:.7em;width:${Math.round(n / maxU * 55)}%;background:var(--amber);vertical-align:middle"></span> ${n}<br>`).join('') +
+        `</div>`;
+    })();
 
     // verdachte praktijken: zelfde toestel, meerdere stemmen / hergebruikte namen
     const perToestel = {};

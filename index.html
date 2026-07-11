@@ -94,10 +94,10 @@ body{
 }
 
 /* een eenzame renner van een andere club, te snel voor deze koers */
-.cyclone-flits{animation:cycloneflits 47s linear 7s infinite}
+.cyclone-flits{animation:cycloneflits 10s linear 4s infinite}
 @keyframes cycloneflits{
   0%{transform:translateX(-180px)}
-  3%{transform:translateX(1780px)}
+  13%{transform:translateX(1780px)}
   100%{transform:translateX(1780px)}
 }
 .voetnoot{margin-top:1.6rem;font-size:.78rem;color:#49545c;font-style:italic}
@@ -177,7 +177,8 @@ body{
 @keyframes wenk{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
 /* portret: het panorama is een band onderaan; til de tekst erboven uit */
 @media (max-aspect-ratio: 9/10){
-  .titelblok{padding-bottom:calc(50vw + 4vh)}
+  .scene{align-items:center}
+  .titelblok{padding-bottom:calc(50vw + 6vh)}
   .pijl-omlaag{display:none}
 }
 /* gsm's: geen trage zoom op de grote SVG (die doet mobiele GPU's beven) en lichtere mist */
@@ -543,21 +544,22 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
 
     <!-- DE BAROUDEURS — groene gloed, uit de mist links -->
     <g class="peloton-groen">
-      <g transform="translate(300 838) scale(1.15)">
-        <use href="#renner" filter="url(#zachter)" style="color:#3ddc84" opacity=".55"/>
-        <use href="#renner" style="color:#02060a"/>
+      <g transform="translate(310 826) scale(1.35)">
+        <use href="#renner" filter="url(#zachter)" style="color:#3ddc84"/>
+        <use href="#renner" filter="url(#zacht)" style="color:#3ddc84" opacity=".8"/>
+        <use href="#renner" style="color:#04120a"/>
       </g>
-      <g transform="translate(190 846) scale(1.05)" opacity=".85">
-        <use href="#renner" filter="url(#zachter)" style="color:#3ddc84" opacity=".45"/>
-        <use href="#renner" style="color:#02060a"/>
+      <g transform="translate(185 838) scale(1.2)" opacity=".95">
+        <use href="#renner" filter="url(#zachter)" style="color:#3ddc84" opacity=".85"/>
+        <use href="#renner" style="color:#04120a"/>
       </g>
-      <g transform="translate(90 852) scale(.95)" opacity=".6">
-        <use href="#renner" filter="url(#zacht)" style="color:#3ddc84" opacity=".35"/>
-        <use href="#renner" style="color:#02060a"/>
+      <g transform="translate(75 848) scale(1.05)" opacity=".8">
+        <use href="#renner" filter="url(#zacht)" style="color:#3ddc84" opacity=".65"/>
+        <use href="#renner" style="color:#04120a"/>
       </g>
     </g>
 
-    <!-- 🌪 blijf 47 seconden kijken -->
+    <!-- 🌪 blijf 10 seconden kijken -->
     <g class="cyclone-flits">
       <g transform="translate(0 874) scale(.72)">
         <title>🌪 te snel voor deze koers</title>
@@ -570,17 +572,18 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
 
     <!-- DE BAROUDELLEN — paarse gloed, uit de mist rechts (rijden naar links) -->
     <g class="peloton-paars">
-      <g transform="translate(1290 842) scale(-1.15 1.15)">
-        <use href="#renner" filter="url(#zachter)" style="color:#d97bb2" opacity=".55"/>
-        <use href="#renner" style="color:#02060a"/>
+      <g transform="translate(1280 828) scale(-1.35 1.35)">
+        <use href="#renner" filter="url(#zachter)" style="color:#d97bb2"/>
+        <use href="#renner" filter="url(#zacht)" style="color:#d97bb2" opacity=".8"/>
+        <use href="#renner" style="color:#140a10"/>
       </g>
-      <g transform="translate(1400 848) scale(-1.05 1.05)" opacity=".85">
-        <use href="#renner" filter="url(#zachter)" style="color:#d97bb2" opacity=".45"/>
-        <use href="#renner" style="color:#02060a"/>
+      <g transform="translate(1405 840) scale(-1.2 1.2)" opacity=".95">
+        <use href="#renner" filter="url(#zachter)" style="color:#d97bb2" opacity=".85"/>
+        <use href="#renner" style="color:#140a10"/>
       </g>
-      <g transform="translate(1500 854) scale(-.95 .95)" opacity=".6">
-        <use href="#renner" filter="url(#zacht)" style="color:#d97bb2" opacity=".35"/>
-        <use href="#renner" style="color:#02060a"/>
+      <g transform="translate(1515 850) scale(-1.05 1.05)" opacity=".8">
+        <use href="#renner" filter="url(#zacht)" style="color:#d97bb2" opacity=".65"/>
+        <use href="#renner" style="color:#140a10"/>
       </g>
     </g>
   </svg>

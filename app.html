@@ -410,12 +410,38 @@ function zichtTeam() {
     }
   }
   return mededeling() + nu
+    + ploegKaart()
     + missiesBlok()
     + reglementBlok()
     + klassementKaart()
     + rondesBlok(mijnDiv)
     + actiesBlok()
     + inzendingenBlok();
+}
+function ploegKaart() {
+  const leden = S.pub.riders.filter(r => r.team_id === S.team.id);
+  return `<div class="kaart dossier"><h2><span class="teamstip" style="background:${esc(S.team.color)}"></span>${esc(S.team.name)}
+      <span class="r"><button class="mini" onclick="hernoemPloeg()">✏️ naam & motto</button></span></h2>
+    ${S.team.motto ? `<p class="stil" style="margin-bottom:.8rem">"${esc(S.team.motto)}"</p>` : ''}
+    ${leden.length ? leden.map(r => `<div class="score-rij"><span class="tnaam">${r.is_captain ? '👑 ' : '🚴 '}${esc(r.name)}</span></div>`).join('')
+      : '<p class="stil">De opperjury heeft jullie nog niet samengesteld. Spannend.</p>'}</div>`;
+}
+function hernoemPloeg() {
+  openModal(`<h3>✏️ Ploegnaam & motto</h3>
+    <p class="stil">Kies wijs. De jury ziet elke naamswijziging en trekt er conclusies uit.</p>
+    <label>Ploegnaam</label><input type="text" id="f-naam" maxlength="40" value="${esc(S.team.name)}">
+    <label>Motto (optioneel)</label><input type="text" id="f-motto" maxlength="120" value="${esc(S.team.motto || '')}">
+    <button class="verzend" onclick="bewaarPloegnaam()">Bewaar</button><p class="fout"></p>`);
+}
+async function bewaarPloegnaam() {
+  const naam = document.getElementById('f-naam').value.trim();
+  const motto = document.getElementById('f-motto').value.trim() || null;
+  if (!naam) return modalFout('Een ploeg zonder naam bestaat niet.');
+  try {
+    await rpc('hert_team_rename', { p_code: S.code, p_name: naam, p_motto: motto });
+    S.team.name = naam; S.team.motto = motto;
+    sluitModal(); toast('✓ De jury is op de hoogte gebracht van uw nieuwe identiteit.'); vernieuw(true);
+  } catch (e) { modalFout(e.message); }
 }
 function missiesBlok() {
   const m = (S.geheim && S.geheim.missions) || [];
@@ -851,13 +877,14 @@ async function bewaarTeam(id) {
   } catch (e) { modalFout(e.message); }
 }
 function deelnemersKaart() {
-  const sterren = n => '★'.repeat(n) + '<span style="opacity:.25">' + '★'.repeat(5 - n) + '</span>';
+  const sterren = r => [1, 2, 3, 4, 5].map(n =>
+    `<span onclick="zetNiveau('${r.id}',${n})" style="cursor:pointer;padding:.15em .05em;opacity:${n <= (r.niveau || 3) ? 1 : .25}" title="niveau ${n}">★</span>`).join('');
   const rij = r => {
     const t = r.team_id ? team(r.team_id) : null;
     return `<div class="score-rij">
       <span class="tnaam">${r.is_captain ? '👑 ' : ''}${esc(r.name)}</span>
       <span class="klein" style="min-width:6.5em;color:${r.division === 'baroudellen' ? 'var(--paars)' : 'var(--groen)'}">${r.division ? DIV[r.division] : '⚠️ geen afdeling'}</span>
-      <span style="letter-spacing:.1em;color:var(--amber);min-width:5.5em">${sterren(r.niveau || 3)}</span>
+      <span style="letter-spacing:.1em;color:var(--amber);min-width:5.5em;user-select:none">${sterren(r)}</span>
       <span class="klein" style="min-width:7em">${t ? esc(t.name) : '— nog geen team —'}</span>
       <button class="mini" onclick="bewerkDeelnemer('${r.id}')">✏️</button>
     </div>`;
@@ -875,6 +902,15 @@ function deelnemersKaart() {
       <button class="mini groen" onclick="verdeelTeams('baroudellen')">⚖️ Verdeel Baroudellen in teams</button>
     </div>
     <p class="klein" style="margin-top:.6rem">verdeling: ploegen van 4-5, niveaus gespreid via slangendraft (★★★★★ = ijzersterk)</p></div>`;
+}
+async function zetNiveau(id, niveau) {
+  const r = S.pub.riders.find(x => x.id === id);
+  if (!r) return;
+  try {
+    await rpc('hert_upsert_deelnemer', { p_code: S.code, p_id: id, p_team: r.team_id,
+      p_name: r.name, p_division: r.division, p_niveau: niveau, p_captain: r.is_captain });
+    r.niveau = niveau; render();
+  } catch (e) { toast('⚠️ ' + e.message); }
 }
 function bewerkDeelnemer(id) {
   const r = id ? S.pub.riders.find(x => x.id === id) : {};

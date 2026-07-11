@@ -194,7 +194,7 @@ body{
   svg.landschap .maan{transform:translate(-330px,130px)}
   svg.landschap .peloton-groen{transform-origin:220px 890px;transform:translate(255px,0) scale(1.25)}
   svg.landschap .peloton-paars{transform-origin:1420px 890px;transform:translate(-255px,0) scale(1.25)}
-  .cyclone-baan{bottom:13svh;width:130px}
+  .cyclone-baan{bottom:13vh;bottom:13svh;width:130px}
 }
 /* gsm's: geen zware GPU-lagen of vaste overlays (bronnen van 'beven') */
 @media (pointer: coarse), (hover: none){
@@ -392,8 +392,7 @@ footer{
 }
 footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscale(.4)}
 @media (prefers-reduced-motion: reduce){
-  .cyclone-baan{display:none}
-  *{animation-duration:.01s !important;animation-delay:0s !important;transition-duration:.01s !important}
+  *:not(.cyclone-baan){animation-duration:.01s !important;animation-delay:0s !important;transition-duration:.01s !important}
   .fluister,.hoofdtitel,.jaartal,.onheil,.pijl-omlaag{opacity:1}
 }
 </style>

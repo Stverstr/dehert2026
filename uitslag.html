@@ -75,6 +75,9 @@ button:hover{filter:brightness(1.25)}
     <h2>🕵️ Verdachte praktijken</h2>
     <div id="verdacht"></div>
 
+    <h2>📍 Herkomst der verklaringen</h2>
+    <div id="herkomst"></div>
+
     <h2>😤 Het gezeur (toevoegingen aan het dossier)</h2>
     <div id="gezeur"></div>
 
@@ -98,6 +101,15 @@ function toestelNaam(ua) {
   return 'onbekend toestel';
 }
 function tijd(t) { return new Date(t).toLocaleString('nl-BE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+// Café Den Hert, Oever 13 (Vaart-Noord), Bellem
+const CAFE = { lat: 51.09733, lon: 3.49797 };
+function afstand(lat, lon) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLat = (lat - CAFE.lat) * r, dLon = (lon - CAFE.lon) * r;
+  const a = Math.sin(dLat/2)**2 + Math.cos(CAFE.lat*r) * Math.cos(lat*r) * Math.sin(dLon/2)**2;
+  const m = 2 * R * Math.asin(Math.sqrt(a));
+  return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(m < 10000 ? 1 : 0) + ' km';
+}
 
 async function openDossier() {
   const code = document.getElementById('code').value.trim();
@@ -155,6 +167,23 @@ async function openDossier() {
     const preDetectie = (perToestel['pre-detectie'] || []).length;
     if (preDetectie) verdacht += `<p class="leeg">${preDetectie} stem(men) van vóór de toesteldetectie — daarvoor is niets te bewijzen. Jammer.</p>`;
     document.getElementById('verdacht').innerHTML = verdacht || '<p class="leeg">Iedereen gedraagt zich. Verdacht op zich.</p>';
+
+    // herkomst
+    document.getElementById('herkomst').innerHTML = stemmen.map(v => {
+      let plaats;
+      if (v.lat != null) {
+        plaats = `op <b>${afstand(v.lat, v.lon)}</b> van het café ` +
+          `<a style="color:var(--amber)" href="https://www.openstreetmap.org/?mlat=${v.lat}&mlon=${v.lon}#map=16/${v.lat}/${v.lon}" target="_blank">kaart</a> ` +
+          `<span class="meta">(±${v.loc_accuracy || '?'} m nauwkeurig)</span>`;
+      } else if (v.loc_status === 'geweigerd') {
+        plaats = '<span style="color:var(--rood)">🚩 locatie geweigerd — verdacht</span>';
+      } else if (v.loc_status === 'niet beschikbaar') {
+        plaats = '<span class="meta">locatie niet beschikbaar</span>';
+      } else {
+        plaats = '<span class="meta">niet gevraagd (oude stem)</span>';
+      }
+      return `<div class="kaartje"><span class="kop2">${esc(v.name)}</span> <span class="meta">(${tijd(v.created_at)})</span><br>${plaats}</div>`;
+    }).join('') || '<p class="leeg">Nog geen verklaringen.</p>';
 
     // het gezeur
     const zeur = stemmen.filter(v => v.comment && v.comment.trim());

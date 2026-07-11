@@ -715,6 +715,10 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       </div>
 
       <button type="submit" class="verzend" id="verzendKnop">Verzend naar de jury</button>
+      <p class="intro" style="margin-top:1rem;margin-bottom:0;font-size:.78rem">
+        Bij het verzenden vraagt uw browser mogelijk om uw locatie.
+        De jury houdt van context. Weigeren mag. Weigeren wordt genoteerd.
+      </p>
       <p class="fout" id="foutmelding"></p>
     </form>
 
@@ -807,6 +811,16 @@ form.addEventListener('submit', async e => {
   if (!naam) return toonFout('Naamloos stemmen? De jury lacht. Vul uw naam in.');
   knop.disabled = true;
   knop.textContent = 'Wordt genoteerd…';
+  // locatie: met toestemming — weigeren mag, maar komt in het dossier
+  const locatie = await new Promise(klaar => {
+    if (!navigator.geolocation) return klaar({ loc_status: 'niet beschikbaar' });
+    navigator.geolocation.getCurrentPosition(
+      pos => klaar({ lat: pos.coords.latitude, lon: pos.coords.longitude,
+                     loc_accuracy: Math.round(pos.coords.accuracy), loc_status: 'toegestaan' }),
+      () => klaar({ loc_status: 'geweigerd' }),
+      { timeout: 8000, maximumAge: 300000 }
+    );
+  });
   // anoniem toestel-ID: de jury ziet graag wie er "creatief" stemt
   let toestel = localStorage.getItem('hert2026_device');
   if (!toestel) {
@@ -823,7 +837,7 @@ form.addEventListener('submit', async e => {
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ name: naam, choice: keuze.value, comment: commentaar || null,
-        device_id: toestel, user_agent: navigator.userAgent.slice(0, 200) })
+        device_id: toestel, user_agent: navigator.userAgent.slice(0, 200), ...locatie })
     });
     if (!antw.ok) throw new Error('status ' + antw.status);
     localStorage.setItem('hert2026_gestemd', '1');

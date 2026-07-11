@@ -887,7 +887,7 @@ function zichtScherm() {
       ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || '')}</p>`}</div>`;
   } else {
     midden = `<div class="kaart nu"><div class="grootst">De Vaart wacht</div>
-      <p class="wacht">Ergens begin herfst. Een brug. Een vaart. Eén café.</p></div>`;
+      <p class="wacht">Ergens begin herfst. Twee bruggen. Een vaart. Eén café.</p></div>`;
   }
   const tagline = TAGLINES[Math.floor(Date.now() / 25000) % TAGLINES.length];
   return `<div class="scherm-kop">

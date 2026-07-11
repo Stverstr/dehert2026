@@ -807,6 +807,12 @@ form.addEventListener('submit', async e => {
   if (!naam) return toonFout('Naamloos stemmen? De jury lacht. Vul uw naam in.');
   knop.disabled = true;
   knop.textContent = 'Wordt genoteerd…';
+  // anoniem toestel-ID: de jury ziet graag wie er "creatief" stemt
+  let toestel = localStorage.getItem('hert2026_device');
+  if (!toestel) {
+    toestel = (crypto.randomUUID ? crypto.randomUUID() : 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    localStorage.setItem('hert2026_device', toestel);
+  }
   try {
     const antw = await fetch(SUPA_URL + '/rest/v1/hert_poll_votes', {
       method: 'POST',
@@ -816,7 +822,8 @@ form.addEventListener('submit', async e => {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ name: naam, choice: keuze.value, comment: commentaar || null })
+      body: JSON.stringify({ name: naam, choice: keuze.value, comment: commentaar || null,
+        device_id: toestel, user_agent: navigator.userAgent.slice(0, 200) })
     });
     if (!antw.ok) throw new Error('status ' + antw.status);
     localStorage.setItem('hert2026_gestemd', '1');

@@ -8,17 +8,18 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗄️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Abril+Fatface&display=swap" rel="stylesheet">
 <style>
-:root{--nacht:#06090d;--groen:#3ddc84;--paars:#d97bb2;--amber:#ffb347;--papier:#d8d2c4}
+:root{--nacht:#06090d;--groen:#3ddc84;--paars:#d97bb2;--amber:#ffb347;--papier:#d8d2c4;--grijs:#77828a;--rood:#ff8f8f}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--nacht);color:var(--papier);font-family:'Special Elite',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
-.dossier{max-width:40rem;width:100%;background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid #223039;padding:2.5rem 2rem;position:relative}
+body{background:var(--nacht);color:var(--papier);font-family:'Special Elite',monospace;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem 4rem}
+.dossier{max-width:42rem;width:100%;background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid #223039;padding:2.5rem 2rem;position:relative}
 .dossier::before{content:"";position:absolute;inset:10px;border:1px dashed #2c3d47;pointer-events:none}
 h1{font-family:'Abril Fatface',serif;font-weight:400;font-size:1.7rem;color:#e9e2d0;margin-bottom:.3rem}
-.sub{font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;color:#77828a;margin-bottom:2rem}
+h2{font-size:.85rem;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin:2.4rem 0 1rem;border-bottom:1px dashed #2c3d47;padding-bottom:.5rem}
+.sub{font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;color:var(--grijs);margin-bottom:2rem}
 input{width:100%;background:#0a0f14;border:1px solid #24333d;color:#ece5d3;font-family:inherit;font-size:1.05rem;padding:.9em;outline:none;margin-bottom:1rem;letter-spacing:.2em}
 button{width:100%;padding:1em;background:#1d6b47;border:1px solid #1d6b47;color:#eafff3;font-family:inherit;font-size:.95rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
 button:hover{filter:brightness(1.25)}
-.fout{color:#ff8f8f;font-size:.85rem;margin-top:1rem;display:none}
+.fout{color:var(--rood);font-size:.85rem;margin-top:1rem;display:none}
 #resultaten{display:none}
 .balkrij{margin-bottom:1.8rem}
 .balkrij .kop{display:flex;justify-content:space-between;font-size:.92rem;margin-bottom:.4rem}
@@ -29,9 +30,18 @@ button:hover{filter:brightness(1.25)}
 .versus .balk i{background:var(--groen)}
 .mix .balk i{background:var(--paars)}
 .supporter .balk i{background:var(--amber)}
-.namen{font-size:.78rem;color:#77828a;margin-top:.5rem;line-height:1.7}
-.totaal{text-align:center;font-size:.85rem;color:#77828a;margin-top:2rem;border-top:1px dashed #2c3d47;padding-top:1.2rem}
-.leeg{color:#77828a;font-size:.9rem;text-align:center;padding:1.5rem 0}
+.namen{font-size:.78rem;color:var(--grijs);margin-top:.5rem;line-height:1.7}
+.kaartje{border:1px solid #24333d;background:#0d1319;padding:.8rem .95rem;margin-bottom:.7rem;font-size:.85rem;line-height:1.7}
+.kaartje .kop2{color:#ece5d3}
+.kaartje .meta{color:var(--grijs);font-size:.75rem}
+.kaartje.alarm{border-color:#6e3333}
+.kaartje.alarm .kop2{color:var(--rood)}
+.zeur{border-left:2px solid var(--amber);padding-left:.8rem;margin-bottom:.9rem;font-size:.85rem;line-height:1.6}
+.zeur .wie{color:var(--amber)}
+.zeur .wat{color:#cfc8b8;font-style:italic}
+.zeur .meta{color:var(--grijs);font-size:.72rem}
+.leeg{color:var(--grijs);font-size:.9rem;text-align:center;padding:1rem 0}
+.totaal{text-align:center;font-size:.85rem;color:var(--grijs);margin-top:2rem;border-top:1px dashed #2c3d47;padding-top:1.2rem}
 </style>
 </head>
 <body>
@@ -61,7 +71,13 @@ button:hover{filter:brightness(1.25)}
       <div class="balk"><i id="b-supporter" style="width:0"></i></div>
       <p class="namen" id="l-supporter"></p>
     </div>
-    <p class="leeg" id="leeg" style="display:none">Nog geen enkele verklaring afgelegd. De stilte is veelzeggend.</p>
+
+    <h2>🕵️ Verdachte praktijken</h2>
+    <div id="verdacht"></div>
+
+    <h2>😤 Het gezeur (toevoegingen aan het dossier)</h2>
+    <div id="gezeur"></div>
+
     <p class="totaal" id="totaal"></p>
   </div>
 </div>
@@ -69,33 +85,84 @@ button:hover{filter:brightness(1.25)}
 <script>
 const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
 const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
+const KEUZES = { versus: '⚔️ versus', mix: '🤝 mix', supporter: '📣 supporter' };
+
+function esc(t) { return (t == null ? '' : String(t)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toestelNaam(ua) {
+  if (!ua) return 'onbekend toestel';
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/iPad/.test(ua)) return 'iPad';
+  if (/Android/.test(ua)) return 'Android-gsm';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua)) return 'Windows-pc';
+  return 'onbekend toestel';
+}
+function tijd(t) { return new Date(t).toLocaleString('nl-BE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
 
 async function openDossier() {
   const code = document.getElementById('code').value.trim();
   document.getElementById('fout').style.display = 'none';
   try {
-    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_poll_results', {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_poll_dossier', {
       method: 'POST',
       headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ admin_code: code })
     });
     if (!antw.ok) throw new Error();
-    const rijen = await antw.json();
-    const totaal = rijen.reduce((s, r) => s + Number(r.votes), 0);
+    const stemmen = await antw.json();
     document.getElementById('slot').style.display = 'none';
     document.getElementById('resultaten').style.display = 'block';
-    const per = { versus: null, mix: null, supporter: null };
-    rijen.forEach(r => per[r.choice] = r);
-    const max = Math.max(1, ...rijen.map(r => Number(r.votes)));
+
+    // balken per keuze
+    const per = { versus: [], mix: [], supporter: [] };
+    stemmen.forEach(v => { if (per[v.choice]) per[v.choice].push(v); });
+    const max = Math.max(1, ...Object.values(per).map(a => a.length));
     for (const k of ['versus', 'mix', 'supporter']) {
-      const r = per[k];
-      const stemmen = r ? Number(r.votes) : 0;
-      document.getElementById('n-' + k).textContent = stemmen;
-      document.getElementById('b-' + k).style.width = (stemmen / max * 100) + '%';
-      document.getElementById('l-' + k).textContent = r ? r.names.join(' · ') : '';
+      document.getElementById('n-' + k).textContent = per[k].length;
+      document.getElementById('b-' + k).style.width = (per[k].length / max * 100) + '%';
+      document.getElementById('l-' + k).textContent = per[k].map(v => v.name).join(' · ');
     }
-    document.getElementById('leeg').style.display = totaal === 0 ? 'block' : 'none';
-    document.getElementById('totaal').textContent = totaal + ' verklaring(en) in het dossier.';
+
+    // verdachte praktijken: zelfde toestel, meerdere stemmen / hergebruikte namen
+    const perToestel = {};
+    stemmen.forEach(v => {
+      const sleutel = v.device_id || 'pre-detectie';
+      (perToestel[sleutel] = perToestel[sleutel] || []).push(v);
+    });
+    const perNaam = {};
+    stemmen.forEach(v => {
+      const n = v.name.trim().toLowerCase();
+      (perNaam[n] = perNaam[n] || []).push(v);
+    });
+    let verdacht = '';
+    let toestelNr = 0;
+    for (const [dev, votes] of Object.entries(perToestel)) {
+      toestelNr++;
+      if (dev !== 'pre-detectie' && votes.length > 1) {
+        verdacht += `<div class="kaartje alarm"><span class="kop2">🚨 Toestel #${toestelNr} (${toestelNaam(votes[0].user_agent)}) stemde ${votes.length}×</span><br>` +
+          votes.map(v => `als <b>"${esc(v.name)}"</b> → ${KEUZES[v.choice]} <span class="meta">(${tijd(v.created_at)})</span>`).join('<br>') +
+          `</div>`;
+      }
+    }
+    for (const [naam, votes] of Object.entries(perNaam)) {
+      if (votes.length > 1) {
+        const toestellen = new Set(votes.map(v => v.device_id || 'x'));
+        verdacht += `<div class="kaartje"><span class="kop2">👥 De naam "${esc(votes[0].name)}" werd ${votes.length}× gebruikt</span> <span class="meta">(vanaf ${toestellen.size} toestel${toestellen.size > 1 ? 'len' : ''})</span><br>` +
+          votes.map(v => `${KEUZES[v.choice]} <span class="meta">(${tijd(v.created_at)}, ${toestelNaam(v.user_agent)})</span>`).join('<br>') +
+          `</div>`;
+      }
+    }
+    const preDetectie = (perToestel['pre-detectie'] || []).length;
+    if (preDetectie) verdacht += `<p class="leeg">${preDetectie} stem(men) van vóór de toesteldetectie — daarvoor is niets te bewijzen. Jammer.</p>`;
+    document.getElementById('verdacht').innerHTML = verdacht || '<p class="leeg">Iedereen gedraagt zich. Verdacht op zich.</p>';
+
+    // het gezeur
+    const zeur = stemmen.filter(v => v.comment && v.comment.trim());
+    document.getElementById('gezeur').innerHTML = zeur.length
+      ? zeur.map(v => `<div class="zeur"><span class="wie">${esc(v.name)}</span> <span class="meta">(${KEUZES[v.choice]}, ${tijd(v.created_at)}, ${toestelNaam(v.user_agent)})</span><br><span class="wat">"${esc(v.comment)}"</span></div>`).join('')
+      : '<p class="leeg">Nog geen gezeur. Dat komt nog.</p>';
+
+    document.getElementById('totaal').textContent = stemmen.length + ' verklaring(en) in het dossier · ' + Object.keys(perToestel).length + ' toestel(len)';
   } catch (e) {
     document.getElementById('fout').style.display = 'block';
   }

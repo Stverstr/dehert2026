@@ -726,8 +726,9 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       <span class="zegel">🦌</span>
       <p>De jury neemt akte.<br>
       Uw verklaring is toegevoegd aan <b>het dossier</b>.<br>
-      De resultaten worden niet bekendgemaakt.<br><br>
-      <em>Tot ergens begin herfst.</em></p>
+      De resultaten worden niet bekendgemaakt.</p>
+      <p id="dank-locatie" style="margin-top:1.2rem;color:#ffd9a0"></p>
+      <p style="margin-top:1.2rem"><em>Tot ergens begin herfst.</em></p>
     </div>
   </div>
 </section>
@@ -841,6 +842,8 @@ form.addEventListener('submit', async e => {
     });
     if (!antw.ok) throw new Error('status ' + antw.status);
     localStorage.setItem('hert2026_gestemd', '1');
+    const boodschap = locatieBoodschap(locatie);
+    if (boodschap) localStorage.setItem('hert2026_dankboodschap', boodschap);
     toonDank();
   } catch (err) {
     knop.disabled = false;
@@ -850,9 +853,32 @@ form.addEventListener('submit', async e => {
 });
 
 function toonFout(t) { fout.textContent = t; fout.style.display = 'block'; }
+
+// Café Den Hert, Oever 13 (Vaart-Noord), Bellem
+const CAFE = { lat: 51.09733, lon: 3.49797 };
+function afstandTotCafe(lat, lon) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLat = (lat - CAFE.lat) * r, dLon = (lon - CAFE.lon) * r;
+  const a = Math.sin(dLat/2)**2 + Math.cos(CAFE.lat*r) * Math.cos(lat*r) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function locatieBoodschap(locatie) {
+  if (locatie.loc_status === 'geweigerd')
+    return 'U verkoos uw locatie niet te delen. Dat staat genoteerd. Onderstreept, zelfs.';
+  if (locatie.lat == null) return '';
+  const m = afstandTotCafe(locatie.lat, locatie.lon);
+  const d = m < 1000 ? Math.round(m) + ' meter' : (m/1000).toFixed(m < 10000 ? 1 : 0) + ' km';
+  if (m <= 250)  return `U verklaarde dit op ${d} van het café. Verdacht dichtbij. Bestel er alvast eentje voor de jury.`;
+  if (m <= 2000) return `U bent op ${d} van De Hert. Dat is geen afstand, dat is een excuus. Kom af — het terras staat klaar.`;
+  if (m <= 25000) return `${d} van het café. Een opwarmrondje, meer niet. De Vaart wacht.`;
+  if (m <= 150000) return `${d} van uw heimat. De jury vraagt zich af wat u daar te zoeken heeft.`;
+  return `${d} van het café?! Vluchten heeft geen zin. De koers vindt u altijd.`;
+}
 function toonDank() {
   form.style.display = 'none';
   document.getElementById('dank').style.display = 'block';
+  const boodschap = localStorage.getItem('hert2026_dankboodschap');
+  if (boodschap) document.getElementById('dank-locatie').textContent = '📍 ' + boodschap;
 }
 </script>
 </body>

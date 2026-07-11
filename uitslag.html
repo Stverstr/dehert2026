@@ -85,6 +85,7 @@ button:hover{filter:brightness(1.25)}
     <div id="gezeur"></div>
 
     <p class="totaal" id="totaal"></p>
+    <p style="text-align:center;margin-top:1rem"><button onclick="vergrendel()" style="width:auto;background:none;border:none;color:var(--grijs);text-decoration:underline;font-size:.75rem;padding:.4em">🔒 vergrendel dossier op dit toestel</button></p>
   </div>
 </div>
 
@@ -120,8 +121,8 @@ function afstand(lat, lon) {
   return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(m < 10000 ? 1 : 0) + ' km';
 }
 
-async function openDossier() {
-  const code = document.getElementById('code').value.trim();
+async function openDossier(bewaardeCode) {
+  const code = (bewaardeCode || document.getElementById('code').value).trim();
   document.getElementById('fout').style.display = 'none';
   try {
     const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_poll_dossier', {
@@ -137,6 +138,7 @@ async function openDossier() {
       body: JSON.stringify({ admin_code: code })
     });
     const bezoeken = statsAntw.ok ? await statsAntw.json() : [];
+    localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
     document.getElementById('resultaten').style.display = 'block';
 
@@ -259,9 +261,14 @@ async function openDossier() {
 
     document.getElementById('totaal').textContent = stemmen.length + ' verklaring(en) in het dossier · ' + Object.keys(perToestel).length + ' toestel(len)';
   } catch (e) {
-    document.getElementById('fout').style.display = 'block';
+    localStorage.removeItem('hert2026_dossier_code');
+    if (!bewaardeCode) document.getElementById('fout').style.display = 'block';
   }
 }
+function vergrendel() { localStorage.removeItem('hert2026_dossier_code'); location.reload(); }
+// het opperjurylid hoeft zijn code maar één keer in te geven per toestel
+const bewaard = localStorage.getItem('hert2026_dossier_code');
+if (bewaard) openDossier(bewaard);
 </script>
 </body>
 </html>

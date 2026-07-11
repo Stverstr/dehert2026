@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Het Dossier</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗄️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Abril+Fatface&display=swap" rel="stylesheet">
+<style>
+:root{--nacht:#06090d;--groen:#3ddc84;--paars:#d97bb2;--amber:#ffb347;--papier:#d8d2c4}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--nacht);color:var(--papier);font-family:'Special Elite',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.dossier{max-width:40rem;width:100%;background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid #223039;padding:2.5rem 2rem;position:relative}
+.dossier::before{content:"";position:absolute;inset:10px;border:1px dashed #2c3d47;pointer-events:none}
+h1{font-family:'Abril Fatface',serif;font-weight:400;font-size:1.7rem;color:#e9e2d0;margin-bottom:.3rem}
+.sub{font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;color:#77828a;margin-bottom:2rem}
+input{width:100%;background:#0a0f14;border:1px solid #24333d;color:#ece5d3;font-family:inherit;font-size:1.05rem;padding:.9em;outline:none;margin-bottom:1rem;letter-spacing:.2em}
+button{width:100%;padding:1em;background:#1d6b47;border:1px solid #1d6b47;color:#eafff3;font-family:inherit;font-size:.95rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+button:hover{filter:brightness(1.25)}
+.fout{color:#ff8f8f;font-size:.85rem;margin-top:1rem;display:none}
+#resultaten{display:none}
+.balkrij{margin-bottom:1.8rem}
+.balkrij .kop{display:flex;justify-content:space-between;font-size:.92rem;margin-bottom:.4rem}
+.balkrij .kop b{font-weight:400;color:#ece5d3}
+.balkrij .kop span{color:var(--amber)}
+.balk{height:14px;background:#0a0f14;border:1px solid #24333d}
+.balk i{display:block;height:100%;transition:width 1s ease}
+.versus .balk i{background:var(--groen)}
+.mix .balk i{background:var(--paars)}
+.supporter .balk i{background:var(--amber)}
+.namen{font-size:.78rem;color:#77828a;margin-top:.5rem;line-height:1.7}
+.totaal{text-align:center;font-size:.85rem;color:#77828a;margin-top:2rem;border-top:1px dashed #2c3d47;padding-top:1.2rem}
+.leeg{color:#77828a;font-size:.9rem;text-align:center;padding:1.5rem 0}
+</style>
+</head>
+<body>
+<div class="dossier">
+  <h1>Het Dossier 🗄️</h1>
+  <p class="sub">Enkel voor het opperjurylid — Communiqué №1</p>
+
+  <div id="slot">
+    <input id="code" type="password" placeholder="TOEGANGSCODE" onkeydown="if(event.key==='Enter')openDossier()">
+    <button onclick="openDossier()">Open het dossier</button>
+    <p class="fout" id="fout">De jury kent u niet. Verdwijn.</p>
+  </div>
+
+  <div id="resultaten">
+    <div class="balkrij versus">
+      <div class="kop"><b>⚔️ Baroudellen versus Baroudeurs</b><span id="n-versus">0</span></div>
+      <div class="balk"><i id="b-versus" style="width:0"></i></div>
+      <p class="namen" id="l-versus"></p>
+    </div>
+    <div class="balkrij mix">
+      <div class="kop"><b>🤝 Mix Baroudellen / Baroudeurs</b><span id="n-mix">0</span></div>
+      <div class="balk"><i id="b-mix" style="width:0"></i></div>
+      <p class="namen" id="l-mix"></p>
+    </div>
+    <div class="balkrij supporter">
+      <div class="kop"><b>📣 Baroudellen als supporters</b><span id="n-supporter">0</span></div>
+      <div class="balk"><i id="b-supporter" style="width:0"></i></div>
+      <p class="namen" id="l-supporter"></p>
+    </div>
+    <p class="leeg" id="leeg" style="display:none">Nog geen enkele verklaring afgelegd. De stilte is veelzeggend.</p>
+    <p class="totaal" id="totaal"></p>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
+const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
+
+async function openDossier() {
+  const code = document.getElementById('code').value.trim();
+  document.getElementById('fout').style.display = 'none';
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_poll_results', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: code })
+    });
+    if (!antw.ok) throw new Error();
+    const rijen = await antw.json();
+    const totaal = rijen.reduce((s, r) => s + Number(r.votes), 0);
+    document.getElementById('slot').style.display = 'none';
+    document.getElementById('resultaten').style.display = 'block';
+    const per = { versus: null, mix: null, supporter: null };
+    rijen.forEach(r => per[r.choice] = r);
+    const max = Math.max(1, ...rijen.map(r => Number(r.votes)));
+    for (const k of ['versus', 'mix', 'supporter']) {
+      const r = per[k];
+      const stemmen = r ? Number(r.votes) : 0;
+      document.getElementById('n-' + k).textContent = stemmen;
+      document.getElementById('b-' + k).style.width = (stemmen / max * 100) + '%';
+      document.getElementById('l-' + k).textContent = r ? r.names.join(' · ') : '';
+    }
+    document.getElementById('leeg').style.display = totaal === 0 ? 'block' : 'none';
+    document.getElementById('totaal').textContent = totaal + ' verklaring(en) in het dossier.';
+  } catch (e) {
+    document.getElementById('fout').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>

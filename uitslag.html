@@ -103,6 +103,12 @@ function toestelNaam(ua) {
 function tijd(t) { return new Date(t).toLocaleString('nl-BE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
 // Café Den Hert, Oever 13 (Vaart-Noord), Bellem
 const CAFE = { lat: 51.09733, lon: 3.49797 };
+function meters(aLat, aLon, bLat, bLon) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLat = (bLat - aLat) * r, dLon = (bLon - aLon) * r;
+  const a = Math.sin(dLat/2)**2 + Math.cos(aLat*r) * Math.cos(bLat*r) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
 function afstand(lat, lon) {
   const R = 6371000, r = Math.PI / 180;
   const dLat = (lat - CAFE.lat) * r, dLon = (lon - CAFE.lon) * r;
@@ -162,6 +168,28 @@ async function openDossier() {
         verdacht += `<div class="kaartje"><span class="kop2">👥 De naam "${esc(votes[0].name)}" werd ${votes.length}× gebruikt</span> <span class="meta">(vanaf ${toestellen.size} toestel${toestellen.size > 1 ? 'len' : ''})</span><br>` +
           votes.map(v => `${KEUZES[v.choice]} <span class="meta">(${tijd(v.created_at)}, ${toestelNaam(v.user_agent)})</span>`).join('<br>') +
           `</div>`;
+      }
+    }
+    // zelfde plek, verschillende namen/toestellen: privévensters lekken via GPS
+    const metCoords = stemmen.filter(v => v.lat != null);
+    const geclusterd = new Set();
+    for (let i = 0; i < metCoords.length; i++) {
+      if (geclusterd.has(i)) continue;
+      const groep = [metCoords[i]], leden = [i];
+      for (let j = i + 1; j < metCoords.length; j++) {
+        if (geclusterd.has(j)) continue;
+        if (meters(metCoords[i].lat, metCoords[i].lon, metCoords[j].lat, metCoords[j].lon) < 150) {
+          groep.push(metCoords[j]); leden.push(j);
+        }
+      }
+      const namen = new Set(groep.map(v => v.name.trim().toLowerCase()));
+      if (groep.length > 1 && namen.size > 1) {
+        leden.forEach(x => geclusterd.add(x));
+        const maxAfst = Math.round(Math.max(...groep.slice(1).map(v => meters(groep[0].lat, groep[0].lon, v.lat, v.lon))));
+        verdacht += `<div class="kaartje alarm"><span class="kop2">📍 Vanaf (vrijwel) dezelfde plek: ${groep.map(v => `"${esc(v.name)}"`).join(' en ')}</span><br>` +
+          `hooguit ${maxAfst} m uit elkaar — ` +
+          groep.map(v => `${esc(v.name)} (${KEUZES[v.choice]}, ${tijd(v.created_at)}, ${toestelNaam(v.user_agent)})`).join(' · ') +
+          `<br><span class="meta">één huishouden of één valsspeler met een privévenster — de jury beslist</span></div>`;
       }
     }
     const preDetectie = (perToestel['pre-detectie'] || []).length;

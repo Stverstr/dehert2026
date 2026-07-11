@@ -235,7 +235,7 @@ const DIV = { baroudeurs: 'Baroudeurs', baroudellen: 'Baroudellen' };
 const DIVKLEUR = { baroudeurs: 'groen', baroudellen: 'paars' };
 
 const S = {
-  rol: null, code: null, team: null, scherm: false,
+  rol: null, code: null, team: null, scherm: false, juryTab: 'koers',
   pub: { event: null, teams: [], riders: [], jury: [], rounds: [], scores: [], secrets: [], delibs: [], prizes: [] },
   geheim: null,   // team secrets
   juryData: null, // jury view
@@ -548,16 +548,24 @@ function juryInfoVan(rondeId) {
 }
 function zichtJury() {
   const opper = S.rol === 'opper';
-  return mededeling()
+  const tabbalk = `<div class="tabs" style="margin-bottom:1.1rem">
+    <button class="${S.juryTab === 'koers' ? 'aan' : ''}" onclick="S.juryTab='koers';render();scrollTo(0,0)">🏁 De Koers</button>
+    <button class="${S.juryTab === 'beheer' ? 'aan' : ''}" onclick="S.juryTab='beheer';render();scrollTo(0,0)">⚙️ Beheer & draaiboek</button>
+  </div>`;
+  if (S.juryTab === 'beheer') {
+    return tabbalk
+      + (opper ? deelnemersKaart() : '')
+      + regelsJuryKaart(opper)
+      + (opper ? beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst());
+  }
+  return tabbalk + mededeling()
     + faseKaart(opper)
     + klassementKaart()
     + rondesBlok('alle', true)
     + inboxKaart()
     + puntenRennerKaart()
     + missiesJuryKaart()
-    + notitiesKaart()
-    + regelsJuryKaart(opper)
-    + (opper ? deelnemersKaart() + beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst());
+    + notitiesKaart();
 }
 function faseKaart(opper) {
   const e = S.pub.event;

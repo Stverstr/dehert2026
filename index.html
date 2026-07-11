@@ -53,6 +53,7 @@ body{
   width:100%;
   height:100%;
   animation:trage-zoom 40s ease-in-out infinite alternate;
+  will-change:transform;
 }
 @keyframes trage-zoom{
   from{transform:scale(1)}
@@ -67,6 +68,7 @@ body{
   background:radial-gradient(ellipse 60% 100% at 50% 50%, rgba(143,163,173,.13), transparent 70%);
   filter:blur(18px);
   pointer-events:none;
+  will-change:transform;
 }
 .mist.m1{bottom:18vh;animation:drijf 38s linear infinite}
 .mist.m2{bottom:8vh;height:28vh;opacity:.8;animation:drijf 55s linear infinite reverse}
@@ -177,6 +179,13 @@ body{
 @media (max-aspect-ratio: 9/10){
   .titelblok{padding-bottom:calc(50vw + 4vh)}
   .pijl-omlaag{display:none}
+}
+/* gsm's: geen trage zoom op de grote SVG (die doet mobiele GPU's beven) en lichtere mist */
+@media (pointer: coarse), (max-width: 720px){
+  .scene svg.landschap{animation:none}
+  .mist{filter:blur(9px)}
+  .mist.m3{display:none}
+  .hoofdtitel{animation:opdoemen 2.8s ease 1.4s forwards}
 }
 
 /* ============ ONHEILSPELLENDE STROOK ============ */
@@ -367,7 +376,7 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
 </style>
 </head>
 <body>
-<!-- 🌪 Team Cyclones was hier. Echte koersen, echte hoogtemeters, echte renners.
+<!-- 🌪 Hier was iemand in het blauw-geel. Echte koersen, echte hoogtemeters, echte renners.
      Veel succes met jullie… vlakke rondjes langs het water. Schattig. -->
 
 <div class="graan"></div>
@@ -675,8 +684,11 @@ const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
 // op portret (gsm) tonen we het volledige panorama als band onderaan,
 // op landschap vult de scène het scherm en wordt er gecropt
 const landschapSvg = document.querySelector('svg.landschap');
+let vorigePortret = null;
 function stelScèneAf() {
   const portret = innerWidth / innerHeight < 0.9;
+  if (portret === vorigePortret) return; // gsm's vuren resize bij elke scroll (adresbalk) — niets herzetten
+  vorigePortret = portret;
   landschapSvg.setAttribute('preserveAspectRatio', portret ? 'xMidYMax meet' : 'xMidYMax slice');
   landschapSvg.setAttribute('viewBox', portret ? '0 100 1600 800' : '0 0 1600 900');
 }
@@ -685,11 +697,11 @@ addEventListener('resize', stelScèneAf);
 
 // kleine lettertjes, groot gelijk
 const VOETNOTEN = [
-  "Een onafhankelijk waarnemer van Team Cyclones bekeek het parcours en noemde het, met liefde: \u2018schattig\u2019.",
-  "Er werden bij het maken van deze aankondiging exact nul hoogtemeters gemaakt. Team Cyclones vindt dat veelzeggend.",
-  "Volgens Team Cyclones is dit geen koers maar een picknick met fietsen. De jury weigert alle commentaar.",
+  "Een onafhankelijke blauw-gele waarnemer bekeek het parcours en noemde het, met liefde: \u2018schattig\u2019.",
+  "Er werden bij het maken van deze aankondiging exact nul hoogtemeters gemaakt. Ergens vindt men dat veelzeggend.",
+  "\u2018Dit is geen koers maar een picknick met fietsen\u2019, aldus een anonieme bron met opvallend veel hoogtemeters.",
   "De Vaart is geen col. We werden daar fijntjes op gewezen. Door iemand in het blauw-geel.",
-  "Gemiddelde snelheid vorig jaar: geheim. \u2018Wij begrijpen waarom\u2019, aldus een woordvoerder van Team Cyclones."
+  "Gemiddelde snelheid vorig jaar: geheim. \u2018Wij begrijpen waarom\u2019, liet een niet nader genoemde wielerclub optekenen."
 ];
 document.getElementById('voetnoot').textContent = "\u2020 " + VOETNOTEN[Math.floor(Math.random() * VOETNOTEN.length)];
 

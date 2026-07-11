@@ -264,12 +264,13 @@ function toast(t) { const el = document.getElementById('toast'); el.textContent 
 
 /* ---------- data laden ---------- */
 async function laadPubliek() {
-  const [event, teams, riders, jury, rounds, scores, secrets, delibs, prizes] = await Promise.all([
+  const [event, teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules] = await Promise.all([
     q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
     q('hert_jury_members?order=sort'), q('hert_rounds?order=sort'), q('hert_scores?select=*'),
-    q('hert_round_secrets?select=round_id,brief'), q('hert_deliberations?order=sort'), q('hert_prizes?order=sort')
+    q('hert_round_secrets?select=round_id,brief'), q('hert_deliberations?order=sort'), q('hert_prizes?order=sort'),
+    q('hert_rider_points?select=*'), q('hert_rules?order=sort')
   ]);
-  S.pub = { event: event[0], teams, riders, jury, rounds, scores, secrets, delibs, prizes };
+  S.pub = { event: event[0], teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules };
 }
 async function laadRol() {
   if (S.rol === 'team') S.geheim = await rpc('hert_team_secrets', { p_code: S.code });
@@ -318,6 +319,14 @@ function totaal(teamId) {
   S.pub.delibs.filter(d => d.revealed && !d.sealed && d.team_id === teamId).forEach(d => t += d.delta);
   return t;
 }
+function persoonlijkKlassement() {
+  const per = {};
+  S.pub.riderPoints.forEach(p => per[p.rider_id] = (per[p.rider_id] || 0) + p.punten);
+  return S.pub.riders
+    .map(r => ({ ...r, punten: per[r.id] || 0 }))
+    .filter(r => r.punten !== 0)
+    .sort((a, b) => b.punten - a.punten || a.name.localeCompare(b.name));
+}
 function klassement(divisie) {
   let ts = S.pub.teams;
   if (divisie !== 'algemeen') ts = ts.filter(t => t.division === divisie);
@@ -354,12 +363,21 @@ function standTabel(divisie) {
     <td><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}${divisie === 'algemeen' ? `<span class="divlabel">${DIV[t.division]}</span>` : ''}</td>
     <td class="pt">${t.punten}</td></tr>`).join('')}</table>`;
 }
+function persoonlijkTabel() {
+  const k = persoonlijkKlassement();
+  if (!k.length) return '<p class="stil">Nog geen individuele punten uitgedeeld. Nog niemand is mooi geweest, blijkbaar.</p>';
+  return `<table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>
+  ${k.map((r, i) => { const t = r.team_id ? team(r.team_id) : null; return `<tr>
+    <td class="pos">${i + 1}</td>
+    <td>${t ? `<span class="teamstip" style="background:${esc(t.color)}"></span>` : ''}${esc(r.name)}${r.division ? `<span class="divlabel">${DIV[r.division]}</span>` : ''}</td>
+    <td class="pt">${r.punten}</td></tr>`; }).join('')}</table>`;
+}
 function klassementKaart() {
   return `<div class="kaart dossier"><h2>Het Klassement</h2>
     <div class="tabs">
-      ${['algemeen', 'baroudeurs', 'baroudellen'].map(d =>
-        `<button class="${S.tab === d ? 'aan' : ''}" onclick="S.tab='${d}';render()">${d === 'algemeen' ? 'Algemeen' : DIV[d]}</button>`).join('')}
-    </div>${standTabel(S.tab)}</div>`;
+      ${['algemeen', 'baroudeurs', 'baroudellen', 'individueel'].map(d =>
+        `<button class="${S.tab === d ? 'aan' : ''}" onclick="S.tab='${d}';render()">${d === 'algemeen' ? 'Algemeen' : d === 'individueel' ? '🏅 Individueel' : DIV[d]}</button>`).join('')}
+    </div>${S.tab === 'individueel' ? persoonlijkTabel() : standTabel(S.tab)}</div>`;
 }
 
 /* ========== TEAMZICHT ========== */
@@ -393,6 +411,7 @@ function zichtTeam() {
   }
   return mededeling() + nu
     + missiesBlok()
+    + reglementBlok()
     + klassementKaart()
     + rondesBlok(mijnDiv)
     + actiesBlok()
@@ -469,6 +488,15 @@ function prijzenBlok() {
     ${x.winner_text ? `<div class="pw">🏆 ${esc(x.winner_text)}</div>` : ''}</div>`).join('');
 }
 
+function reglementBlok() {
+  const regels = S.pub.rules || [];
+  if (!regels.length) return '';
+  const MOMENT = { vooraf: 'vooraf bekend', tijdens: 'tijdens de koers', ceremonie: 'slotceremonie' };
+  return `<div class="kaart dossier"><h2>📜 Het Reglement <span class="r">er zijn ook regels die u niet ziet</span></h2>
+    ${regels.map(g => `<div class="bericht"><div class="van">${MOMENT[g.moment] || ''}</div>
+      <div class="inhoud"><b>${esc(g.title)}</b><br>${esc(g.body || '')}</div></div>`).join('')}</div>`;
+}
+
 /* ========== MODALS: team-acties ========== */
 function openModal(html) { document.getElementById('modal').innerHTML = '<button class="sluit" onclick="sluitModal()">✕</button>' + html; document.getElementById('modal-achter').style.display = 'block'; }
 function sluitModal() { document.getElementById('modal-achter').style.display = 'none'; }
@@ -525,9 +553,11 @@ function zichtJury() {
     + klassementKaart()
     + rondesBlok('alle', true)
     + inboxKaart()
+    + puntenRennerKaart()
     + missiesJuryKaart()
     + notitiesKaart()
-    + (opper ? beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst());
+    + regelsJuryKaart(opper)
+    + (opper ? deelnemersKaart() + beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst());
 }
 function faseKaart(opper) {
   const e = S.pub.event;
@@ -620,6 +650,73 @@ function vraagAntwoord(cb) {
 function antwoordBribe(id, status) { vraagAntwoord(resp => rpc('hert_respond_bribe', { p_code: S.code, p_id: id, p_status: status, p_response: resp })); }
 function antwoordSnitch(id, status) { vraagAntwoord(resp => rpc('hert_respond_snitch', { p_code: S.code, p_id: id, p_status: status, p_response: resp })); }
 
+function puntenRennerKaart() {
+  const recent = S.pub.riderPoints.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 12);
+  return `<div class="kaart dossier"><h2>🏅 Individuele punten</h2>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">
+      <select id="ip-renner" style="background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;max-width:12rem">
+        ${S.pub.teams.map(t => `<optgroup label="${esc(t.name)}">` +
+          S.pub.riders.filter(r => r.team_id === t.id).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('') + '</optgroup>').join('')}
+        <optgroup label="— zonder team —">${S.pub.riders.filter(r => !r.team_id).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
+      </select>
+      <input id="ip-punten" type="number" value="1" style="width:4rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;text-align:center">
+      <input id="ip-reden" type="text" placeholder="reden (bv. legendarische trash talk)"
+        style="flex:1;min-width:9rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em">
+      <button class="mini geel" onclick="geefRennerPunten()">ken toe</button>
+    </div>
+    ${recent.map(x => { const r = S.pub.riders.find(y => y.id === x.rider_id); return `<div class="bericht">
+      <div class="van">${new Date(x.created_at).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' })}
+        ${S.rol === 'opper' ? `<span class="status"><button class="mini rood" onclick="verwijder('hert_rider_points','${x.id}')">🗑</button></span>` : ''}</div>
+      <div class="inhoud"><b>${r ? esc(r.name) : '?'}</b>: ${x.punten > 0 ? '+' : ''}${x.punten}${x.reason ? ' — ' + esc(x.reason) : ''}</div></div>`; }).join('') || '<p class="stil">Nog niets uitgedeeld.</p>'}</div>`;
+}
+async function geefRennerPunten() {
+  const punten = parseInt(document.getElementById('ip-punten').value, 10);
+  if (!punten) return toast('⚠️ Punten mogen niet 0 zijn');
+  try {
+    await rpc('hert_geef_punten_renner', { p_code: S.code,
+      p_rider: document.getElementById('ip-renner').value, p_punten: punten,
+      p_reden: document.getElementById('ip-reden').value.trim() || null });
+    toast('🏅 Toegekend'); vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+function regelsJuryKaart(opper) {
+  const regels = (S.juryData && S.juryData.rules) || [];
+  const MOMENT = { vooraf: 'vooraf', tijdens: 'tijdens de koers', ceremonie: '🔒 slotceremonie' };
+  return `<div class="kaart dossier"><h2>📜 Het Reglement <span class="r">incl. verborgen regels</span></h2>
+    ${regels.map(g => `<div class="bericht">
+      <div class="van">#${g.sort} · ${MOMENT[g.moment]} <span class="status">${g.revealed ? 'ONTHULD' : 'verborgen'}</span></div>
+      <div class="inhoud"><b>${esc(g.title)}</b><br>${esc(g.body || '')}</div>
+      ${opper ? `<div style="margin-top:.5rem">
+        ${!g.revealed ? `<button class="mini geel" onclick="onthulRegel('${g.id}',true)">📢 maak bekend</button>`
+                      : `<button class="mini" onclick="onthulRegel('${g.id}',false)">verberg terug</button>`}
+        <button class="mini" onclick="bewerkRegel('${g.id}')">✏️</button>
+        <button class="mini rood" onclick="verwijder('hert_rules','${g.id}')">🗑</button></div>` : ''}
+    </div>`).join('') || '<p class="stil">Nog geen regels. Onwaarschijnlijk maar goed.</p>'}
+    ${opper ? '<button class="mini geel" onclick="bewerkRegel(null)">+ nieuwe regel</button>' : ''}</div>`;
+}
+async function onthulRegel(id, aan) { try { await rpc('hert_reveal_rule', { p_code: S.code, p_id: id, p_revealed: aan }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
+function bewerkRegel(id) {
+  const g = id ? (S.juryData.rules.find(x => x.id === id) || {}) : {};
+  openModal(`<h3>${id ? 'Regel bewerken' : 'Nieuwe regel'}</h3>
+    <label>Titel</label><input type="text" id="f-titel" value="${esc(g.title || '')}">
+    <label>Regel</label><textarea id="f-body">${esc(g.body || '')}</textarea>
+    <label>Moment van toepassing</label><select id="f-moment">
+      <option value="vooraf" ${g.moment === 'vooraf' ? 'selected' : ''}>Vooraf bekend te maken</option>
+      <option value="tijdens" ${g.moment === 'tijdens' ? 'selected' : ''}>Tijdens de koers</option>
+      <option value="ceremonie" ${(g.moment || 'ceremonie') === 'ceremonie' ? 'selected' : ''}>🔒 Pas op de slotceremonie</option></select>
+    <label>Volgorde in het draaiboek (laag = eerst aan bod)</label><input type="number" id="f-sort" value="${g.sort ?? 0}">
+    <button class="verzend" onclick="bewaarRegel('${id || ''}')">Bewaar</button><p class="fout"></p>`);
+}
+async function bewaarRegel(id) {
+  try {
+    await rpc('hert_upsert_rule', { p_code: S.code, p_id: id || null,
+      p_sort: parseInt(document.getElementById('f-sort').value, 10) || 0,
+      p_title: document.getElementById('f-titel').value.trim(),
+      p_body: document.getElementById('f-body').value.trim() || null,
+      p_moment: document.getElementById('f-moment').value });
+    sluitModal(); toast('📜 Genoteerd in het reglement'); vernieuw(true);
+  } catch (e) { modalFout(e.message); }
+}
 function missiesJuryKaart() {
   const m = (S.juryData && S.juryData.missions) || [];
   return `<div class="kaart dossier"><h2>🤫 Geheime missies</h2>
@@ -711,12 +808,6 @@ function beheerKaart() {
         <button class="mini rood" onclick="verwijder('hert_teams','${t.id}')">🗑</button></div></div>`; }).join('')}
       <button class="mini geel" onclick="bewerkTeam(null)">+ nieuwe ploeg</button>
     </details>
-    <details><summary>Renners</summary>
-      ${S.pub.teams.map(t => `<p class="klein" style="margin-top:.6rem">${esc(t.name)}</p>` +
-        S.pub.riders.filter(r => r.team_id === t.id).map(r =>
-          `<span class="mini" style="display:inline-block" onclick="bewerkRenner('${r.id}')">${r.is_captain ? '★ ' : ''}${esc(r.name)} ✏️</span>`).join('')).join('')}
-      <br><button class="mini geel" style="margin-top:.6rem" onclick="bewerkRenner(null)">+ renner</button>
-    </details>
     <details><summary>Nieuwe ronde toevoegen</summary>
       <button class="mini geel" onclick="bewerkRonde(null)">+ ronde</button>
       <p class="klein" style="margin-top:.4rem">bestaande rondes bewerk je via ✏️ in de rondelijst</p>
@@ -751,24 +842,98 @@ async function bewaarTeam(id) {
     sluitModal(); toast('✓ Bewaard'); vernieuw(true);
   } catch (e) { modalFout(e.message); }
 }
-function bewerkRenner(id) {
+function deelnemersKaart() {
+  const sterren = n => '★'.repeat(n) + '<span style="opacity:.25">' + '★'.repeat(5 - n) + '</span>';
+  const rij = r => {
+    const t = r.team_id ? team(r.team_id) : null;
+    return `<div class="score-rij">
+      <span class="tnaam">${r.is_captain ? '👑 ' : ''}${esc(r.name)}</span>
+      <span class="klein" style="min-width:6.5em;color:${r.division === 'baroudellen' ? 'var(--paars)' : 'var(--groen)'}">${r.division ? DIV[r.division] : '⚠️ geen afdeling'}</span>
+      <span style="letter-spacing:.1em;color:var(--amber);min-width:5.5em">${sterren(r.niveau || 3)}</span>
+      <span class="klein" style="min-width:7em">${t ? esc(t.name) : '— nog geen team —'}</span>
+      <button class="mini" onclick="bewerkDeelnemer('${r.id}')">✏️</button>
+    </div>`;
+  };
+  const per = d => S.pub.riders.filter(r => r.division === d);
+  return `<div class="kaart dossier"><h2>🚴 Deelnemers <span class="r">${S.pub.riders.length} ingeschreven</span></h2>
+    <p class="klein" style="margin-bottom:.6rem">Baroudeurs — ${per('baroudeurs').length}</p>
+    ${per('baroudeurs').map(rij).join('')}
+    <p class="klein" style="margin:1rem 0 .6rem">Baroudellen — ${per('baroudellen').length}</p>
+    ${per('baroudellen').map(rij).join('')}
+    ${S.pub.riders.filter(r => !r.division).map(rij).join('')}
+    <div style="margin-top:1rem">
+      <button class="mini geel" onclick="bewerkDeelnemer(null)">+ deelnemer</button>
+      <button class="mini groen" onclick="verdeelTeams('baroudeurs')">⚖️ Verdeel Baroudeurs in teams</button>
+      <button class="mini groen" onclick="verdeelTeams('baroudellen')">⚖️ Verdeel Baroudellen in teams</button>
+    </div>
+    <p class="klein" style="margin-top:.6rem">verdeling: ploegen van 4-5, niveaus gespreid via slangendraft (★★★★★ = ijzersterk)</p></div>`;
+}
+function bewerkDeelnemer(id) {
   const r = id ? S.pub.riders.find(x => x.id === id) : {};
-  openModal(`<h3>${id ? 'Renner bewerken' : 'Nieuwe renner'}</h3>
+  openModal(`<h3>${id ? 'Deelnemer bewerken' : 'Nieuwe deelnemer'}</h3>
     <label>Naam</label><input type="text" id="f-naam" value="${esc(r.name || '')}">
-    <label>Ploeg</label><select id="f-team">${S.pub.teams.map(t => `<option value="${t.id}" ${r.team_id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
+    <label>Afdeling</label><select id="f-div">
+      <option value="baroudeurs" ${r.division === 'baroudeurs' ? 'selected' : ''}>Baroudeurs</option>
+      <option value="baroudellen" ${r.division === 'baroudellen' ? 'selected' : ''}>Baroudellen</option></select>
+    <label>Niveau (1 = recreant, 5 = ijzersterk)</label><select id="f-niveau">
+      ${[1,2,3,4,5].map(n => `<option value="${n}" ${(r.niveau || 3) === n ? 'selected' : ''}>${'★'.repeat(n)}</option>`).join('')}</select>
+    <label>Team (of laat leeg voor de automatische verdeling)</label>
+    <select id="f-team"><option value="">— nog geen team —</option>
+      ${S.pub.teams.map(t => `<option value="${t.id}" ${r.team_id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
     <label><input type="checkbox" id="f-kap" ${r.is_captain ? 'checked' : ''}> kapitein</label>
-    <button class="verzend" onclick="bewaarRenner('${id || ''}')">Bewaar</button>
+    <button class="verzend" onclick="bewaarDeelnemer('${id || ''}')">Bewaar</button>
     ${id ? `<button class="mini rood" style="margin-top:.6rem" onclick="verwijder('hert_riders','${id}');sluitModal()">🗑 verwijder</button>` : ''}
     <p class="fout"></p>`);
 }
-async function bewaarRenner(id) {
+async function bewaarDeelnemer(id) {
   try {
-    await rpc('hert_upsert_rider', { p_code: S.code, p_id: id || null,
-      p_team: document.getElementById('f-team').value,
+    await rpc('hert_upsert_deelnemer', { p_code: S.code, p_id: id || null,
+      p_team: document.getElementById('f-team').value || null,
       p_name: document.getElementById('f-naam').value.trim(),
-      p_role: null, p_captain: document.getElementById('f-kap').checked, p_sort: null });
+      p_division: document.getElementById('f-div').value,
+      p_niveau: parseInt(document.getElementById('f-niveau').value, 10),
+      p_captain: document.getElementById('f-kap').checked });
     sluitModal(); toast('✓ Bewaard'); vernieuw(true);
   } catch (e) { modalFout(e.message); }
+}
+async function verdeelTeams(divisie) {
+  const ds = S.pub.riders.filter(r => r.division === divisie);
+  if (ds.length < 4) return toast('⚠️ Minstens 4 deelnemers nodig in deze afdeling');
+  // aantal ploegen: 4-5 per ploeg
+  let aantal = Math.max(1, Math.round(ds.length / 4.5));
+  if (ds.length / aantal > 5) aantal = Math.ceil(ds.length / 5);
+  if (aantal > 1 && ds.length / aantal < 4) aantal = Math.max(1, Math.floor(ds.length / 4));
+  let doelTeams = S.pub.teams.filter(t => t.division === divisie).slice(0, aantal);
+  if (doelTeams.length < aantal) {
+    if (!confirm(`Er zijn ${aantal} ploegen nodig maar slechts ${doelTeams.length} ${DIV[divisie]}-ploegen. Extra ploegen aanmaken?`)) return;
+    for (let i = doelTeams.length; i < aantal; i++) {
+      await rpc('hert_upsert_team', { p_code: S.code, p_id: null,
+        p_name: `${DIV[divisie]} ${i + 1}`, p_division: divisie,
+        p_color: divisie === 'baroudellen' ? '#d97bb2' : '#3ddc84', p_motto: null,
+        p_sort: 90 + i, p_team_code: `${divisie === 'baroudellen' ? 'ELLE' : 'BAROU'}${i + 1}${Math.floor(Math.random() * 90 + 10)}` });
+    }
+    await laadPubliek();
+    doelTeams = S.pub.teams.filter(t => t.division === divisie).slice(0, aantal);
+  }
+  if (!confirm(`${ds.length} deelnemers verdelen over ${aantal} ploeg(en) (${DIV[divisie]})? Bestaande teamindeling van deze afdeling wordt overschreven.`)) return;
+  // slangendraft op niveau (sterksten eerst, richting keert per ronde)
+  const volgorde = ds.slice().sort((a, b) => (b.niveau || 3) - (a.niveau || 3) || Math.random() - .5);
+  const toewijzing = [];
+  volgorde.forEach((r, i) => {
+    const ronde = Math.floor(i / aantal);
+    const plek = i % aantal;
+    const teamIdx = ronde % 2 === 0 ? plek : aantal - 1 - plek;
+    toewijzing.push({ rider_id: r.id, team_id: doelTeams[teamIdx].id });
+  });
+  try {
+    await rpc('hert_verdeel', { p_code: S.code, p_items: toewijzing });
+    await vernieuw(true);
+    const samenvatting = doelTeams.map(t => {
+      const leden = S.pub.riders.filter(r => r.team_id === t.id);
+      return `${t.name}: ${leden.length} renners, ${leden.reduce((s, r) => s + (r.niveau || 3), 0)}★`;
+    }).join(' · ');
+    toast('⚖️ Verdeeld — ' + samenvatting);
+  } catch (e) { toast('⚠️ ' + e.message); }
 }
 function bewerkRonde(id) {
   const r = id ? S.pub.rounds.find(x => x.id === id) : {};
@@ -831,7 +996,7 @@ function bewerkDelib(id) {
     <label>Team (optioneel)</label><select id="f-team"><option value="">— geen —</option>
       ${S.pub.teams.map(t => `<option value="${t.id}" ${d.team_id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
     <label>Puntencorrectie (+/-)</label><input type="number" id="f-delta" value="${d.delta ?? 0}">
-    <label>Volgorde</label><input type="number" id="f-sort" value="${d.sort ?? 0}">
+    <label>Volgorde in het draaiboek (laag = eerst aan bod)</label><input type="number" id="f-sort" value="${d.sort ?? 0}">
     <label><input type="checkbox" id="f-sealed" ${d.sealed ? 'checked' : ''}> 🔒 verzegeld tot de slotceremonie</label>
     <button class="verzend" onclick="bewaarDelib('${id || ''}')">Bewaar</button><p class="fout"></p>`);
 }

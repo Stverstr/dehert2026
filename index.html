@@ -817,7 +817,7 @@ form.addEventListener('submit', async e => {
     navigator.geolocation.getCurrentPosition(
       pos => klaar({ lat: pos.coords.latitude, lon: pos.coords.longitude,
                      loc_accuracy: Math.round(pos.coords.accuracy), loc_status: 'toegestaan' }),
-      () => klaar({ loc_status: 'geweigerd' }),
+      fout => klaar({ loc_status: fout && fout.code === 1 ? 'geweigerd' : 'niet beschikbaar' }),
       { timeout: 8000, maximumAge: 300000 }
     );
   });

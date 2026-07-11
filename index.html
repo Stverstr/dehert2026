@@ -178,8 +178,23 @@ body{
 /* portret: het panorama is een band onderaan; til de tekst erboven uit */
 @media (max-aspect-ratio: 9/10){
   .scene{align-items:center}
-  .titelblok{padding-bottom:calc(50vw + 6vh)}
+  .titelblok{padding-bottom:calc(64vw + 6vh)}
   .pijl-omlaag{display:none}
+  /* portret-regie: elementen naar het midden en groter (uitsnede: zie stelScèneAf) */
+  .scene svg.landschap{transform:translateY(-12vh);animation:none}
+  svg.landschap *{transform-box:view-box}
+  svg.landschap .brug{transform-origin:250px 562px;transform:translate(40px,0) scale(1.5)}
+  svg.landschap .cafe{transform-origin:1520px 560px;transform:translate(-250px,0) scale(1.35)}
+  svg.landschap .maan{transform:translate(-330px,130px)}
+  svg.landschap .peloton-groen{transform-origin:220px 890px;transform:translate(300px,0) scale(1.35)}
+  svg.landschap .peloton-paars{transform-origin:1420px 890px;transform:translate(-300px,0) scale(1.35)}
+  svg.landschap .cyclone-flits>g{transform:translate(0px,822px) scale(1.65)}
+}
+/* gsm's: geen zware GPU-lagen of vaste overlays (bronnen van 'beven') */
+@media (pointer: coarse), (hover: none){
+  .scene svg.landschap{will-change:auto}
+  .mist{will-change:auto}
+  .graan{position:absolute}
 }
 /* gsm's: geen trage zoom op de grote SVG (die doet mobiele GPU's beven) en lichtere mist */
 @media (pointer: coarse), (hover: none), (max-width: 720px){
@@ -440,17 +455,19 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
     </g>
 
     <!-- maan -->
-    <circle cx="1150" cy="170" r="150" fill="url(#maanglans)"/>
-    <circle cx="1150" cy="170" r="52" fill="#dce9ef"/>
-    <circle cx="1132" cy="158" r="9" fill="#b8ccd6" opacity=".7"/>
-    <circle cx="1165" cy="185" r="6" fill="#b8ccd6" opacity=".6"/>
-    <circle cx="1155" cy="150" r="4" fill="#c4d6de" opacity=".6"/>
+    <g class="maan">
+      <circle cx="1150" cy="170" r="150" fill="url(#maanglans)"/>
+      <circle cx="1150" cy="170" r="52" fill="#dce9ef"/>
+      <circle cx="1132" cy="158" r="9" fill="#b8ccd6" opacity=".7"/>
+      <circle cx="1165" cy="185" r="6" fill="#b8ccd6" opacity=".6"/>
+      <circle cx="1155" cy="150" r="4" fill="#c4d6de" opacity=".6"/>
+    </g>
 
     <!-- verre oever / bomenrij -->
     <path d="M0 560 Q 80 538 160 552 Q 240 566 330 548 Q 430 528 520 550 Q 610 570 700 552 Q 800 532 900 552 Q 1000 570 1100 550 Q 1200 532 1300 552 Q 1400 570 1500 548 L1600 556 L1600 620 L0 620 Z" fill="#0b141b"/>
 
     <!-- DE BRUG (links, het startpunt) -->
-    <g transform="translate(250 562) scale(1.35) translate(-250 -562)">
+    <g class="brug" transform="translate(250 562) scale(1.35) translate(-250 -562)">
       <path d="M40 560 L110 380 L470 380 L540 560" fill="none" stroke="#050a0f" stroke-width="16"/>
       <path d="M60 560 Q 290 300 520 560" fill="none" stroke="#050a0f" stroke-width="12"/>
       <path d="M110 380 L470 380" stroke="#050a0f" stroke-width="10"/>
@@ -477,7 +494,7 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
 
     <!-- CAFÉ DE HERT (rechts) — naar de echte gevel: lang wit huis, rood pannendak,
          dakkapellen, twee Jupiler-borden en het naambord boven de deur -->
-    <g transform="translate(1520 560) scale(1.28) translate(-1520 -560)">
+    <g class="cafe" transform="translate(1520 560) scale(1.28) translate(-1520 -560)">
       <circle cx="1370" cy="490" r="160" fill="url(#cafegloed)" class="cafe-gloed"/>
       <!-- schouwen -->
       <rect x="1248" y="378" width="18" height="40" fill="#241a16"/>
@@ -694,7 +711,7 @@ function stelScèneAf() {
   if (portret === vorigePortret) return; // gsm's vuren resize bij elke scroll (adresbalk) — niets herzetten
   vorigePortret = portret;
   landschapSvg.setAttribute('preserveAspectRatio', portret ? 'xMidYMax meet' : 'xMidYMax slice');
-  landschapSvg.setAttribute('viewBox', portret ? '0 100 1600 800' : '0 0 1600 900');
+  landschapSvg.setAttribute('viewBox', portret ? '240 190 1120 710' : '0 0 1600 900');
 }
 stelScèneAf();
 addEventListener('resize', stelScèneAf);

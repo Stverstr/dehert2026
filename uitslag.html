@@ -284,6 +284,8 @@ async function openDossier(bewaardeCode) {
           }
           (sc.correcties || []).forEach(c => lijnen.push(
             `<div class="prij"><span class="pl">jurycorrectie${c.reden ? ' — „' + esc(c.reden) + '"' : ''} ` +
+            `<span onclick="zetCorrectiePubliek('${c.id}',${!c.publiek})" style="cursor:pointer" title="${c.publiek ? 'zichtbaar voor de renner — klik om te verbergen' : 'geheim — klik om zichtbaar te maken voor de renner'}">${c.publiek ? '👁' : '🙈'}</span>` +
+            `${c.publiek ? ' <span style="color:var(--groen);font-size:.72rem">zichtbaar voor de renner</span>' : ''} ` +
             `<span onclick="verwijderCorrectie('${c.id}')" style="cursor:pointer" title="verwijder deze correctie">🗑</span></span>` +
             `<span class="pp">${c.punten > 0 ? '+' : ''}${c.punten}</span></div>`));
           let plaats = '';
@@ -295,15 +297,23 @@ async function openDossier(bewaardeCode) {
             `<span class="tot">${sc.totaal != null ? (sc.totaal > 0 ? '+' : '') + sc.totaal + ' pt' : '?'}</span></div>` +
             `<span class="meta"><span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> · ${tijd(i.created_at)} · ${toestelNaam(i.user_agent)}${plaats}${i.alias ? '' : ' · geen schuilnaam (gebrek aan fantasie genoteerd)'}</span><br>` +
             `<span class="sterren" style="color:${bijgesteld ? 'var(--rood)' : 'var(--amber)'}">${sterren}</span> ` +
-            `<span class="meta">${bijgesteld ? `bijgesteld — zelfscore was ${i.niveau}★` : 'zelfscore, automatisch geverifieerd'}</span>` +
+            `<span class="meta">${bijgesteld ? `bijgesteld — zelfscore was ${i.niveau}★` : 'zelfscore, automatisch geverifieerd'}</span><br>` +
+            `<span class="corr-link" id="pl-k-${i.id}" onclick="klapPunten('${i.id}', this)">▸ punten &amp; correcties (${lijnen.length})</span>` +
+            `<div id="pl-${i.id}" style="display:none">` +
             `<div class="puntlijst">${lijnen.join('')}</div>` +
             `<span class="corr-link" onclick="this.style.display='none';document.getElementById('corr-v-${i.id}').style.display='block'">± jurycorrectie toevoegen</span>` +
             `<div class="corr-vorm" id="corr-v-${i.id}">` +
             `<input class="mini-in" id="corr-p-${i.id}" type="number" placeholder="±pt">` +
-            `<input class="mini-in breed" id="corr-r-${i.id}" type="text" maxlength="120" placeholder="reden (blijft geheim)">` +
-            `<button class="mini-knop" onclick="geefCorrectie('${i.id}')">ken toe</button></div>` +
-            `${i.comment ? `<br><span style="font-style:italic;color:#cfc8b8">"${esc(i.comment)}"</span>` : ''}</div>`;
+            `<input class="mini-in breed" id="corr-r-${i.id}" type="text" maxlength="120" placeholder="reden">` +
+            `<button class="mini-knop" onclick="geefCorrectie('${i.id}')">ken toe</button><br>` +
+            `<label class="meta" style="cursor:pointer"><input type="checkbox" id="corr-z-${i.id}" style="width:auto;margin:0 .4em 0 0;vertical-align:middle">reden zichtbaar voor de renner op het scorebord (anders geheim)</label>` +
+            `</div></div></div>`;
         }).join('');
+      // eerder opengeklapte puntenlijsten open houden na een verversing
+      openPanelen.forEach(id => {
+        const p = document.getElementById('pl-' + id), k = document.getElementById('pl-k-' + id);
+        if (p && k) { p.style.display = 'block'; k.textContent = k.textContent.replace('▸', '▾'); }
+      });
     })();
 
     // kijkcijfers
@@ -457,10 +467,14 @@ async function openDossier(bewaardeCode) {
       return `<div class="kaartje"><span class="kop2">${esc(v.name)}</span> <span class="meta">(${tijd(v.created_at)})</span><br>${plaats}</div>`;
     }).join('') || '<p class="leeg">Nog geen verklaringen.</p>';
 
-    // het gezeur
-    const zeur = stemmen.filter(v => v.comment && v.comment.trim());
+    // het gezeur: poll-commentaren én toevoegingen bij inschrijving, chronologisch
+    const zeur = stemmen.filter(v => v.comment && v.comment.trim())
+      .map(v => ({ wie: v.name, bron: `${KEUZES[v.choice]}, ${tijd(v.created_at)}, ${toestelNaam(v.user_agent)}`, wat: v.comment, t: v.created_at }))
+      .concat(inschrijvingen.filter(i => i.comment && i.comment.trim())
+        .map(i => ({ wie: i.name, bron: `📜 bij inschrijving, ${tijd(i.created_at)}, ${toestelNaam(i.user_agent)}`, wat: i.comment, t: i.created_at })))
+      .sort((a, b) => new Date(a.t) - new Date(b.t));
     document.getElementById('gezeur').innerHTML = zeur.length
-      ? zeur.map(v => `<div class="zeur"><span class="wie">${esc(v.name)}</span> <span class="meta">(${KEUZES[v.choice]}, ${tijd(v.created_at)}, ${toestelNaam(v.user_agent)})</span><br><span class="wat">"${esc(v.comment)}"</span></div>`).join('')
+      ? zeur.map(z => `<div class="zeur"><span class="wie">${esc(z.wie)}</span> <span class="meta">(${z.bron})</span><br><span class="wat">"${esc(z.wat)}"</span></div>`).join('')
       : '<p class="leeg">Nog geen gezeur. Dat komt nog.</p>';
 
     document.getElementById('totaal').textContent = stemmen.length + ' verklaring(en) in het dossier · ' + Object.keys(perToestel).length + ' toestel(len)';
@@ -491,20 +505,42 @@ async function zetPuntenZichtbaar(zichtbaar) {
     openDossier(dossierCode);
   } catch (e) { alert('De schakelaar klemt. Probeer nog eens.'); }
 }
-// manuele correctie op het pre-koers scorebord (reden blijft geheim tot de ceremonie)
+// uitklappen/inklappen van de puntenlijst per renner (blijft open na verversing)
+const openPanelen = new Set();
+function klapPunten(id, el) {
+  const p = document.getElementById('pl-' + id);
+  const open = p.style.display === 'none';
+  p.style.display = open ? 'block' : 'none';
+  el.textContent = el.textContent.replace(open ? '▸' : '▾', open ? '▾' : '▸');
+  if (open) openPanelen.add(id); else openPanelen.delete(id);
+}
+// manuele correctie op het pre-koers scorebord; reden geheim tenzij bewust publiek gezet
 async function geefCorrectie(id) {
   const punten = parseInt(document.getElementById('corr-p-' + id).value, 10);
   const reden = document.getElementById('corr-r-' + id).value.trim();
+  const publiek = document.getElementById('corr-z-' + id).checked;
   if (!punten) return alert('Punten mogen niet 0 zijn. De jury doet niet aan symboliek.');
   try {
     const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_prekoers_geef', {
       method: 'POST',
       headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_code: dossierCode, p_inschrijving: id, p_punten: punten, p_reden: reden || null })
+      body: JSON.stringify({ admin_code: dossierCode, p_inschrijving: id, p_punten: punten, p_reden: reden || null, p_publiek: publiek })
     });
     if (!antw.ok) throw new Error();
     openDossier(dossierCode);
   } catch (e) { alert('De correctie is niet aangekomen. Probeer nog eens.'); }
+}
+// een bestaande correctie zichtbaar/onzichtbaar maken voor de renner (publiek scorebord)
+async function zetCorrectiePubliek(id, publiek) {
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_prekoers_zichtbaarheid', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: dossierCode, p_id: id, p_publiek: publiek })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('Het omzetten mislukte. Probeer nog eens.'); }
 }
 async function verwijderCorrectie(id) {
   try {

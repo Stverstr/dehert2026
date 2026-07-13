@@ -50,6 +50,13 @@ button:hover{filter:brightness(1.25)}
 .schakel .aanuit{white-space:nowrap}
 .status-aan{color:var(--groen)}
 .status-uit{color:var(--rood)}
+textarea.mini-in,select.mini-in{
+  background:#0a0f14;border:1px solid #24333d;color:#ece5d3;
+  font-family:inherit;font-size:.82rem;letter-spacing:0;padding:.5em .6em;outline:none;
+}
+textarea.mini-in{width:100%;resize:vertical;margin:.4rem 0}
+.regel-vorm{display:none;margin-top:.6rem}
+.regel-vorm .breed-vol{width:100%;max-width:none;margin:.4rem 0 0}
 .kaartje .kop2{color:#ece5d3}
 .kaartje .meta{color:var(--grijs);font-size:.75rem}
 .kaartje.alarm{border-color:#6e3333}
@@ -93,6 +100,7 @@ button:hover{filter:brightness(1.25)}
   <div id="resultaten">
     <div class="tabs">
       <button id="tabknop-inschrijvingen" class="aan" onclick="toonTab('inschrijvingen')">📜 Inschrijvingen</button>
+      <button id="tabknop-regels" onclick="toonTab('regels')">⚖️ Regels</button>
       <button id="tabknop-poll" onclick="toonTab('poll')">🗳️ De Poll</button>
       <button id="tabknop-verdacht" onclick="toonTab('verdacht')">🕵️ Verdacht</button>
       <button id="tabknop-gezeur" onclick="toonTab('gezeur')">😤 Gezeur</button>
@@ -102,6 +110,11 @@ button:hover{filter:brightness(1.25)}
     <div class="tabblad aan" id="tab-inschrijvingen">
       <h2>📜 De inschrijvingen voor 30 september</h2>
       <div id="inschrijvingen"></div>
+    </div>
+
+    <div class="tabblad" id="tab-regels">
+      <h2>⚖️ De regels van vóór de koers</h2>
+      <div id="regelsbeheer"></div>
     </div>
 
     <div class="tabblad" id="tab-poll">
@@ -154,6 +167,7 @@ const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
 const KEUZES = { versus: '⚔️ versus', mix: '🤝 mix', supporter: '📣 supporter' };
 let dossierCode = '';
 let puntenPubliek = true;
+let alleRegels = [];
 
 function esc(t) { return (t == null ? '' : String(t)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toestelNaam(ua) {
@@ -231,6 +245,12 @@ async function openDossier(bewaardeCode) {
       body: '{}'
     });
     puntenPubliek = bordAntw.ok ? !!(await bordAntw.json()).punten_publiek : true;
+    const regelsAntw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_regels', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: code })
+    });
+    alleRegels = regelsAntw.ok ? await regelsAntw.json() : [];
     dossierCode = code;
     localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
@@ -314,6 +334,39 @@ async function openDossier(bewaardeCode) {
         const p = document.getElementById('pl-' + id), k = document.getElementById('pl-k-' + id);
         if (p && k) { p.style.display = 'block'; k.textContent = k.textContent.replace('▸', '▾'); }
       });
+    })();
+
+    // regelbeheer: alle regels van vóór de koers, hier te bewerken en te onthullen
+    (() => {
+      const el = document.getElementById('regelsbeheer');
+      const MOMENTEN = { vooraf: 'vooraf bekend', tijdens: 'tijdens de koers', ceremonie: 'slotceremonie' };
+      const regels = alleRegels.slice().sort((a, b) => a.nr - b.nr);
+      const vorm = r => {
+        const s = r ? r.id : 'nieuw';
+        const momentOpties = Object.entries(MOMENTEN).map(([w, l]) =>
+          `<option value="${w}"${r && r.moment === w ? ' selected' : ''}>${l}</option>`).join('');
+        return `<div class="regel-vorm" id="rg-v-${s}">` +
+          `№<input class="mini-in" id="rg-nr-${s}" type="number" value="${r ? r.nr : ''}" placeholder="nr"> ` +
+          `<select class="mini-in" id="rg-m-${s}">${momentOpties}</select>` +
+          `<input class="mini-in breed-vol" id="rg-t-${s}" type="text" maxlength="80" value="${r ? esc(r.titel) : ''}" placeholder="titel (bv. De Waterdragers)">` +
+          `<textarea class="mini-in" id="rg-b-${s}" rows="4" placeholder="de regel zelf — in jurytoon">${r ? esc(r.body || '') : ''}</textarea>` +
+          `<button class="mini-knop" onclick="bewaarRegel('${r ? r.id : ''}')">bewaar</button></div>`;
+      };
+      el.innerHTML = `<div class="kaartje"><span class="kop2">${regels.length} regel(s)</span> — ` +
+        `<span style="color:var(--groen)">${regels.filter(x => !x.geheim).length} onthuld</span> · ` +
+        `<span style="color:var(--amber)">${regels.filter(x => x.geheim).length} verborgen</span><br>` +
+        `<span class="meta">🙈 verborgen = het publiek ziet enkel "Regel №X — ████" (de punten tellen wél); 🔓 onthuld = titel en tekst leesbaar op het scorebord.<br>` +
+        `⚠️ №10–№50 sturen de automatische puntentelling — hernummer of verwijder die niet, verberg ze hoogstens.</span></div>` +
+        regels.map(r => `<div class="insch">
+          <div class="rij-kop"><span class="wie">№${r.nr} ${esc(r.titel)}</span>
+            <span style="white-space:nowrap;font-size:.78rem">
+              <span onclick="zetRegelOnthuld('${r.id}',${r.geheim})" style="cursor:pointer;color:${r.geheim ? 'var(--amber)' : 'var(--groen)'}" title="${r.geheim ? 'verborgen — klik om te onthullen op het scorebord' : 'onthuld — klik om weer te verbergen'}">${r.geheim ? '🙈 verborgen' : '🔓 onthuld'}</span>
+              <span onclick="verwijderRegel('${r.id}','№${r.nr} ${esc(r.titel).replace(/'/g, '')}')" style="cursor:pointer;margin-left:.5em" title="verwijder deze regel">🗑</span></span></div>
+          <span class="meta">${MOMENTEN[r.moment] || esc(r.moment || '')}</span><br>
+          <span style="color:#cfc8b8">${esc(r.body || '')}</span><br>
+          <span class="corr-link" onclick="this.style.display='none';document.getElementById('rg-v-${r.id}').style.display='block'">✎ bewerk</span>
+          ${vorm(r)}</div>`).join('') +
+        `<span class="corr-link" onclick="this.style.display='none';document.getElementById('rg-v-nieuw').style.display='block'">+ nieuwe regel toevoegen</span>${vorm(null)}`;
     })();
 
     // kijkcijfers
@@ -529,6 +582,48 @@ async function geefCorrectie(id) {
     if (!antw.ok) throw new Error();
     openDossier(dossierCode);
   } catch (e) { alert('De correctie is niet aangekomen. Probeer nog eens.'); }
+}
+// regelbeheer: bewaren (nieuw of bestaand), onthullen/verbergen, verwijderen
+async function bewaarRegel(id) {
+  const s = id || 'nieuw';
+  const nr = parseInt(document.getElementById('rg-nr-' + s).value, 10);
+  const titel = document.getElementById('rg-t-' + s).value.trim();
+  const moment = document.getElementById('rg-m-' + s).value;
+  const body = document.getElementById('rg-b-' + s).value.trim();
+  if (!titel) return alert('Een regel zonder titel is geen regel.');
+  if (isNaN(nr)) return alert('Geef de regel een nummer.');
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_upsert_rule', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: dossierCode, p_id: id || null, p_sort: nr, p_title: titel, p_body: body || null, p_moment: moment })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('De regel is niet bewaard. Probeer nog eens.'); }
+}
+async function zetRegelOnthuld(id, onthullen) {
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_reveal_rule', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: dossierCode, p_id: id, p_revealed: onthullen })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('Het omzetten mislukte. Probeer nog eens.'); }
+}
+async function verwijderRegel(id, label) {
+  if (!confirm('Regel ' + label + ' definitief verwijderen?\n(Regels №10–№50 sturen de automatische punten — die verwijder je beter niet.)')) return;
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_delete_row', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: dossierCode, p_table: 'hert_rules', p_id: id })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('Verwijderen mislukte. Probeer nog eens.'); }
 }
 // een bestaande correctie zichtbaar/onzichtbaar maken voor de renner (publiek scorebord)
 async function zetCorrectiePubliek(id, publiek) {

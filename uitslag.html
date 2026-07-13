@@ -285,20 +285,11 @@ async function openDossier(bewaardeCode) {
         schoonheid: '№10 De Schoonheidspremie', verstopper: '№20 De Verstoppers',
         burgerplicht: '№30 De Burgerplicht', zelfkennis: '№40 De Zelfkennis', vroegte: '№50 De Vroege Vogels'
       };
-      // de schakelaar: staan de punten al op het publieke scorebord?
-      const schakel = `<div class="schakel">
-          <span>🏅 Punten op het publieke scorebord:
-            <b class="${puntenPubliek ? 'status-aan' : 'status-uit'}">${puntenPubliek ? 'ZICHTBAAR' : 'VERBORGEN'}</b><br>
-            <span class="meta">${puntenPubliek
-              ? 'iedereen ziet het klassement met punten en uitsplitsing (geheime regels blijven dichtgeplakt)'
-              : 'het publiek ziet enkel namen — geen punten, geen uitsplitsing; u ziet hier alles gewoon'}</span></span>
-          <button class="mini-knop aanuit" onclick="zetPuntenZichtbaar(${!puntenPubliek})">${puntenPubliek ? '🔒 verberg' : '🔓 geef vrij'}</button>
-        </div>`;
-      if (!inschrijvingen.length) { el.innerHTML = schakel + '<p class="leeg">Nog niemand ingeschreven. De moed wordt nog gezocht.</p>'; return; }
+      if (!inschrijvingen.length) { el.innerHTML = '<p class="leeg">Nog niemand ingeschreven. De moed wordt nog gezocht.</p>'; return; }
       const heren = inschrijvingen.filter(i => i.division === 'baroudeur');
       const dames = inschrijvingen.filter(i => i.division === 'baroudelle');
       const aangepast = i => i.jury_niveau != null && i.jury_niveau !== i.niveau;
-      el.innerHTML = schakel +
+      el.innerHTML =
         `<div class="kaartje"><span class="kop2">${inschrijvingen.length} inschrijving(en)</span> — ` +
         `<span style="color:var(--groen)">${heren.length} baroudeur(s)</span> · ` +
         `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span> · ` +
@@ -364,7 +355,16 @@ async function openDossier(bewaardeCode) {
           `<textarea class="mini-in" id="rg-b-${s}" rows="4" placeholder="de regel zelf — in jurytoon">${r ? esc(r.body || '') : ''}</textarea>` +
           `<button class="mini-knop" onclick="bewaarRegel('${r ? r.id : ''}')">bewaar</button></div>`;
       };
-      el.innerHTML = `<div class="kaartje"><span class="kop2">${regels.length} regel(s)</span> — ` +
+      // de schakelaar: staan de punten al op het publieke scorebord?
+      const schakel = `<div class="schakel">
+          <span>🏅 Punten op het publieke scorebord:
+            <b class="${puntenPubliek ? 'status-aan' : 'status-uit'}">${puntenPubliek ? 'ZICHTBAAR' : 'VERBORGEN'}</b><br>
+            <span class="meta">${puntenPubliek
+              ? 'iedereen ziet het klassement met punten en uitsplitsing (geheime regels blijven dichtgeplakt)'
+              : 'het publiek ziet enkel namen — geen punten, geen uitsplitsing; u ziet hier alles gewoon'}</span></span>
+          <button class="mini-knop aanuit" onclick="zetPuntenZichtbaar(${!puntenPubliek})">${puntenPubliek ? '🔒 verberg' : '🔓 geef vrij'}</button>
+        </div>`;
+      el.innerHTML = schakel + `<div class="kaartje"><span class="kop2">${regels.length} regel(s)</span> — ` +
         `<span style="color:var(--groen)">${regels.filter(x => !x.geheim).length} onthuld</span> · ` +
         `<span style="color:var(--amber)">${regels.filter(x => x.geheim).length} verborgen</span><br>` +
         `<span class="meta">🙈 verborgen = het publiek ziet enkel "Regel №X — ████" (de punten tellen wél); 🔓 onthuld = titel en tekst leesbaar op het scorebord.<br>` +

@@ -96,6 +96,7 @@ button:hover{filter:brightness(1.25)}
 const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
 const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
 const KEUZES = { versus: '⚔️ versus', mix: '🤝 mix', supporter: '📣 supporter' };
+let dossierCode = '';
 
 function esc(t) { return (t == null ? '' : String(t)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toestelNaam(ua) {
@@ -154,6 +155,7 @@ async function openDossier(bewaardeCode) {
       body: JSON.stringify({ admin_code: code })
     });
     const inschrijvingen = inschAntw.ok ? await inschAntw.json() : [];
+    dossierCode = code;
     localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
     document.getElementById('resultaten').style.display = 'block';
@@ -175,10 +177,24 @@ async function openDossier(bewaardeCode) {
       const heren = inschrijvingen.filter(i => i.division === 'baroudeur');
       const dames = inschrijvingen.filter(i => i.division === 'baroudelle');
       const ster = n => '★'.repeat(n) + '<span style="opacity:.25">' + '★'.repeat(5 - n) + '</span>';
+      // klikbare jurysterren: het opperjurylid verifieert elke zelfscore vóór de ploegopstelling
+      const jurySterren = i => [1, 2, 3, 4, 5].map(n =>
+        `<span onclick="zetJuryNiveau('${i.id}',${n})" style="cursor:pointer;padding:.1em .04em;` +
+        `opacity:${n <= (i.jury_niveau || i.niveau) ? 1 : .25}${i.jury_niveau ? '' : ';filter:grayscale(1)'}" title="jury zet niveau ${n}">★</span>`).join('');
+      // De Zelfkennis: juist ingeschat = +3, per ster afwijking = −1
+      const zelfkennis = i => {
+        if (!i.jury_niveau) return '<span class="meta">nog te verifiëren — klik de grijze sterren</span>';
+        const afw = Math.abs(i.niveau - i.jury_niveau);
+        return afw === 0
+          ? '<span style="color:var(--groen)">De Zelfkennis: +3</span>'
+          : `<span style="color:var(--rood)">De Zelfkennis: −${afw}</span>`;
+      };
+      const geverifieerd = inschrijvingen.filter(i => i.jury_niveau).length;
       el.innerHTML = `<div class="kaartje"><span class="kop2">${inschrijvingen.length} inschrijving(en)</span> — ` +
         `<span style="color:var(--groen)">${heren.length} baroudeur(s)</span> · ` +
         `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span>` +
-        `${inschrijvingen.length ? `<br><span class="meta">gemiddelde zelfscore ${(inschrijvingen.reduce((s, i) => s + i.niveau, 0) / inschrijvingen.length).toFixed(1)} ★ — bescheidenheid is schaars</span>` : ''}</div>` +
+        `${inschrijvingen.length ? `<br><span class="meta">gemiddelde zelfscore ${(inschrijvingen.reduce((s, i) => s + i.niveau, 0) / inschrijvingen.length).toFixed(1)} ★ — bescheidenheid is schaars</span>` : ''}` +
+        `<br><span class="meta">${geverifieerd}/${inschrijvingen.length} door de jury geverifieerd — De Zelfkennis: juist = +3, per ster ernaast = −1 (verborgen regel №40)</span></div>` +
         inschrijvingen.map(i => {
           let plaats = '';
           if (i.lat != null) plaats = `, op ${afstand(i.lat, i.lon)} van het café`;
@@ -186,9 +202,10 @@ async function openDossier(bewaardeCode) {
           const paars = i.division === 'baroudelle';
           return `<div class="kaartje"><span class="kop2">${esc(i.name)}</span>` +
             `${i.alias ? ` — alias "<span style="color:var(--amber)">${esc(i.alias)}</span>"` : ' <span class="meta">(geen schuilnaam — gebrek aan fantasie wordt genoteerd)</span>'}<br>` +
-            `<span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> · ` +
-            `<span style="color:var(--amber)">${ster(i.niveau)}</span> ` +
-            `<span class="meta">(${tijd(i.created_at)}, ${toestelNaam(i.user_agent)}${plaats})</span>` +
+            `<span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> ` +
+            `<span class="meta">(${tijd(i.created_at)}, ${toestelNaam(i.user_agent)}${plaats})</span><br>` +
+            `zelfscore <span style="color:var(--amber)">${ster(i.niveau)}</span> · ` +
+            `jury <span style="color:var(--amber)">${jurySterren(i)}</span> · ${zelfkennis(i)}` +
             `${i.comment ? `<br><span style="font-style:italic;color:#cfc8b8">"${esc(i.comment)}"</span>` : ''}</div>`;
         }).join('');
     })();
@@ -318,6 +335,18 @@ async function openDossier(bewaardeCode) {
     localStorage.removeItem('hert2026_dossier_code');
     if (!bewaardeCode) document.getElementById('fout').style.display = 'block';
   }
+}
+// het opperjurylid verifieert een zelfscore: origineel blijft bewaard, jury_niveau is het finale oordeel
+async function zetJuryNiveau(id, niveau) {
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_inschrijving_jury_niveau', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: dossierCode, p_id: id, p_niveau: niveau })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('Het juryoordeel is niet aangekomen. Probeer nog eens.'); }
 }
 function vergrendel() { localStorage.removeItem('hert2026_dossier_code'); location.reload(); }
 // het opperjurylid hoeft zijn code maar één keer in te geven per toestel

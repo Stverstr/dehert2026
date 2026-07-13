@@ -538,7 +538,8 @@ async function verstuurKlacht(naam) {
       p_ua: navigator.userAgent.slice(0, 200), p_foto: fotoPad
     });
     document.getElementById('klachtVorm').innerHTML =
-      '<p class="klacht-status" style="color:var(--amber);display:block">📜 Uw klacht is genoteerd en verzegeld.<br>Terecht = +1. Belachelijk = ook iets. De jury beslist.<br>Het vuur staat alvast aan.</p>';
+      '<p class="klacht-status" style="color:var(--amber);display:block">📜 Uw klacht is genoteerd. De +1 is alvast bijgeschreven.<br>Voorlopig — de jury leest alles en herziet in beide richtingen.<br>Het vuur staat aan.</p>';
+    laad();
   } catch (e) {
     knop.disabled = false;
     knop.textContent = 'verstuur naar de jury';

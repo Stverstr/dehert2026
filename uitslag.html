@@ -392,8 +392,8 @@ async function openDossier(bewaardeCode) {
         behandeld: '<span style="color:var(--groen)">✓ behandeld</span>',
         verbrand: '<span style="color:var(--rood)">🔥 verbrand</span>'
       };
-      el.innerHTML = `<div class="kaartje"><span class="kop2">${klachten.length} klacht(en)</span> — ${nieuw} te behandelen<br>` +
-        `<span class="meta">✓ terecht = +1 voor de klager, zichtbaar op het scorebord · 🔥 verbrand = geen punten, klacht geklasseerd · maatwerk = zelf punten bepalen, voor de klager of een ander (bv. het voorwerp van de klacht)</span></div>` +
+      el.innerHTML = `<div class="kaartje"><span class="kop2">${klachten.length} klacht(en)</span> — ${nieuw} te bekijken<br>` +
+        `<span class="meta">elke klacht krijgt bij indiening automatisch +1 (zichtbaar op het scorebord) — ingrijpen hoeft dus niet · ✓ ok zo = +1 blijft staan · 🔥 verbrand = klacht geklasseerd én de +1 vervalt · overschrijf = vervang de +1 door uw eigen oordeel, voor de klager of een ander (bv. het voorwerp van de klacht)</span></div>` +
         klachten.map(k => {
           const opties = inschrijvingen.map(i =>
             `<option value="${i.id}"${i.id === k.inschrijving_id ? ' selected' : ''}>${esc(i.name)}</option>`).join('');
@@ -403,17 +403,20 @@ async function openDossier(bewaardeCode) {
             <span class="meta">${tijd(k.created_at)} · ${toestelNaam(k.user_agent)}</span><br>
             <span style="font-style:italic;color:#cfc8b8">"${esc(k.tekst)}"</span>` +
             (k.foto ? `<br><a href="${SUPA_URL}/storage/v1/object/public/hert-bewijs/${esc(k.foto)}" target="_blank" style="color:var(--amber)">📎 bekijk het bewijsstuk</a>` : '') +
+            `<br><span class="meta">${k.punten != null
+              ? `hangt aan: <span style="color:var(--amber)">${k.punten > 0 ? '+' : ''}${k.punten}</span> voor ${esc(k.punten_wie || k.naam)}`
+              : 'geen punten meer gekoppeld'}</span>` +
             (k.status === 'nieuw' ? `
             <div style="margin-top:.7rem;margin-bottom:.5rem">
-              <button class="mini-knop" onclick="klachtTerecht('${k.id}','${k.inschrijving_id}')">✓ terecht (+1, zichtbaar)</button>
-              <button class="mini-knop" style="background:#5a1e12;border-color:#7a2f1d" onclick="klachtVerbrand('${k.id}')">🔥 verbrand</button>
+              <button class="mini-knop" onclick="klachtOk('${k.id}')">✓ ok zo (+1 blijft)</button>
+              <button class="mini-knop" style="background:#5a1e12;border-color:#7a2f1d" onclick="klachtVerbrand('${k.id}')">🔥 verbrand (+1 vervalt)</button>
             </div>
-            <span class="corr-link" onclick="this.style.display='none';document.getElementById('kl-v-${k.id}').style.display='block'">± maatwerk: zelf punten bepalen (klager of iemand anders)</span>
+            <span class="corr-link" onclick="this.style.display='none';document.getElementById('kl-v-${k.id}').style.display='block'">± overschrijf de +1 met uw eigen oordeel (klager of iemand anders)</span>
             <div class="corr-vorm" id="kl-v-${k.id}" style="white-space:normal">
               <select class="mini-in" id="kl-w-${k.id}">${opties}</select>
               <input class="mini-in" id="kl-p-${k.id}" type="number" placeholder="±pt">
               <input class="mini-in breed" id="kl-r-${k.id}" type="text" maxlength="120" placeholder="reden">
-              <button class="mini-knop" onclick="klachtMaatwerk('${k.id}')">ken toe</button><br>
+              <button class="mini-knop" onclick="klachtOverschrijf('${k.id}')">vervang</button><br>
               <label class="meta" style="cursor:pointer"><input type="checkbox" id="kl-z-${k.id}" style="width:auto;margin:0 .4em 0 0;vertical-align:middle">reden zichtbaar voor de renner op het scorebord</label>
             </div>` : '') +
           `</div>`;
@@ -643,31 +646,28 @@ async function klachtRpc(naam, body) {
   });
   if (!antw.ok) throw new Error();
 }
-async function klachtTerecht(klachtId, inschrijvingId) {
+async function klachtOk(klachtId) {
   try {
-    await klachtRpc('hert_prekoers_geef', { admin_code: dossierCode, p_inschrijving: inschrijvingId, p_punten: 1,
-      p_reden: 'Klacht ontvankelijk verklaard. De jury waardeert de moed.', p_publiek: true });
     await klachtRpc('hert_klacht_behandel', { admin_code: dossierCode, p_id: klachtId, p_status: 'behandeld' });
     openDossier(dossierCode);
-  } catch (e) { alert('De toekenning mislukte. Probeer nog eens.'); }
+  } catch (e) { alert('Het afvinken mislukte. Probeer nog eens.'); }
 }
 async function klachtVerbrand(klachtId) {
   try {
-    await klachtRpc('hert_klacht_behandel', { admin_code: dossierCode, p_id: klachtId, p_status: 'verbrand' });
+    await klachtRpc('hert_klacht_verbrand', { admin_code: dossierCode, p_id: klachtId });
     openDossier(dossierCode);
   } catch (e) { alert('Het vuur wou niet pakken. Probeer nog eens.'); }
 }
-async function klachtMaatwerk(klachtId) {
+async function klachtOverschrijf(klachtId) {
   const wie = document.getElementById('kl-w-' + klachtId).value;
   const punten = parseInt(document.getElementById('kl-p-' + klachtId).value, 10);
   const reden = document.getElementById('kl-r-' + klachtId).value.trim();
   const publiek = document.getElementById('kl-z-' + klachtId).checked;
   if (!punten) return alert('Punten mogen niet 0 zijn. De jury doet niet aan symboliek.');
   try {
-    await klachtRpc('hert_prekoers_geef', { admin_code: dossierCode, p_inschrijving: wie, p_punten: punten, p_reden: reden || null, p_publiek: publiek });
-    await klachtRpc('hert_klacht_behandel', { admin_code: dossierCode, p_id: klachtId, p_status: 'behandeld' });
+    await klachtRpc('hert_klacht_overschrijf', { admin_code: dossierCode, p_klacht: klachtId, p_inschrijving: wie, p_punten: punten, p_reden: reden || null, p_publiek: publiek });
     openDossier(dossierCode);
-  } catch (e) { alert('Het maatwerk mislukte. Probeer nog eens.'); }
+  } catch (e) { alert('Het overschrijven mislukte. Probeer nog eens.'); }
 }
 // regelbeheer: bewaren (nieuw of bestaand), onthullen/verbergen, verwijderen
 async function bewaarRegel(id) {

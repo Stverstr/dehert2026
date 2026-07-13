@@ -506,7 +506,7 @@ function klachtHtml(naam) {
     <a onclick="openKlachtVorm()">📢 Bent u ${esc(naam)}? Dien hier uw klacht in — regel №60.</a>
     <div class="klacht-vorm" id="klachtVorm">
       <textarea id="klachtTekst" rows="3" maxlength="500" placeholder="Formuleer uw grief. Beknopt. De jury heeft weinig geduld en een lange memorie."></textarea>
-      <p class="klacht-status" style="display:block;margin-top:.3rem">Wie klaagt, klaagt in het openbaar: uw klacht en het oordeel verschijnen voor iedereen op deze uitsplitsing.</p>
+      <p class="klacht-status" style="display:block;margin-top:.3rem;color:#b9b1a0">⚠️ Wie klaagt, <b style="color:var(--amber);text-transform:uppercase;letter-spacing:.06em">klaagt in het openbaar</b>: uw klacht en het oordeel verschijnen voor iedereen op deze uitsplitsing.</p>
       <div class="rij">
         <label>📎 bewijsstuk (foto, mag)<input type="file" id="klachtFoto" accept="image/*" style="display:none" onchange="document.getElementById('klachtFotoNaam').textContent = this.files[0] ? '📎 ' + this.files[0].name : ''"> <span id="klachtFotoNaam" style="color:var(--amber)"></span></label>
         <button id="klachtKnop" onclick="verstuurKlacht('${esc(naam)}')">verstuur naar de jury</button>

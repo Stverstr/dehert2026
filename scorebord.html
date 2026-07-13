@@ -139,6 +139,63 @@ table.stand tr:first-child td{border-top:none}
   font-family:'Special Elite',monospace;font-size:.88rem;line-height:1.7;
   color:var(--amber);text-align:center;
 }
+table.stand tr.klik{cursor:pointer}
+table.stand tr.klik:hover td{background:#101822}
+.popup-sluier{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(3,5,8,.8);
+  display:none;align-items:center;justify-content:center;
+  padding:1.2rem;
+}
+.popup-sluier.open{display:flex}
+.popup{
+  position:relative;
+  width:100%;max-width:30rem;
+  max-height:85vh;overflow-y:auto;
+  background:linear-gradient(175deg,#10151b,#0b1015);
+  border:1px solid #223039;
+  box-shadow:0 30px 80px rgba(0,0,0,.85);
+  padding:2rem 1.5rem 1.4rem;
+}
+.popup::before{content:"";position:absolute;inset:8px;border:1px dashed #2c3d47;pointer-events:none}
+.popup .sluit{
+  position:absolute;top:.45rem;right:.6rem;z-index:1;
+  background:none;border:none;cursor:pointer;
+  color:#77828a;font-size:1.3rem;font-family:'Special Elite',monospace;
+}
+.popup h3{
+  font-family:'Special Elite',monospace;font-weight:400;
+  font-size:1.1rem;letter-spacing:.1em;text-transform:uppercase;
+  color:#ece5d3;margin-bottom:.2rem;
+}
+.popup .onder-h3{font-family:'Special Elite',monospace;font-size:.75rem;color:#77828a;margin-bottom:1.2rem}
+.lijn{
+  display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
+  padding:.55em .15em;border-bottom:1px solid #16212a;
+  font-family:'Special Elite',monospace;font-size:.86rem;color:#cfc8b8;
+}
+.lijn .pt{color:var(--amber);white-space:nowrap}
+.lijn .balk{color:#3d4854;letter-spacing:-.08em;user-select:none}
+.lijn.geheim .lbl{color:#9c8a67;font-style:italic}
+.lijn.totaal{border-bottom:none;border-top:1px dashed #2c3d47;color:#ece5d3;margin-top:.2rem}
+.opper-zone{
+  margin-top:1.5rem;text-align:center;
+  font-family:'Special Elite',monospace;font-size:.76rem;color:#5a656d;
+}
+.opper-zone a{color:#77828a;cursor:pointer;text-decoration:underline dotted}
+.opper-zone .badge{color:var(--amber)}
+.opper-vorm{display:none;margin-top:.8rem}
+.opper-vorm input{
+  background:#0a0f14;border:1px solid #24333d;color:#ece5d3;
+  font-family:'Special Elite',monospace;font-size:.85rem;
+  padding:.55em .8em;width:11rem;outline:none;
+}
+.opper-vorm button{
+  background:#1a2530;border:1px solid #2c3d47;color:#cfc8b8;
+  font-family:'Special Elite',monospace;font-size:.8rem;
+  padding:.55em .9em;cursor:pointer;letter-spacing:.08em;
+}
+.opper-vorm .fout-klein{color:#ff8f8f;margin-top:.5rem;display:none}
 footer{
   text-align:center;
   padding:1rem 1.4rem;
@@ -176,6 +233,16 @@ footer a{color:#77828a}
   <div id="regels"><p class="leeg">Het reglement wordt ontcijferd…</p></div>
 </div>
 
+<div class="popup-sluier" id="popupSluier">
+  <div class="popup" role="dialog" aria-modal="true">
+    <button class="sluit" id="popupSluit" aria-label="sluiten">✕</button>
+    <h3 id="popupNaam"></h3>
+    <p class="onder-h3" id="popupSub"></p>
+    <div id="popupLijnen"></div>
+    <div class="opper-zone" id="opperZone"></div>
+  </div>
+</div>
+
 <footer>
   <span class="gewei">🦌</span>
   Nog niet ingeschreven? <a href="inschrijven.html">Herstel dat.</a><br>
@@ -210,11 +277,12 @@ async function laad() {
       el.innerHTML = '<p class="leeg">Nog geen namen, dus nog geen punten.<br>Dat is de veiligste positie die u ooit zult hebben.</p>';
     } else {
       el.innerHTML = `<table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>` +
-        p.map((x, i) => `<tr>
+        p.map((x, i) => `<tr class="klik" data-naam="${esc(x.naam)}" title="klik voor de uitsplitsing">
           <td class="pos">${i + 1}</td>
           <td><span class="stip" style="background:${x.divisie === 'baroudelle' ? 'var(--paars)' : 'var(--groen)'}"></span>${esc(x.naam)}${x.alias ? ` <span class="alias">"${esc(x.alias)}"</span>` : ''}</td>
           <td class="pt">${x.punten > 0 ? '+' : ''}${x.punten}</td></tr>`).join('') + '</table>';
     }
+    detailCache = null; // uitsplitsing vers ophalen na elke verversing van de stand
 
     // regels van kracht
     const MOMENT = { vooraf: 'vooraf bekend', tijdens: 'tijdens de koers', ceremonie: 'slotceremonie' };
@@ -234,6 +302,112 @@ async function laad() {
 laad();
 // het klassement beweegt ook als niemand kijkt — maar vooral als iemand kijkt
 setInterval(laad, 60000);
+
+// ── de uitsplitsing per renner: publiek ziet punten, de oppercode ziet waarom ──
+let detailCache = null;
+let popupNaamOpen = null;
+
+async function haalDetail() {
+  if (detailCache) return detailCache;
+  const code = sessionStorage.getItem('hert2026_oppercode');
+  const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_scorebord_detail', {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_code: code || null })
+  });
+  if (!antw.ok) throw new Error('status ' + antw.status);
+  detailCache = await antw.json();
+  return detailCache;
+}
+
+function lijnLabel(l) {
+  const balk = '<span class="balk">█████████████</span>';
+  if (l.soort === 'correctie') {
+    return l.titel ? `Vermelding van de jury — "${esc(l.titel)}"` : `Vermelding van de jury — ${balk}`;
+  }
+  return l.titel ? `Regel №${l.regel} — ${esc(l.titel)}` : `Regel №${l.regel} — ${balk}`;
+}
+
+async function toonPopup(naam) {
+  popupNaamOpen = naam;
+  const sluier = document.getElementById('popupSluier');
+  sluier.classList.add('open');
+  document.getElementById('popupNaam').textContent = naam;
+  document.getElementById('popupSub').textContent = 'het dossier wordt geopend…';
+  document.getElementById('popupLijnen').innerHTML = '';
+  document.getElementById('opperZone').innerHTML = '';
+  let d;
+  try { d = await haalDetail(); }
+  catch (e) {
+    document.getElementById('popupSub').textContent = 'Het dossier klemt. Probeer straks opnieuw.';
+    return;
+  }
+  if (popupNaamOpen !== naam) return; // intussen andere popup geopend
+  const pers = (d.personen || []).find(x => x.naam === naam);
+  if (!pers) { document.getElementById('popupSub').textContent = 'Geen dossier gevonden.'; return; }
+
+  document.getElementById('popupSub').textContent = d.opper
+    ? 'volledige inzage — u bent de jury'
+    : 'de uitsplitsing, voor zover u ze mag zien';
+
+  const geheimen = pers.lijnen.filter(l => l.geheim && !l.titel).length;
+  document.getElementById('popupLijnen').innerHTML =
+    pers.lijnen.map(l => `<div class="lijn${l.geheim ? ' geheim' : ''}">
+        <span class="lbl">${lijnLabel(l)}</span>
+        <span class="pt">${l.punten > 0 ? '+' : ''}${l.punten}</span>
+      </div>`).join('') +
+    `<div class="lijn totaal"><span class="lbl">Totaal</span><span class="pt">${pers.punten > 0 ? '+' : ''}${pers.punten}</span></div>` +
+    (geheimen ? `<p class="onder-h3" style="margin-top:.9rem;margin-bottom:0">De zwarte balken zijn geen drukfout. Dat zijn regels die u niet kent. Ze kennen u wel.</p>` : '');
+
+  tekenOpperZone();
+}
+
+function tekenOpperZone() {
+  const zone = document.getElementById('opperZone');
+  if (detailCache && detailCache.opper) {
+    zone.innerHTML = '<span class="badge">🔓 opperzicht actief</span>';
+    return;
+  }
+  zone.innerHTML = `<a id="opperLink">Enkel de opperjury leest achter de balken.</a>
+    <div class="opper-vorm" id="opperVorm">
+      <input type="password" id="opperCode" placeholder="code…" autocomplete="off">
+      <button id="opperKnop">open</button>
+      <p class="fout-klein" id="opperFout">De jury kent u niet. Dat is genoteerd.</p>
+    </div>`;
+  document.getElementById('opperLink').addEventListener('click', () => {
+    document.getElementById('opperVorm').style.display = 'block';
+    document.getElementById('opperCode').focus();
+  });
+  const probeer = async () => {
+    const code = document.getElementById('opperCode').value.trim();
+    if (!code) return;
+    sessionStorage.setItem('hert2026_oppercode', code);
+    detailCache = null;
+    const d = await haalDetail().catch(() => null);
+    if (d && d.opper) {
+      toonPopup(popupNaamOpen);
+    } else {
+      sessionStorage.removeItem('hert2026_oppercode');
+      detailCache = null;
+      document.getElementById('opperFout').style.display = 'block';
+      document.getElementById('opperCode').value = '';
+    }
+  };
+  document.getElementById('opperKnop').addEventListener('click', probeer);
+  document.getElementById('opperCode').addEventListener('keydown', e => { if (e.key === 'Enter') probeer(); });
+}
+
+function sluitPopup() {
+  popupNaamOpen = null;
+  document.getElementById('popupSluier').classList.remove('open');
+}
+document.getElementById('klassement').addEventListener('click', e => {
+  const rij = e.target.closest('tr.klik');
+  if (rij) toonPopup(rij.dataset.naam);
+});
+document.getElementById('popupSluit').addEventListener('click', sluitPopup);
+document.getElementById('popupSluier').addEventListener('click', e => { if (e.target === e.currentTarget) sluitPopup(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') sluitPopup(); });
 </script>
 </body>
 </html>

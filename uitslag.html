@@ -393,7 +393,7 @@ async function openDossier(bewaardeCode) {
         verbrand: '<span style="color:var(--rood)">🔥 verbrand</span>'
       };
       el.innerHTML = `<div class="kaartje"><span class="kop2">${klachten.length} klacht(en)</span> — ${nieuw} te bekijken<br>` +
-        `<span class="meta">elke klacht krijgt bij indiening automatisch +1 (zichtbaar op het scorebord) — ingrijpen hoeft dus niet · ✓ ok zo = +1 blijft staan · 🔥 verbrand = klacht geklasseerd én de +1 vervalt · overschrijf = vervang de +1 door uw eigen oordeel, voor de klager of een ander (bv. het voorwerp van de klacht)</span></div>` +
+        `<span class="meta">elke klacht krijgt bij indiening automatisch +1 (zichtbaar op het scorebord) — ingrijpen hoeft dus niet · ✓ ok zo = +1 blijft staan · 🔥 verbrand = klacht geklasseerd én de +1 vervalt · overschrijf op de klager = vervangt de +1 · overschrijf op een ánder = de klager houdt zijn +1 en het doelwit ziet de klacht, de klager en uw oordeel op zijn eigen uitsplitsing</span></div>` +
         klachten.map(k => {
           const opties = inschrijvingen.map(i =>
             `<option value="${i.id}"${i.id === k.inschrijving_id ? ' selected' : ''}>${esc(i.name)}</option>`).join('');
@@ -405,18 +405,19 @@ async function openDossier(bewaardeCode) {
             (k.foto ? `<br><a href="${SUPA_URL}/storage/v1/object/public/hert-bewijs/${esc(k.foto)}" target="_blank" style="color:var(--amber)">📎 bekijk het bewijsstuk</a>` : '') +
             `<br><span class="meta">${k.punten != null
               ? `hangt aan: <span style="color:var(--amber)">${k.punten > 0 ? '+' : ''}${k.punten}</span> voor ${esc(k.punten_wie || k.naam)}`
-              : 'geen punten meer gekoppeld'}</span>` +
+              : 'geen punten meer gekoppeld'}${k.gevolgen ? ` · gevolg voor anderen: <span style="color:var(--amber)">${esc(k.gevolgen)}</span>` : ''}</span>` +
             (k.status === 'nieuw' ? `
             <div style="margin-top:.7rem;margin-bottom:.5rem">
               <button class="mini-knop" onclick="klachtOk('${k.id}')">✓ ok zo (+1 blijft)</button>
               <button class="mini-knop" style="background:#5a1e12;border-color:#7a2f1d" onclick="klachtVerbrand('${k.id}')">🔥 verbrand (+1 vervalt)</button>
-            </div>
-            <span class="corr-link" onclick="this.style.display='none';document.getElementById('kl-v-${k.id}').style.display='block'">± overschrijf de +1 met uw eigen oordeel (klager of iemand anders)</span>
+            </div>` : '') +
+            (k.status !== 'verbrand' ? `
+            <span class="corr-link" onclick="this.style.display='none';document.getElementById('kl-v-${k.id}').style.display='block'">± overschrijf: kies de klager om zijn +1 te vervangen, of een ander om die punten te geven</span>
             <div class="corr-vorm" id="kl-v-${k.id}" style="white-space:normal">
               <select class="mini-in" id="kl-w-${k.id}">${opties}</select>
               <input class="mini-in" id="kl-p-${k.id}" type="number" placeholder="±pt">
               <input class="mini-in breed" id="kl-r-${k.id}" type="text" maxlength="120" placeholder="reden">
-              <button class="mini-knop" onclick="klachtOverschrijf('${k.id}')">vervang</button><br>
+              <button class="mini-knop" onclick="klachtOverschrijf('${k.id}')">ken toe</button><br>
               <label class="meta" style="cursor:pointer"><input type="checkbox" id="kl-z-${k.id}" style="width:auto;margin:0 .4em 0 0;vertical-align:middle">reden zichtbaar voor de renner op het scorebord</label>
             </div>` : '') +
           `</div>`;

@@ -452,6 +452,10 @@ function lijnLabel(l) {
     const antwoord = l.titel ? esc(l.titel) : balk;
     return `Klacht — "${esc(l.tekst || '')}"<br><span style="opacity:.75">↳ de jury: ${antwoord}</span>`;
   }
+  if (l.soort === 'klacht_gevolg') {
+    const antwoord = l.titel ? esc(l.titel) : balk;
+    return `Klacht van ${esc(l.van || 'een renner')} — "${esc(l.tekst || '')}"<br><span style="opacity:.75">↳ de jury: ${antwoord}</span>`;
+  }
   if (l.soort === 'correctie') {
     return l.titel ? `Vermelding van de jury — "${esc(l.titel)}"` : `Vermelding van de jury — ${balk}`;
   }

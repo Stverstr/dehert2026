@@ -32,6 +32,24 @@ button:hover{filter:brightness(1.25)}
 .supporter .balk i{background:var(--amber)}
 .namen{font-size:.78rem;color:var(--grijs);margin-top:.5rem;line-height:1.7}
 .kaartje{border:1px solid #24333d;background:#0d1319;padding:.8rem .95rem;margin-bottom:.7rem;font-size:.85rem;line-height:1.7}
+.insch{border:1px solid #24333d;background:#0d1319;padding:.95rem 1.1rem;margin-bottom:1rem;font-size:.85rem;line-height:1.65}
+.insch .rij-kop{display:flex;justify-content:space-between;align-items:baseline;gap:.8rem}
+.insch .wie{color:#ece5d3;font-size:1.05rem}
+.insch .wie .als{color:var(--amber);font-size:.85rem}
+.insch .tot{color:var(--amber);font-size:1.1rem;white-space:nowrap}
+.insch .meta{color:var(--grijs);font-size:.73rem}
+.insch .sterren{letter-spacing:.1em}
+.puntlijst{margin:.6rem 0 .15rem;border-top:1px dashed #223039}
+.prij{display:flex;justify-content:space-between;gap:1rem;padding:.3em .1em;border-bottom:1px solid #121b23;font-size:.8rem}
+.prij .pl{color:#cfc8b8}
+.prij .pp{color:var(--amber);white-space:nowrap}
+.corr-link{color:var(--grijs);font-size:.75rem;cursor:pointer;text-decoration:underline dotted}
+.corr-link:hover{color:var(--amber)}
+.corr-vorm{display:none;margin-top:.6rem;white-space:nowrap}
+.schakel{display:flex;justify-content:space-between;align-items:center;gap:1rem;border:1px solid #24333d;background:#0d1319;padding:.85rem 1.1rem;margin-bottom:1rem;font-size:.85rem}
+.schakel .aanuit{white-space:nowrap}
+.status-aan{color:var(--groen)}
+.status-uit{color:var(--rood)}
 .kaartje .kop2{color:#ece5d3}
 .kaartje .meta{color:var(--grijs);font-size:.75rem}
 .kaartje.alarm{border-color:#6e3333}
@@ -135,6 +153,7 @@ const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
 const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
 const KEUZES = { versus: '⚔️ versus', mix: '🤝 mix', supporter: '📣 supporter' };
 let dossierCode = '';
+let puntenPubliek = true;
 
 function esc(t) { return (t == null ? '' : String(t)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toestelNaam(ua) {
@@ -206,6 +225,12 @@ async function openDossier(bewaardeCode) {
       body: JSON.stringify({ admin_code: code })
     });
     const toegangscodes = codesAntw.ok ? await codesAntw.json() : null;
+    const bordAntw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_scorebord', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    puntenPubliek = bordAntw.ok ? !!(await bordAntw.json()).punten_publiek : true;
     dossierCode = code;
     localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
@@ -224,47 +249,59 @@ async function openDossier(bewaardeCode) {
     // inschrijvingen + scorebord-beheer
     (() => {
       const el = document.getElementById('inschrijvingen');
-      if (!inschrijvingen.length) { el.innerHTML = '<p class="leeg">Nog niemand ingeschreven. De moed wordt nog gezocht.</p>'; return; }
+      const REGELNAAM = {
+        schoonheid: '№10 De Schoonheidspremie', verstopper: '№20 De Verstoppers',
+        burgerplicht: '№30 De Burgerplicht', zelfkennis: '№40 De Zelfkennis', vroegte: '№50 De Vroege Vogels'
+      };
+      // de schakelaar: staan de punten al op het publieke scorebord?
+      const schakel = `<div class="schakel">
+          <span>🏅 Punten op het publieke scorebord:
+            <b class="${puntenPubliek ? 'status-aan' : 'status-uit'}">${puntenPubliek ? 'ZICHTBAAR' : 'VERBORGEN'}</b><br>
+            <span class="meta">${puntenPubliek
+              ? 'iedereen ziet het klassement met punten en uitsplitsing (geheime regels blijven dichtgeplakt)'
+              : 'het publiek ziet enkel namen — geen punten, geen uitsplitsing; u ziet hier alles gewoon'}</span></span>
+          <button class="mini-knop aanuit" onclick="zetPuntenZichtbaar(${!puntenPubliek})">${puntenPubliek ? '🔒 verberg' : '🔓 geef vrij'}</button>
+        </div>`;
+      if (!inschrijvingen.length) { el.innerHTML = schakel + '<p class="leeg">Nog niemand ingeschreven. De moed wordt nog gezocht.</p>'; return; }
       const heren = inschrijvingen.filter(i => i.division === 'baroudeur');
       const dames = inschrijvingen.filter(i => i.division === 'baroudelle');
       const aangepast = i => i.jury_niveau != null && i.jury_niveau !== i.niveau;
-      el.innerHTML = `<div class="kaartje"><span class="kop2">${inschrijvingen.length} inschrijving(en)</span> — ` +
+      el.innerHTML = schakel +
+        `<div class="kaartje"><span class="kop2">${inschrijvingen.length} inschrijving(en)</span> — ` +
         `<span style="color:var(--groen)">${heren.length} baroudeur(s)</span> · ` +
         `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span> · ` +
-        `${inschrijvingen.filter(aangepast).length} door de jury bijgesteld<br>` +
-        `<span class="meta">sterren = geldend niveau, klik om bij te stellen (kan altijd; ongemoeid = automatisch geverifieerd; <span style="color:var(--rood)">rood</span> = door de jury aangepast)</span><br>` +
-        `<span class="meta">punten lopen automatisch volgens het reglement (№10 schoonheid, №20 verstoppers, №30 burgerplicht, №40 zelfkennis, №50 vroege vogels) — publiek zichtbaar op <a href="scorebord.html" style="color:var(--amber)">het scorebord</a>, zonder redenen</span></div>` +
+        `${inschrijvingen.filter(aangepast).length} bijgesteld<br>` +
+        `<span class="meta">sterren = geldend niveau, klik om bij te stellen — <span style="color:var(--rood)">rood</span> = door de jury aangepast, origineel blijft bewaard</span></div>` +
         inschrijvingen.map(i => {
           const sc = scorePer[i.id] || {};
           const eff = i.jury_niveau != null ? i.jury_niveau : i.niveau;
           const bijgesteld = aangepast(i);
-          // één rij sterren: geldend niveau, klikbaar; kleurt rood zodra de jury afwijkt van de zelfscore
           const sterren = [1, 2, 3, 4, 5].map(n =>
             `<span onclick="zetJuryNiveau('${i.id}',${n})" style="cursor:pointer;padding:.1em .04em;opacity:${n <= eff ? 1 : .25}" title="jury zet niveau ${n}">★</span>`).join('');
-          const opsom = [];
-          if (sc.burgerplicht) opsom.push(`+${sc.burgerplicht} burgerplicht`);
-          if (sc.verstopper) opsom.push(`${sc.verstopper} verstopper`);
-          if (sc.schoonheid) opsom.push(`+${sc.schoonheid} schoonheid`);
-          if (sc.zelfkennis != null) opsom.push(`${sc.zelfkennis > 0 ? '+' : ''}${sc.zelfkennis} zelfkennis`);
-          if (sc.vroegte != null) opsom.push(`${sc.vroegte > 0 ? '+' : ''}${sc.vroegte} vroegte`);
-          (sc.correcties || []).forEach(c => opsom.push(
-            `<span style="color:var(--amber)">${c.punten > 0 ? '+' : ''}${c.punten}${c.reden ? ' „' + esc(c.reden) + '"' : ''}</span> ` +
-            `<span onclick="verwijderCorrectie('${c.id}')" style="cursor:pointer" title="verwijder correctie">🗑</span>`));
+          const lijnen = [];
+          for (const [veld, naam] of Object.entries(REGELNAAM)) {
+            if (sc[veld]) lijnen.push(`<div class="prij"><span class="pl">${naam}</span><span class="pp">${sc[veld] > 0 ? '+' : ''}${sc[veld]}</span></div>`);
+          }
+          (sc.correcties || []).forEach(c => lijnen.push(
+            `<div class="prij"><span class="pl">jurycorrectie${c.reden ? ' — „' + esc(c.reden) + '"' : ''} ` +
+            `<span onclick="verwijderCorrectie('${c.id}')" style="cursor:pointer" title="verwijder deze correctie">🗑</span></span>` +
+            `<span class="pp">${c.punten > 0 ? '+' : ''}${c.punten}</span></div>`));
           let plaats = '';
-          if (i.lat != null) plaats = `, op ${afstand(i.lat, i.lon)} van het café`;
-          else if (i.loc_status === 'geweigerd') plaats = ', 🚩 locatie geweigerd';
+          if (i.lat != null) plaats = ` · op ${afstand(i.lat, i.lon)} van het café`;
+          else if (i.loc_status === 'geweigerd') plaats = ' · 🚩 locatie geweigerd';
           const paars = i.division === 'baroudelle';
-          return `<div class="kaartje"><span class="kop2">${esc(i.name)}</span>` +
-            `${i.alias ? ` — alias "<span style="color:var(--amber)">${esc(i.alias)}</span>"` : ' <span class="meta">(geen schuilnaam — gebrek aan fantasie wordt genoteerd)</span>'}` +
-            `<span style="float:right;color:var(--amber)">${sc.totaal > 0 ? '+' : ''}${sc.totaal != null ? sc.totaal : '?'} pt</span><br>` +
-            `<span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> ` +
-            `<span class="meta">(${tijd(i.created_at)}, ${toestelNaam(i.user_agent)}${plaats})</span><br>` +
-            `niveau <span style="color:${bijgesteld ? 'var(--rood)' : 'var(--amber)'}">${sterren}</span> ` +
-            `<span class="meta">${bijgesteld ? `door de jury bijgesteld (zelfscore was ${i.niveau}★)` : 'zelfscore, automatisch geverifieerd'}</span><br>` +
-            `<span class="meta">${opsom.join(' · ')}</span><br>` +
-            `<span style="white-space:nowrap"><input class="mini-in" id="corr-p-${i.id}" type="number" placeholder="±pt">` +
+          return `<div class="insch">
+            <div class="rij-kop"><span class="wie">${esc(i.name)}${i.alias ? ` <span class="als">"${esc(i.alias)}"</span>` : ''}</span>` +
+            `<span class="tot">${sc.totaal != null ? (sc.totaal > 0 ? '+' : '') + sc.totaal + ' pt' : '?'}</span></div>` +
+            `<span class="meta"><span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> · ${tijd(i.created_at)} · ${toestelNaam(i.user_agent)}${plaats}${i.alias ? '' : ' · geen schuilnaam (gebrek aan fantasie genoteerd)'}</span><br>` +
+            `<span class="sterren" style="color:${bijgesteld ? 'var(--rood)' : 'var(--amber)'}">${sterren}</span> ` +
+            `<span class="meta">${bijgesteld ? `bijgesteld — zelfscore was ${i.niveau}★` : 'zelfscore, automatisch geverifieerd'}</span>` +
+            `<div class="puntlijst">${lijnen.join('')}</div>` +
+            `<span class="corr-link" onclick="this.style.display='none';document.getElementById('corr-v-${i.id}').style.display='block'">± jurycorrectie toevoegen</span>` +
+            `<div class="corr-vorm" id="corr-v-${i.id}">` +
+            `<input class="mini-in" id="corr-p-${i.id}" type="number" placeholder="±pt">` +
             `<input class="mini-in breed" id="corr-r-${i.id}" type="text" maxlength="120" placeholder="reden (blijft geheim)">` +
-            `<button class="mini-knop" onclick="geefCorrectie('${i.id}')">ken toe</button></span>` +
+            `<button class="mini-knop" onclick="geefCorrectie('${i.id}')">ken toe</button></div>` +
             `${i.comment ? `<br><span style="font-style:italic;color:#cfc8b8">"${esc(i.comment)}"</span>` : ''}</div>`;
         }).join('');
     })();
@@ -441,6 +478,18 @@ function kopieerLink(knop, url) {
 function toonTab(naam) {
   document.querySelectorAll('.tabblad').forEach(t => t.classList.toggle('aan', t.id === 'tab-' + naam));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('aan', b.id === 'tabknop-' + naam));
+}
+// schakelaar: punten wel/niet publiek op het scorebord
+async function zetPuntenZichtbaar(zichtbaar) {
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_punten_zichtbaar_zet', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: dossierCode, p_zichtbaar: zichtbaar })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('De schakelaar klemt. Probeer nog eens.'); }
 }
 // manuele correctie op het pre-koers scorebord (reden blijft geheim tot de ceremonie)
 async function geefCorrectie(id) {

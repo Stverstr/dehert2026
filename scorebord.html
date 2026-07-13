@@ -46,7 +46,47 @@ body{
   opacity:.5;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.aanhef{text-align:center;margin-bottom:2.6rem}
+.aanhef{text-align:center;margin-bottom:2.2rem}
+.tabs{
+  display:flex;gap:.5rem;justify-content:center;
+  max-width:44rem;margin:0 auto 1.6rem;
+}
+.tabs button{
+  flex:1 1 auto;max-width:14rem;
+  padding:.75em .6em;
+  background:#0d1319;border:1px solid #24333d;color:#77828a;
+  font-family:'Special Elite',monospace;font-size:.82rem;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:border-color .2s, color .2s;
+}
+.tabs button.aan{border-color:var(--amber-diep);color:var(--amber);background:#141b22}
+.tabblad{display:none}
+.tabblad.aan{display:block}
+.regel.dicht{border:1px dashed #3a2c22;color:#8a7a5c}
+.regel.dicht b{color:#9c8a67}
+.regel .balk,.lijn .balk{color:#3d4854;letter-spacing:-.08em;user-select:none}
+.slot-noot{
+  text-align:center;font-family:'Special Elite',monospace;
+  font-size:.85rem;color:var(--amber);padding:.9rem 0 .1rem;
+}
+.jury-zone{
+  max-width:44rem;margin:0 auto 2rem;text-align:center;
+  font-family:'Special Elite',monospace;font-size:.78rem;color:#5a656d;
+}
+.jury-zone a{color:#77828a;cursor:pointer;text-decoration:underline dotted}
+.jury-zone .badge{color:var(--amber)}
+.jury-vorm{display:none;margin-top:.8rem}
+.jury-vorm input{
+  background:#0a0f14;border:1px solid #24333d;color:#ece5d3;
+  font-family:'Special Elite',monospace;font-size:.85rem;
+  padding:.55em .8em;width:11rem;outline:none;
+}
+.jury-vorm button{
+  background:#1a2530;border:1px solid #2c3d47;color:#cfc8b8;
+  font-family:'Special Elite',monospace;font-size:.8rem;
+  padding:.55em .9em;cursor:pointer;letter-spacing:.08em;
+}
+.jury-vorm .fout-klein{color:#ff8f8f;margin-top:.5rem;display:none}
 .aanhef .fluister{
   font-style:italic;
   letter-spacing:.32em;
@@ -215,23 +255,38 @@ footer a{color:#77828a}
   <h1>Grote Sluitingsprijs <span class="cafe">Café De Hert</span></h1>
 </div>
 
-<div class="communique">
-  <span class="stempel">Voorlopig</span>
-  <h2>🏅 Het Voorlopig Klassement</h2>
-  <p class="intro">
-    Woensdag 30 september wordt er gekoerst. Maar de jury wacht niet:
-    er worden nu al punten uitgedeeld en afgenomen — automatisch,
-    onherroepelijk, en volgens regels die u niet allemaal kent.
-    Vragen over uw score worden genoteerd. Niet beantwoord.
-  </p>
-  <div id="klassement"><p class="leeg">Het klassement wordt opgevraagd…</p></div>
+<div class="tabs">
+  <button id="tabknop-klassement" class="aan" onclick="toonTab('klassement')">🏅 Klassement</button>
+  <button id="tabknop-reglement" onclick="toonTab('reglement')">📜 Reglement</button>
 </div>
 
-<div class="communique">
-  <span class="stempel">Reglement</span>
-  <h2>📜 De regels van kracht</h2>
-  <div id="regels"><p class="leeg">Het reglement wordt ontcijferd…</p></div>
+<div class="tabblad aan" id="tab-klassement">
+  <div class="communique">
+    <span class="stempel">Voorlopig</span>
+    <h2>🏅 Het Voorlopig Klassement</h2>
+    <p class="intro">
+      Woensdag 30 september wordt er gekoerst. Maar de jury wacht niet:
+      er worden nu al punten uitgedeeld en afgenomen — automatisch,
+      onherroepelijk, en volgens regels die u niet allemaal kent.
+      Vragen over uw score worden genoteerd. Niet beantwoord.
+    </p>
+    <div id="klassement"><p class="leeg">Het klassement wordt opgevraagd…</p></div>
+  </div>
 </div>
+
+<div class="tabblad" id="tab-reglement">
+  <div class="communique">
+    <span class="stempel">Reglement</span>
+    <h2>📜 De regels van kracht</h2>
+    <p class="intro">
+      Het volledige reglement, genummerd en compleet. Wat u niet mag lezen,
+      is dichtgeplakt. Het geldt desondanks.
+    </p>
+    <div id="regels"><p class="leeg">Het reglement wordt ontcijferd…</p></div>
+  </div>
+</div>
+
+<div class="jury-zone" id="juryZone"></div>
 
 <div class="popup-sluier" id="popupSluier">
   <div class="popup" role="dialog" aria-modal="true">
@@ -254,47 +309,69 @@ const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
 const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
 function esc(t) { return (t == null ? '' : String(t)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+let detailCache = null, regelsCache = null, isOpper = false, juryFout = false;
+
+function juryCode() { return sessionStorage.getItem('hert2026_oppercode') || null; }
+async function rpc(naam, body) {
+  const antw = await fetch(SUPA_URL + '/rest/v1/rpc/' + naam, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!antw.ok) throw new Error('status ' + antw.status);
+  return antw.json();
+}
+
+function toonTab(naam) {
+  document.querySelectorAll('.tabblad').forEach(t => t.classList.toggle('aan', t.id === 'tab-' + naam));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('aan', b.id === 'tabknop-' + naam));
+}
+
 async function laad() {
   try {
-    const [bordAntw, regelsAntw] = await Promise.all([
-      fetch(SUPA_URL + '/rest/v1/rpc/hert_scorebord', {
-        method: 'POST',
-        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
-        body: '{}'
-      }),
-      // anon ziet enkel de regels die de jury al heeft onthuld
-      fetch(SUPA_URL + '/rest/v1/hert_rules?select=title,body,moment&order=sort', {
-        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-      })
+    const [detail, regels] = await Promise.all([
+      rpc('hert_scorebord_detail', { p_code: juryCode() }),
+      rpc('hert_regels', { p_code: juryCode() })
     ]);
-    const bord = await bordAntw.json();
-    const regels = regelsAntw.ok ? await regelsAntw.json() : [];
+    detailCache = detail;
+    regelsCache = regels;
+    isOpper = !!detail.opper;
 
     // klassement
     const el = document.getElementById('klassement');
-    const p = bord.personen || [];
+    const p = detail.personen || [];
+    const zicht = !!detail.punten_zichtbaar;
     if (!p.length) {
       el.innerHTML = '<p class="leeg">Nog geen namen, dus nog geen punten.<br>Dat is de veiligste positie die u ooit zult hebben.</p>';
     } else {
       el.innerHTML = `<table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>` +
         p.map((x, i) => `<tr class="klik" data-naam="${esc(x.naam)}" title="klik voor de uitsplitsing">
-          <td class="pos">${i + 1}</td>
+          <td class="pos">${zicht ? i + 1 : '·'}</td>
           <td><span class="stip" style="background:${x.divisie === 'baroudelle' ? 'var(--paars)' : 'var(--groen)'}"></span>${esc(x.naam)}${x.alias ? ` <span class="alias">"${esc(x.alias)}"</span>` : ''}</td>
-          <td class="pt">${x.punten > 0 ? '+' : ''}${x.punten}</td></tr>`).join('') + '</table>';
+          <td class="pt">${x.punten == null ? '<span title="nog niet vrijgegeven">🔒</span>' : (x.punten > 0 ? '+' : '') + x.punten}</td></tr>`).join('') + '</table>' +
+        (!detail.punten_publiek
+          ? `<p class="slot-noot">${isOpper
+              ? '🔓 De punten staan op VERBORGEN — het publiek ziet enkel namen. U ziet alles.'
+              : '🔒 De punten bestaan al. U krijgt ze te zien wanneer de jury dat gepast acht.'}</p>`
+          : '');
     }
-    detailCache = null; // uitsplitsing vers ophalen na elke verversing van de stand
 
-    // regels van kracht
+    // reglement: alle regels, genummerd; dichtgeplakt wat niet onthuld is
     const MOMENT = { vooraf: 'vooraf bekend', tijdens: 'tijdens de koers', ceremonie: 'slotceremonie' };
     const rEl = document.getElementById('regels');
-    let html = regels.map(g => `<div class="regel"><span class="moment">${MOMENT[g.moment] || ''}</span><b>${esc(g.title)}</b><br>${esc(g.body || '')}</div>`).join('');
-    const verborgen = bord.verborgen_regels || 0;
-    if (verborgen) {
-      html += `<div class="verborgen">⚠️ Daarnaast zijn er nog <b>${verborgen}</b> regel${verborgen > 1 ? 's' : ''} van kracht die u niet ziet.<br>Ze werken. Nu ook. Aan uw score te zien: sommige in uw nadeel.</div>`;
-    } else if (!regels.length) {
+    let html = regels.map(g => g.titel
+      ? `<div class="regel"><span class="moment">${g.geheim ? '🔒 nog niet onthuld — enkel u leest dit' : (MOMENT[g.moment] || '')}</span><b>Regel №${g.nr} — ${esc(g.titel)}</b><br>${esc(g.body || '')}</div>`
+      : `<div class="regel dicht"><span class="moment">geclassificeerd</span><b>Regel №${g.nr} — <span class="balk">████████████</span></b><br><span class="balk">██████████████████████████████████████████</span></div>`
+    ).join('');
+    const dicht = regels.filter(g => g.geheim).length;
+    if (!regels.length) {
       html = '<p class="leeg">De jury heeft nog niets bekendgemaakt. Dat betekent niet dat er geen regels zijn.</p>';
+    } else if (dicht && !isOpper) {
+      html += `<div class="verborgen">⚠️ De ${dicht > 1 ? dicht + ' dichtgeplakte regels werken' : 'dichtgeplakte regel werkt'}. Nu ook.<br>Aan uw score te zien: sommige in uw nadeel.</div>`;
     }
     rEl.innerHTML = html;
+
+    tekenJuryZone();
   } catch (e) {
     document.getElementById('klassement').innerHTML = '<p class="leeg">Het klassement laat op zich wachten. Net als de koers.</p>';
   }
@@ -303,23 +380,50 @@ laad();
 // het klassement beweegt ook als niemand kijkt — maar vooral als iemand kijkt
 setInterval(laad, 60000);
 
-// ── de uitsplitsing per renner: publiek ziet punten, de oppercode ziet waarom ──
-let detailCache = null;
-let popupNaamOpen = null;
-
-async function haalDetail() {
-  if (detailCache) return detailCache;
-  const code = sessionStorage.getItem('hert2026_oppercode');
-  const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_scorebord_detail', {
-    method: 'POST',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ p_code: code || null })
+// ── algemene jury-login: één keer aanmelden, alles ontgrendeld ──
+function tekenJuryZone() {
+  const zone = document.getElementById('juryZone');
+  if (isOpper) {
+    zone.innerHTML = '<span class="badge">🔓 opperzicht actief — u leest alles</span> · <a id="juryWeg">afmelden</a>';
+    document.getElementById('juryWeg').addEventListener('click', () => {
+      sessionStorage.removeItem('hert2026_oppercode');
+      laad();
+    });
+    return;
+  }
+  zone.innerHTML = `<a id="juryLink">Dit document is volledig leesbaar. Voor wie het mag lezen.</a>
+    <div class="jury-vorm" id="juryVorm"${juryFout ? ' style="display:block"' : ''}>
+      <input type="password" id="juryCodeIn" placeholder="code…" autocomplete="off">
+      <button id="juryKnop">open het dossier</button>
+      <p class="fout-klein" id="juryFoutEl"${juryFout ? ' style="display:block"' : ''}>De jury kent u niet. Dat is genoteerd.</p>
+    </div>`;
+  juryFout = false;
+  document.getElementById('juryLink').addEventListener('click', () => {
+    document.getElementById('juryVorm').style.display = 'block';
+    document.getElementById('juryCodeIn').focus();
   });
-  if (!antw.ok) throw new Error('status ' + antw.status);
-  detailCache = await antw.json();
-  return detailCache;
+  const probeer = async () => {
+    const code = document.getElementById('juryCodeIn').value.trim();
+    if (!code) return;
+    sessionStorage.setItem('hert2026_oppercode', code);
+    await laad();
+    if (!isOpper) {
+      sessionStorage.removeItem('hert2026_oppercode');
+      juryFout = true;
+      tekenJuryZone();
+    }
+  };
+  document.getElementById('juryKnop').addEventListener('click', probeer);
+  document.getElementById('juryCodeIn').addEventListener('keydown', e => { if (e.key === 'Enter') probeer(); });
+}
+function openJuryVorm() {
+  sluitPopup();
+  document.getElementById('juryZone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const vorm = document.getElementById('juryVorm');
+  if (vorm) { vorm.style.display = 'block'; document.getElementById('juryCodeIn').focus(); }
 }
 
+// ── de uitsplitsing per renner (uit de cache van laad) ──
 function lijnLabel(l) {
   const balk = '<span class="balk">█████████████</span>';
   if (l.soort === 'correctie') {
@@ -328,28 +432,28 @@ function lijnLabel(l) {
   return l.titel ? `Regel №${l.regel} — ${esc(l.titel)}` : `Regel №${l.regel} — ${balk}`;
 }
 
-async function toonPopup(naam) {
-  popupNaamOpen = naam;
-  const sluier = document.getElementById('popupSluier');
-  sluier.classList.add('open');
+function toonPopup(naam) {
+  if (!detailCache) return;
+  const pers = (detailCache.personen || []).find(x => x.naam === naam);
+  if (!pers) return;
+  document.getElementById('popupSluier').classList.add('open');
   document.getElementById('popupNaam').textContent = naam;
-  document.getElementById('popupSub').textContent = 'het dossier wordt geopend…';
-  document.getElementById('popupLijnen').innerHTML = '';
-  document.getElementById('opperZone').innerHTML = '';
-  let d;
-  try { d = await haalDetail(); }
-  catch (e) {
-    document.getElementById('popupSub').textContent = 'Het dossier klemt. Probeer straks opnieuw.';
+
+  const zone = document.getElementById('opperZone');
+  zone.innerHTML = isOpper
+    ? '<span class="badge">🔓 opperzicht actief</span>'
+    : '<a onclick="openJuryVorm()">Enkel de opperjury leest achter de balken.</a>';
+
+  if (pers.punten == null) {
+    document.getElementById('popupSub').textContent = 'dossier aangelegd — inzage volgt';
+    document.getElementById('popupLijnen').innerHTML =
+      '<p class="onder-h3" style="margin-bottom:0">De punten bestaan al. De uitsplitsing ook.<br>U krijgt beide te zien wanneer de jury dat gepast acht.</p>';
     return;
   }
-  if (popupNaamOpen !== naam) return; // intussen andere popup geopend
-  const pers = (d.personen || []).find(x => x.naam === naam);
-  if (!pers) { document.getElementById('popupSub').textContent = 'Geen dossier gevonden.'; return; }
 
-  document.getElementById('popupSub').textContent = d.opper
+  document.getElementById('popupSub').textContent = isOpper
     ? 'volledige inzage — u bent de jury'
     : 'de uitsplitsing, voor zover u ze mag zien';
-
   const geheimen = pers.lijnen.filter(l => l.geheim && !l.titel).length;
   document.getElementById('popupLijnen').innerHTML =
     pers.lijnen.map(l => `<div class="lijn${l.geheim ? ' geheim' : ''}">
@@ -358,47 +462,9 @@ async function toonPopup(naam) {
       </div>`).join('') +
     `<div class="lijn totaal"><span class="lbl">Totaal</span><span class="pt">${pers.punten > 0 ? '+' : ''}${pers.punten}</span></div>` +
     (geheimen ? `<p class="onder-h3" style="margin-top:.9rem;margin-bottom:0">De zwarte balken zijn geen drukfout. Dat zijn regels die u niet kent. Ze kennen u wel.</p>` : '');
-
-  tekenOpperZone();
-}
-
-function tekenOpperZone() {
-  const zone = document.getElementById('opperZone');
-  if (detailCache && detailCache.opper) {
-    zone.innerHTML = '<span class="badge">🔓 opperzicht actief</span>';
-    return;
-  }
-  zone.innerHTML = `<a id="opperLink">Enkel de opperjury leest achter de balken.</a>
-    <div class="opper-vorm" id="opperVorm">
-      <input type="password" id="opperCode" placeholder="code…" autocomplete="off">
-      <button id="opperKnop">open</button>
-      <p class="fout-klein" id="opperFout">De jury kent u niet. Dat is genoteerd.</p>
-    </div>`;
-  document.getElementById('opperLink').addEventListener('click', () => {
-    document.getElementById('opperVorm').style.display = 'block';
-    document.getElementById('opperCode').focus();
-  });
-  const probeer = async () => {
-    const code = document.getElementById('opperCode').value.trim();
-    if (!code) return;
-    sessionStorage.setItem('hert2026_oppercode', code);
-    detailCache = null;
-    const d = await haalDetail().catch(() => null);
-    if (d && d.opper) {
-      toonPopup(popupNaamOpen);
-    } else {
-      sessionStorage.removeItem('hert2026_oppercode');
-      detailCache = null;
-      document.getElementById('opperFout').style.display = 'block';
-      document.getElementById('opperCode').value = '';
-    }
-  };
-  document.getElementById('opperKnop').addEventListener('click', probeer);
-  document.getElementById('opperCode').addEventListener('keydown', e => { if (e.key === 'Enter') probeer(); });
 }
 
 function sluitPopup() {
-  popupNaamOpen = null;
   document.getElementById('popupSluier').classList.remove('open');
 }
 document.getElementById('klassement').addEventListener('click', e => {

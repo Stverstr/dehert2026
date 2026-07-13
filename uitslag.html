@@ -233,7 +233,7 @@ async function openDossier(bewaardeCode) {
         `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span> · ` +
         `${inschrijvingen.filter(aangepast).length} door de jury bijgesteld<br>` +
         `<span class="meta">sterren = geldend niveau, klik om bij te stellen (kan altijd; ongemoeid = automatisch geverifieerd; <span style="color:var(--rood)">rood</span> = door de jury aangepast)</span><br>` +
-        `<span class="meta">punten lopen automatisch volgens het reglement (№10 schoonheid, №20 verstoppers, №30 burgerplicht, №40 zelfkennis) — publiek zichtbaar op <a href="scorebord.html" style="color:var(--amber)">het scorebord</a>, zonder redenen</span></div>` +
+        `<span class="meta">punten lopen automatisch volgens het reglement (№10 schoonheid, №20 verstoppers, №30 burgerplicht, №40 zelfkennis, №50 vroege vogels) — publiek zichtbaar op <a href="scorebord.html" style="color:var(--amber)">het scorebord</a>, zonder redenen</span></div>` +
         inschrijvingen.map(i => {
           const sc = scorePer[i.id] || {};
           const eff = i.jury_niveau != null ? i.jury_niveau : i.niveau;
@@ -246,6 +246,7 @@ async function openDossier(bewaardeCode) {
           if (sc.verstopper) opsom.push(`${sc.verstopper} verstopper`);
           if (sc.schoonheid) opsom.push(`+${sc.schoonheid} schoonheid`);
           if (sc.zelfkennis != null) opsom.push(`${sc.zelfkennis > 0 ? '+' : ''}${sc.zelfkennis} zelfkennis`);
+          if (sc.vroegte != null) opsom.push(`${sc.vroegte > 0 ? '+' : ''}${sc.vroegte} vroegte`);
           (sc.correcties || []).forEach(c => opsom.push(
             `<span style="color:var(--amber)">${c.punten > 0 ? '+' : ''}${c.punten}${c.reden ? ' „' + esc(c.reden) + '"' : ''}</span> ` +
             `<span onclick="verwijderCorrectie('${c.id}')" style="cursor:pointer" title="verwijder correctie">🗑</span>`));

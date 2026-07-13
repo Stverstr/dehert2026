@@ -203,16 +203,15 @@ async function openDossier(bewaardeCode) {
       (perNaam[n] = perNaam[n] || []).push(v);
     });
     let verdacht = '';
-    // juryvaststelling: het raadsel "rikke rikke tik" is ontmaskerd — zelfde persoon als Lennert Verstraete
-    const raadsel = stemmen.find(v => /rikke rikke tik/i.test(v.name));
-    const lennert = stemmen.find(v => /lennert\s+verstraete/i.test(v.name));
-    if (raadsel && lennert) {
-      verdacht += `<div class="kaartje alarm"><span class="kop2">⚖️ Juryvaststelling: raadsel opgelost — dubbelstemmer ontmaskerd</span><br>` +
-        `<b>"${esc(raadsel.name)}"</b> <span class="meta">(${tijd(raadsel.created_at)}, ${toestelNaam(raadsel.user_agent)}, locatie geweigerd)</span><br>` +
-        `en <b>${esc(lennert.name)}</b> <span class="meta">(${tijd(lennert.created_at)}, ${toestelNaam(lennert.user_agent)})</span> zijn één en dezelfde persoon.<br>` +
-        `Eerst anoniem ${KEUZES[raadsel.choice]}, twee dagen later doodleuk onder eigen naam ${KEUZES[lennert.choice]}. ` +
-        `Twee stemmen, één man, nul schaamte.<br>` +
-        `<span class="meta">vastgesteld door het opperjurylid — tegen deze identificatie is geen beroep mogelijk</span></div>`;
+    // juryvaststelling: "rikke rikke tik", "kan je mij nu ontmaskeren?" en Lennert Verstraete zijn dezelfde persoon
+    const lennertStemmen = stemmen.filter(v => /rikke rikke tik|lennert\s+verstraete|kan je mij nu ontmaskeren/i.test(v.name));
+    if (lennertStemmen.length > 1) {
+      const telwoord = ['','één','twee','drie','vier','vijf'][lennertStemmen.length] || lennertStemmen.length;
+      verdacht += `<div class="kaartje alarm"><span class="kop2">⚖️ Juryvaststelling: dubbelstemmer ontmaskerd — Lennert Verstraete stemde ${lennertStemmen.length}×</span><br>` +
+        lennertStemmen.map(v => `als <b>"${esc(v.name)}"</b> → ${KEUZES[v.choice]} <span class="meta">(${tijd(v.created_at)}, ${toestelNaam(v.user_agent)}${v.loc_status === 'geweigerd' ? ', locatie geweigerd' : ''})</span>`).join('<br>') +
+        `<br>Telkens een ander toestel, telkens geen locatie. De jury laat zich niet vangen: ${telwoord} stemmen, één man, nul schaamte.<br>` +
+        `Op de vraag "Kan je mij nu ontmaskeren?" antwoordt de jury: <b>ja. Alweer. Doe zo voort, het dossier vult zichzelf.</b><br>` +
+        `<span class="meta">vastgesteld door het opperjurylid — tegen deze identificatie is geen beroep mogelijk · slechts één stem telt mee</span></div>`;
     }
     let toestelNr = 0;
     for (const [dev, votes] of Object.entries(perToestel)) {

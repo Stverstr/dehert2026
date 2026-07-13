@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>De Vaart fluistert — MMXXVI</title>
-<meta property="og:title" content="⚠️ Aanmaning van de jury">
-<meta property="og:description" content="Velen keken. Weinigen stemden. Scroll & stem — wie niet stemt, verliest punten.">
+<meta property="og:title" content="📜 Communiqué №2 — de datum is bekend">
+<meta property="og:description" content="Woensdag 30 september 2026. De inschrijvingen zijn geopend: naam, schuilnaam, sterren. De jury wacht.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://stverstr.github.io/dehert2026/">
 <meta property="og:image" content="https://stverstr.github.io/dehert2026/og-aanmaning.jpeg">
@@ -394,6 +394,35 @@ body{
 }
 .dank p b{color:var(--amber)}
 
+/* ============ DATUM-ONTHULLING & INSCHRIJVING ============ */
+.datum{text-align:center;margin:2.4rem 0 2.6rem}
+.datum .dag{
+  font-family:'Special Elite',monospace;
+  font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--mist);
+}
+.datum .groot{
+  font-family:'Abril Fatface',serif;
+  font-size:clamp(1.9rem,6.6vw,3.1rem);
+  line-height:1.15;
+  color:#e9e2d0;
+  text-shadow:0 0 40px rgba(255,179,71,.35), 0 4px 30px rgba(0,0,0,.9);
+  margin:.15em 0;
+}
+.datum .groot b{color:var(--amber);font-weight:400;text-shadow:0 0 26px rgba(255,179,71,.55)}
+.sterren-keuze{
+  display:flex;align-items:center;gap:.15rem;
+  font-size:2rem;color:var(--amber);user-select:none;
+}
+.sterren-keuze span{cursor:pointer;opacity:.22;transition:opacity .15s, transform .15s;padding:0 .05em}
+.sterren-keuze span.aan{opacity:1;text-shadow:0 0 14px rgba(255,179,71,.5)}
+.sterren-keuze span:hover{transform:scale(1.18)}
+.ster-uitleg{
+  font-family:'Special Elite',monospace;
+  font-size:.78rem;color:#77828a;margin-top:.45em;
+}
+.ster-uitleg b{color:#cfc8b8;font-weight:400}
+
 /* ============ VOET ============ */
 footer{
   text-align:center;
@@ -661,7 +690,7 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       <span class="cafe">Café De Hert</span>
     </h1>
     <p class="jaartal">MMXXVI</p>
-    <p class="onheil">Ergens begin herfst. Twee bruggen. Een vaart. Eén café.<br>
+    <p class="onheil">Woensdag 30 september. Twee bruggen. Een vaart. Eén café.<br>
     <strong>Baroudeurs.</strong> <em>Baroudellen.</em> En een jury die alles ziet.</p>
   </div>
 
@@ -676,6 +705,80 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
   <p class="regel">Jaron, Bart, Rik, Lodewijk en Willem kwamen vorig jaar<br>met het gewei naar huis.<br><small>de jury vraagt zich af of dat voor herhaling vatbaar is</small></p>
   <p class="regel">De jury is al aan het noteren.<br><small>ook nu. vooral nu.</small></p>
   <p class="regel beprepared">Be prepared.</p>
+</section>
+
+<!-- ================= COMMUNIQUÉ №2 — DE DATUM & DE INSCHRIJVINGEN ================= -->
+<section style="padding:0 1.2rem">
+  <div class="communique" id="inschrijving" style="margin-bottom:4rem">
+    <span class="stempel">Officieel</span>
+    <h2>Communiqué №2 — de datum is bekend</h2>
+    <p class="intro">
+      De jury heeft beraadslaagd, de maanstand geraadpleegd en de agenda van
+      het café ontcijferd. Het is beslist, bezegeld en onherroepelijk:
+    </p>
+
+    <div class="datum">
+      <p class="dag">woensdag</p>
+      <p class="groot">30 september <b>MMXXVI</b></p>
+      <p class="dag" style="margin-top:.5em">twee bruggen · een vaart · één café</p>
+    </div>
+
+    <p class="intro">
+      Wie meent erbij te horen, schrijft zich in. Hieronder. Nu.
+      De jury stelt nadien de ploegen samen — eerlijk, evenwichtig
+      en volstrekt ondoorgrondelijk.
+    </p>
+
+    <form id="inschrijfForm">
+      <div class="veld">
+        <label for="in-naam">Uw naam <span style="text-transform:none">(uw echte — de jury verifieert)</span></label>
+        <input id="in-naam" type="text" maxlength="60" autocomplete="name" placeholder="…">
+      </div>
+      <div class="veld">
+        <label for="in-alias">Uw schuilnaam <span style="text-transform:none">(voor in de verslagen — kies ze beter dan Lennert)</span></label>
+        <input id="in-alias" type="text" maxlength="60" placeholder="…">
+      </div>
+
+      <div class="opties">
+        <label class="optie">
+          <input type="radio" name="division" value="baroudeur">
+          <span class="vak"></span>
+          <span><b>🚴 &nbsp;Baroudeur</b>
+          <small>rijdt bij de heren</small></span>
+        </label>
+        <label class="optie paarse">
+          <input type="radio" name="division" value="baroudelle">
+          <span class="vak"></span>
+          <span><b>🚴‍♀️ &nbsp;Baroudelle</b>
+          <small>rijdt bij de dames</small></span>
+        </label>
+      </div>
+
+      <div class="veld">
+        <label>Uw niveau <span style="text-transform:none">(scoor uzelf — de koers corrigeert, de jury noteert)</span></label>
+        <div class="sterren-keuze" id="sterrenKeuze" aria-label="niveau van 1 tot 5 sterren"></div>
+        <p class="ster-uitleg" id="sterUitleg"></p>
+      </div>
+
+      <div class="veld">
+        <label for="in-commentaar">Toevoeging aan het dossier <span style="text-transform:none">(optioneel, kan tegen u gebruikt worden)</span></label>
+        <textarea id="in-commentaar" rows="2" maxlength="300" placeholder="…"></textarea>
+      </div>
+
+      <button type="submit" class="verzend" id="inschrijfKnop">Schrijf mij in</button>
+      <p class="intro" style="margin-top:1rem;margin-bottom:0;font-size:.78rem">
+        Ook hier kan uw browser om uw locatie vragen. U kent de regels intussen:
+        weigeren mag, weigeren wordt genoteerd.
+      </p>
+      <p class="fout" id="inschrijfFout"></p>
+    </form>
+
+    <div class="dank" id="inschrijfDank">
+      <span class="zegel">📜</span>
+      <p id="inschrijfDankTekst"></p>
+      <p style="margin-top:1.2rem"><em>Tot woensdag 30 september.</em></p>
+    </div>
+  </div>
 </section>
 
 <!-- ================= COMMUNIQUÉ №1 ================= -->
@@ -734,7 +837,7 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       Uw verklaring is toegevoegd aan <b>het dossier</b>.<br>
       De resultaten worden niet bekendgemaakt.</p>
       <p id="dank-locatie" style="margin-top:1.2rem;color:#ffd9a0"></p>
-      <p style="margin-top:1.2rem"><em>Tot ergens begin herfst.</em></p>
+      <p style="margin-top:1.2rem"><em>Tot woensdag 30 september.</em></p>
     </div>
   </div>
 </section>
@@ -819,8 +922,8 @@ if (matchMedia('(pointer: fine)').matches) {
   }, 700);
 }
 
-// poll
-const opties = document.querySelectorAll('.optie');
+// poll (selector begrensd tot het pollformulier — het inschrijfformulier heeft eigen opties)
+const opties = document.querySelectorAll('#pollForm .optie');
 opties.forEach(o => o.addEventListener('click', () => {
   opties.forEach(x => x.classList.remove('gekozen'));
   o.classList.add('gekozen');
@@ -836,6 +939,32 @@ function meld(type) {
       body: JSON.stringify({ type, device_id: localStorage.getItem('hert2026_device') })
     }).catch(() => {});
   } catch (e) {}
+}
+
+// locatie: met toestemming — maar de inzending mag hier NOOIT op blijven hangen.
+// (wie de popup negeert, krijgt geen callback — vandaar de harde race van 6 s)
+function vraagLocatie() {
+  return Promise.race([
+    new Promise(klaar => {
+      if (!navigator.geolocation) return klaar({ loc_status: 'niet beschikbaar' });
+      navigator.geolocation.getCurrentPosition(
+        pos => klaar({ lat: pos.coords.latitude, lon: pos.coords.longitude,
+                       loc_accuracy: Math.round(pos.coords.accuracy), loc_status: 'toegestaan' }),
+        fout => klaar({ loc_status: fout && fout.code === 1 ? 'geweigerd' : 'niet beschikbaar' }),
+        { timeout: 5000, maximumAge: 300000 }
+      );
+    }),
+    new Promise(klaar => setTimeout(() => klaar({ loc_status: 'geen antwoord op de vraag' }), 6000))
+  ]);
+}
+// anoniem toestel-ID: de jury ziet graag wie er "creatief" inzendt
+function haalToestel() {
+  let toestel = localStorage.getItem('hert2026_device');
+  if (!toestel) {
+    toestel = (crypto.randomUUID ? crypto.randomUUID() : 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    localStorage.setItem('hert2026_device', toestel);
+  }
+  return toestel;
 }
 
 const form = document.getElementById('pollForm');
@@ -854,27 +983,9 @@ form.addEventListener('submit', async e => {
   if (!naam) return toonFout('Naamloos stemmen? De jury lacht. Vul uw naam in.');
   knop.disabled = true;
   knop.textContent = 'Wordt genoteerd…';
-  // locatie: met toestemming — maar de stem mag hier NOOIT op blijven hangen.
-  // (wie de popup negeert, krijgt geen callback — vandaar de harde race van 6 s)
   meld('poging');
-  const locatie = await Promise.race([
-    new Promise(klaar => {
-      if (!navigator.geolocation) return klaar({ loc_status: 'niet beschikbaar' });
-      navigator.geolocation.getCurrentPosition(
-        pos => klaar({ lat: pos.coords.latitude, lon: pos.coords.longitude,
-                       loc_accuracy: Math.round(pos.coords.accuracy), loc_status: 'toegestaan' }),
-        fout => klaar({ loc_status: fout && fout.code === 1 ? 'geweigerd' : 'niet beschikbaar' }),
-        { timeout: 5000, maximumAge: 300000 }
-      );
-    }),
-    new Promise(klaar => setTimeout(() => klaar({ loc_status: 'geen antwoord op de vraag' }), 6000))
-  ]);
-  // anoniem toestel-ID: de jury ziet graag wie er "creatief" stemt
-  let toestel = localStorage.getItem('hert2026_device');
-  if (!toestel) {
-    toestel = (crypto.randomUUID ? crypto.randomUUID() : 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-    localStorage.setItem('hert2026_device', toestel);
-  }
+  const locatie = await vraagLocatie();
+  const toestel = haalToestel();
   try {
     const antw = await fetch(SUPA_URL + '/rest/v1/hert_poll_votes', {
       method: 'POST',
@@ -929,6 +1040,95 @@ function toonDank() {
   const boodschap = localStorage.getItem('hert2026_dankboodschap');
   if (boodschap) document.getElementById('dank-locatie').textContent = '📍 ' + boodschap;
 }
+
+// ============ inschrijvingen — communiqué №2 ============
+const NIVEAU_UITLEG = {
+  1: '★ — recreant. Eerlijk. De jury waardeert eerlijkheid.',
+  2: '★★ — meer terras dan training.',
+  3: '★★★ — degelijk wielervolk. De veilige keuze. Genoteerd.',
+  4: '★★★★ — gevaarlijk in vorm. Grote woorden.',
+  5: '★★★★★ — ijzersterk. Dat gaan we onthouden. En citeren.'
+};
+let gekozenNiveau = 3;
+const sterrenKeuze = document.getElementById('sterrenKeuze');
+const sterUitleg = document.getElementById('sterUitleg');
+function tekenSterren() {
+  sterrenKeuze.innerHTML = [1, 2, 3, 4, 5].map(n =>
+    `<span class="${n <= gekozenNiveau ? 'aan' : ''}" data-n="${n}" title="niveau ${n}">★</span>`).join('');
+  sterUitleg.innerHTML = `<b>${NIVEAU_UITLEG[gekozenNiveau]}</b>`;
+}
+sterrenKeuze.addEventListener('click', e => {
+  const n = Number(e.target.dataset.n);
+  if (n) { gekozenNiveau = n; tekenSterren(); }
+});
+tekenSterren();
+
+const inschrijfOpties = document.querySelectorAll('#inschrijfForm .optie');
+inschrijfOpties.forEach(o => o.addEventListener('click', () => {
+  inschrijfOpties.forEach(x => x.classList.remove('gekozen'));
+  o.classList.add('gekozen');
+  o.querySelector('input').checked = true;
+}));
+
+const inschrijfForm = document.getElementById('inschrijfForm');
+const inschrijfFout = document.getElementById('inschrijfFout');
+const inschrijfKnop = document.getElementById('inschrijfKnop');
+
+function toonInschrijfFout(t) { inschrijfFout.textContent = t; inschrijfFout.style.display = 'block'; }
+function toonInschrijfDank() {
+  inschrijfForm.style.display = 'none';
+  document.getElementById('inschrijfDank').style.display = 'block';
+  document.getElementById('inschrijfDankTekst').innerHTML =
+    localStorage.getItem('hert2026_inschrijfdank') ||
+    'De jury neemt akte.<br>Uw inschrijving is toegevoegd aan <b>het dossier</b>.';
+}
+if (localStorage.getItem('hert2026_ingeschreven')) toonInschrijfDank();
+
+inschrijfForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  inschrijfFout.style.display = 'none';
+  const naam = document.getElementById('in-naam').value.trim();
+  const alias = document.getElementById('in-alias').value.trim();
+  const divisie = inschrijfForm.querySelector('input[name="division"]:checked');
+  const commentaar = document.getElementById('in-commentaar').value.trim();
+  if (!naam) return toonInschrijfFout('Zonder naam geen rugnummer. Vul uw naam in.');
+  if (!divisie) return toonInschrijfFout('Baroudeur of Baroudelle — de jury eist duidelijkheid.');
+  inschrijfKnop.disabled = true;
+  inschrijfKnop.textContent = 'Wordt bezegeld…';
+  meld('inschrijf_poging');
+  const locatie = await vraagLocatie();
+  const toestel = haalToestel();
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/hert_inschrijvingen', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ name: naam, alias: alias || null, division: divisie.value,
+        niveau: gekozenNiveau, comment: commentaar || null,
+        device_id: toestel, user_agent: navigator.userAgent.slice(0, 200), ...locatie })
+    });
+    if (!antw.ok) throw new Error('status ' + antw.status);
+    meld('inschrijf_gelukt');
+    const rol = divisie.value === 'baroudelle' ? 'Baroudelle' : 'Baroudeur';
+    const boodschap = locatieBoodschap(locatie);
+    localStorage.setItem('hert2026_ingeschreven', '1');
+    localStorage.setItem('hert2026_inschrijfdank',
+      `De jury neemt akte.<br><b>${naam.replace(/</g, '&lt;')}</b>${alias ? ', in de verslagen "<b>' + alias.replace(/</g, '&lt;') + '</b>",' : ''} ` +
+      `rijdt op 30 september als <b>${rol}</b> — zelfverklaard ${'★'.repeat(gekozenNiveau)}.<br>` +
+      `De ploegen volgen. Op het moment dat de jury dat gepast acht.` +
+      (boodschap ? `<br><br><span style="color:#ffd9a0">📍 ${boodschap}</span>` : ''));
+    toonInschrijfDank();
+  } catch (err) {
+    meld('inschrijf_mislukt');
+    inschrijfKnop.disabled = false;
+    inschrijfKnop.textContent = 'Schrijf mij in';
+    toonInschrijfFout('De duif is niet aangekomen. Probeer nog eens.');
+  }
+});
 </script>
 </body>
 </html>

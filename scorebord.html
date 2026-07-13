@@ -339,7 +339,11 @@ async function rpc(naam, body) {
     headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  if (!antw.ok) throw new Error('status ' + antw.status);
+  if (!antw.ok) {
+    let melding = 'status ' + antw.status;
+    try { const d = await antw.json(); if (d && d.message) melding = d.message; } catch (e) {}
+    throw new Error(melding);
+  }
   const tekst = await antw.text();
   return tekst ? JSON.parse(tekst) : null;
 }
@@ -367,7 +371,7 @@ async function laad() {
       el.innerHTML = '<p class="leeg">Nog geen namen, dus nog geen punten.<br>Dat is de veiligste positie die u ooit zult hebben.</p>';
     } else {
       el.innerHTML = `<table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>` +
-        p.map((x, i) => `<tr class="klik" data-naam="${esc(x.naam)}" title="klik voor de uitsplitsing">
+        p.map((x, i) => `<tr class="klik" data-id="${esc(x.id)}" title="klik voor de uitsplitsing">
           <td class="pos">${zicht ? i + 1 : '·'}</td>
           <td><span class="stip" style="background:${x.divisie === 'baroudelle' ? 'var(--paars)' : 'var(--groen)'}"></span>${esc(x.naam)}${x.alias ? ` <span class="alias">"${esc(x.alias)}"</span>` : ''}</td>
           <td class="pt">${x.punten == null ? '<span title="nog niet vrijgegeven">🔒</span>' : (x.punten > 0 ? '+' : '') + x.punten}</td></tr>`).join('') + '</table>' +
@@ -462,19 +466,19 @@ function lijnLabel(l) {
   return l.titel ? `Regel №${l.regel} — ${esc(l.titel)}` : `Regel №${l.regel} — ${balk}`;
 }
 
-function toonPopup(naam) {
+function toonPopup(persId) {
   if (!detailCache) return;
-  const pers = (detailCache.personen || []).find(x => x.naam === naam);
+  const pers = (detailCache.personen || []).find(x => x.id === persId);
   if (!pers) return;
   document.getElementById('popupSluier').classList.add('open');
-  document.getElementById('popupNaam').textContent = naam;
+  document.getElementById('popupNaam').textContent = pers.naam;
 
   const zone = document.getElementById('opperZone');
   zone.innerHTML = isOpper
     ? '<span class="badge">🔓 opperzicht actief</span>'
     : '<a onclick="openJuryVorm()">Enkel de opperjury leest achter de balken.</a>';
 
-  document.getElementById('popupKlacht').innerHTML = klachtHtml(naam);
+  document.getElementById('popupKlacht').innerHTML = klachtHtml(pers);
 
   if (pers.punten == null) {
     document.getElementById('popupSub').textContent = 'dossier aangelegd — inzage volgt';
@@ -501,15 +505,15 @@ function sluitPopup() {
 }
 
 // ── het Klachtenloket (regel №60): klacht indienen op eigen naam, foto mag mee ──
-function klachtHtml(naam) {
+function klachtHtml(pers) {
   return `<div class="klacht-zone">
-    <a onclick="openKlachtVorm()">📢 Bent u ${esc(naam)}? Dien hier uw klacht in — regel №60.</a>
+    <a onclick="openKlachtVorm()">📢 Bent u ${esc(pers.naam)}? Dien hier uw klacht in — regel №60.</a>
     <div class="klacht-vorm" id="klachtVorm">
       <textarea id="klachtTekst" rows="3" maxlength="500" placeholder="Formuleer uw grief. Beknopt. De jury heeft weinig geduld en een lange memorie."></textarea>
       <p class="klacht-status" style="display:block;margin-top:.3rem;color:#b9b1a0">⚠️ Wie klaagt, <b style="color:var(--amber);text-transform:uppercase;letter-spacing:.06em">klaagt in het openbaar</b>: uw klacht en het oordeel verschijnen voor iedereen op deze uitsplitsing.</p>
       <div class="rij">
         <label>📎 bewijsstuk (foto, mag)<input type="file" id="klachtFoto" accept="image/*" style="display:none" onchange="document.getElementById('klachtFotoNaam').textContent = this.files[0] ? '📎 ' + this.files[0].name : ''"> <span id="klachtFotoNaam" style="color:var(--amber)"></span></label>
-        <button id="klachtKnop" onclick="verstuurKlacht('${esc(naam)}')">verstuur naar de jury</button>
+        <button id="klachtKnop" onclick="verstuurKlacht('${esc(pers.id)}')">verstuur naar de jury</button>
       </div>
       <p class="klacht-status" id="klachtStatus"></p>
     </div>
@@ -519,7 +523,7 @@ function openKlachtVorm() {
   document.getElementById('klachtVorm').style.display = 'block';
   document.getElementById('klachtTekst').focus();
 }
-async function verstuurKlacht(naam) {
+async function verstuurKlacht(persId) {
   const tekst = document.getElementById('klachtTekst').value.trim();
   const status = document.getElementById('klachtStatus');
   status.style.color = '#ff8f8f';
@@ -542,7 +546,7 @@ async function verstuurKlacht(naam) {
       if (!up.ok) throw new Error('upload');
     }
     await rpc('hert_klacht_indienen', {
-      p_naam: naam, p_tekst: tekst,
+      p_id: persId, p_tekst: tekst,
       p_device: localStorage.getItem('hert2026_device'),
       p_ua: navigator.userAgent.slice(0, 200), p_foto: fotoPad
     });
@@ -554,12 +558,14 @@ async function verstuurKlacht(naam) {
     knop.textContent = 'verstuur naar de jury';
     status.textContent = e.message === 'foto-te-groot'
       ? 'Dat bewijsstuk is te zwaar (max 8 MB). Verklein het.'
-      : 'De duif is niet vertrokken. Probeer nog eens.';
+      : (e.message && !e.message.startsWith('status') && e.message !== 'upload'
+          ? e.message
+          : 'De duif is niet vertrokken. Probeer nog eens.');
   }
 }
 document.getElementById('klassement').addEventListener('click', e => {
   const rij = e.target.closest('tr.klik');
-  if (rij) toonPopup(rij.dataset.naam);
+  if (rij) toonPopup(rij.dataset.id);
 });
 document.getElementById('popupSluit').addEventListener('click', sluitPopup);
 document.getElementById('popupSluier').addEventListener('click', e => { if (e.target === e.currentTarget) sluitPopup(); });

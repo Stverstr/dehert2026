@@ -318,7 +318,7 @@ async function openDossier(bewaardeCode) {
           return `<div class="insch">
             <div class="rij-kop"><span class="wie">${esc(i.name)}${i.alias ? ` <span class="als">"${esc(i.alias)}"</span>` : ''}</span>` +
             `<span class="tot">${sc.totaal != null ? (sc.totaal > 0 ? '+' : '') + sc.totaal + ' pt' : '?'}</span></div>` +
-            `<span class="meta"><span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> · ${tijd(i.created_at)} · ${toestelNaam(i.user_agent)}${plaats}${i.alias ? '' : ' · geen schuilnaam (gebrek aan fantasie genoteerd)'}</span><br>` +
+            `<span class="meta"><span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> · ${tijd(i.created_at)} · ${toestelNaam(i.user_agent)}${plaats}${i.alias ? '' : ' · geen schuilnaam (gebrek aan fantasie genoteerd)'} · <span onclick="verwijderInschrijving('${i.id}','${esc(i.name).replace(/'/g, '')}')" style="cursor:pointer" title="verwijder deze inschrijving (nep of dubbel)">🗑</span></span><br>` +
             `<span class="sterren" style="color:${bijgesteld ? 'var(--rood)' : 'var(--amber)'}">${sterren}</span> ` +
             `<span class="meta">${bijgesteld ? `bijgesteld — zelfscore was ${i.niveau}★` : 'zelfscore, automatisch geverifieerd'}</span><br>` +
             `<span class="corr-link" id="pl-k-${i.id}" onclick="klapPunten('${i.id}', this)">▸ punten &amp; correcties (${lijnen.length})</span>` +
@@ -637,6 +637,19 @@ async function geefCorrectie(id) {
     if (!antw.ok) throw new Error();
     openDossier(dossierCode);
   } catch (e) { alert('De correctie is niet aangekomen. Probeer nog eens.'); }
+}
+// een (nep- of dubbele) inschrijving definitief verwijderen — klachten en punten gaan mee
+async function verwijderInschrijving(id, naam) {
+  if (!confirm(`Inschrijving van "${naam}" definitief verwijderen?\nBijhorende klachten en punten verdwijnen mee. Dit kan niet ongedaan gemaakt worden.`)) return;
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_inschrijving_verwijder', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: dossierCode, p_id: id })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('Verwijderen mislukte. Probeer nog eens.'); }
 }
 // het klachtenloket: hulpje voor RPC-aanroepen
 async function klachtRpc(naam, body) {

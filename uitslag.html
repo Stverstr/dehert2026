@@ -45,6 +45,14 @@ button:hover{filter:brightness(1.25)}
 .mini-in{width:4rem;display:inline-block;margin:0 .3rem 0 0;padding:.45em .5em;font-size:.82rem;letter-spacing:0}
 .mini-in.breed{width:11rem;max-width:45%}
 .mini-knop{width:auto;display:inline-block;padding:.5em .9em;font-size:.72rem}
+.site-kaart{border:1px solid #24333d;background:#0d1319;padding:1.05rem 1.15rem;margin-bottom:1rem;font-size:.85rem;line-height:1.75}
+.site-kaart .naam{color:#ece5d3;font-size:1.02rem}
+.site-kaart .doel{color:var(--grijs);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;float:right;margin-top:.2em}
+.site-kaart a.url{color:var(--amber);word-break:break-all;text-decoration:none;border-bottom:1px dashed #6e5a33}
+.kopieer{cursor:pointer;color:var(--grijs);font-size:.75rem;margin-left:.6em;white-space:nowrap}
+.kopieer:hover{color:var(--amber)}
+.chip{display:inline-block;border:1px dashed #455965;padding:.12em .6em;margin:.18em .35em .18em 0;letter-spacing:.1em;color:var(--amber);background:#0a0f14;font-size:.8rem;white-space:nowrap}
+.chip .van{color:var(--grijs);letter-spacing:.04em}
 .zeur{border-left:2px solid var(--amber);padding-left:.8rem;margin-bottom:.9rem;font-size:.85rem;line-height:1.6}
 .zeur .wie{color:var(--amber)}
 .zeur .wat{color:#cfc8b8;font-style:italic}
@@ -70,6 +78,7 @@ button:hover{filter:brightness(1.25)}
       <button id="tabknop-poll" onclick="toonTab('poll')">🗳️ De Poll</button>
       <button id="tabknop-verdacht" onclick="toonTab('verdacht')">🕵️ Verdacht</button>
       <button id="tabknop-gezeur" onclick="toonTab('gezeur')">😤 Gezeur</button>
+      <button id="tabknop-links" onclick="toonTab('links')">🔗 Links</button>
     </div>
 
     <div class="tabblad aan" id="tab-inschrijvingen">
@@ -109,6 +118,11 @@ button:hover{filter:brightness(1.25)}
     <div class="tabblad" id="tab-gezeur">
       <h2>😤 Het gezeur (toevoegingen aan het dossier)</h2>
       <div id="gezeur"></div>
+    </div>
+
+    <div class="tabblad" id="tab-links">
+      <h2>🔗 De sites & de codes</h2>
+      <div id="links"></div>
     </div>
 
     <p class="totaal" id="totaal"></p>
@@ -186,6 +200,12 @@ async function openDossier(bewaardeCode) {
     });
     const scorePer = {};
     if (scoreAntw.ok) (await scoreAntw.json()).forEach(s => scorePer[s.id] = s);
+    const codesAntw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_dossier_codes', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: code })
+    });
+    const toegangscodes = codesAntw.ok ? await codesAntw.json() : null;
     dossierCode = code;
     localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
@@ -345,6 +365,43 @@ async function openDossier(bewaardeCode) {
     if (preDetectie) verdacht += `<p class="leeg">${preDetectie} stem(men) van vóór de toesteldetectie — daarvoor is niets te bewijzen. Jammer.</p>`;
     document.getElementById('verdacht').innerHTML = verdacht || '<p class="leeg">Iedereen gedraagt zich. Verdacht op zich.</p>';
 
+    // de sites & de codes: alles wat deelbaar is, mét de bijhorende toegangscodes (behalve de uwe)
+    (() => {
+      const B = 'https://stverstr.github.io/dehert2026/';
+      const geenCode = '<span class="meta">geen code — iedereen mag binnen</span>';
+      let koersCodes;
+      if (toegangscodes) {
+        koersCodes = `<span class="chip"><span class="van">jury ·</span> ${esc(toegangscodes.jury)}</span>` +
+          (toegangscodes.teams || []).map(t =>
+            `<span class="chip" style="border-color:${esc(t.kleur || '#455965')}"><span style="color:${esc(t.kleur || 'var(--amber)')}">●</span> <span class="van">${esc(t.naam)} ·</span> ${esc(t.code)}</span>`).join('') +
+          `<br><span class="meta">groot scherm heeft geen code nodig · teamcodes zijn aanpasbaar via het opper-beheer in de app — dit overzicht toont altijd de actuele</span>`;
+      } else {
+        koersCodes = '<span class="meta">codes konden niet opgehaald worden — zie het opper-beheer in de app</span>';
+      }
+      const sites = [
+        { emoji: '🦌', naam: 'De Teaser', doel: 'publiek', url: B,
+          wat: 'Vrij te delen in de club-WhatsApp. De nachtscène, het onheil en Communiqué №1 (de poll). Verklapt de datum niet.',
+          codes: geenCode },
+        { emoji: '📜', naam: 'De Inschrijfpagina', doel: 'publiek — nog geheim', url: B + 'inschrijven.html',
+          wat: 'Communiqué №2: de datumonthulling (woensdag 30 september) en het inschrijfformulier met schuilnaam en zelfscore. <b>Pas delen wanneer de datum bekend mag zijn.</b>',
+          codes: geenCode },
+        { emoji: '🏅', naam: 'Het Scorebord', doel: 'publiek', url: B + 'scorebord.html',
+          wat: 'Het voorlopig klassement: punten verschijnen automatisch volgens de regels — de redenen blijven geheim. Toont ook welke regels onthuld zijn. Ververst zichzelf.',
+          codes: geenCode },
+        { emoji: '🚴', naam: 'De Koerscentrale', doel: 'wedstrijddag', url: B + 'app.html',
+          wat: 'De avond zelf: rondes, klassementen, geheime missies, omkoping en de kliklijn. Teams en jury loggen in met hun code; het groot scherm toont enkel publieke info.',
+          codes: koersCodes },
+        { emoji: '🗄️', naam: 'Het Dossier', doel: 'enkel voor u', url: B + 'uitslag.html',
+          wat: 'Deze pagina: poll-resultaten, inschrijvingen verifiëren, punten corrigeren, verdachte praktijken.',
+          codes: '<span class="meta">de oppercode — die kent u, en die schrijven we nergens op</span>' }
+      ];
+      document.getElementById('links').innerHTML = sites.map(s =>
+        `<div class="site-kaart"><span class="doel">${s.doel}</span><span class="naam">${s.emoji} ${s.naam}</span><br>` +
+        `<a class="url" href="${s.url}" target="_blank">${s.url.replace('https://', '')}</a>` +
+        `<span class="kopieer" onclick="kopieerLink(this,'${s.url}')">⧉ kopieer link</span><br>` +
+        `<span style="color:#cfc8b8">${s.wat}</span><br>${s.codes}</div>`).join('');
+    })();
+
     // herkomst
     document.getElementById('herkomst').innerHTML = stemmen.map(v => {
       let plaats;
@@ -373,6 +430,12 @@ async function openDossier(bewaardeCode) {
     localStorage.removeItem('hert2026_dossier_code');
     if (!bewaardeCode) document.getElementById('fout').style.display = 'block';
   }
+}
+function kopieerLink(knop, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    knop.textContent = '✓ gekopieerd';
+    setTimeout(() => { knop.textContent = '⧉ kopieer link'; }, 1600);
+  });
 }
 function toonTab(naam) {
   document.querySelectorAll('.tabblad').forEach(t => t.classList.toggle('aan', t.id === 'tab-' + naam));

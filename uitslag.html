@@ -36,6 +36,15 @@ button:hover{filter:brightness(1.25)}
 .kaartje .meta{color:var(--grijs);font-size:.75rem}
 .kaartje.alarm{border-color:#6e3333}
 .kaartje.alarm .kop2{color:var(--rood)}
+.tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.8rem}
+.tabs button{width:auto;flex:1 1 auto;padding:.7em .4em;background:#0d1319;border:1px solid #24333d;color:#77828a;font-size:.76rem;letter-spacing:.06em;text-transform:none}
+.tabs button.aan{border-color:#c47a1e;color:var(--amber);background:#141b22}
+.tabblad{display:none}
+.tabblad.aan{display:block}
+.tabblad h2:first-child{margin-top:.4rem}
+.mini-in{width:4rem;display:inline-block;margin:0 .3rem 0 0;padding:.45em .5em;font-size:.82rem;letter-spacing:0}
+.mini-in.breed{width:11rem;max-width:45%}
+.mini-knop{width:auto;display:inline-block;padding:.5em .9em;font-size:.72rem}
 .zeur{border-left:2px solid var(--amber);padding-left:.8rem;margin-bottom:.9rem;font-size:.85rem;line-height:1.6}
 .zeur .wie{color:var(--amber)}
 .zeur .wat{color:#cfc8b8;font-style:italic}
@@ -56,36 +65,51 @@ button:hover{filter:brightness(1.25)}
   </div>
 
   <div id="resultaten">
-    <div class="balkrij versus">
-      <div class="kop"><b>⚔️ Baroudellen versus Baroudeurs (apart klassement)</b><span id="n-versus">0</span></div>
-      <div class="balk"><i id="b-versus" style="width:0"></i></div>
-      <p class="namen" id="l-versus"></p>
-    </div>
-    <div class="balkrij mix">
-      <div class="kop"><b>🤝 Mix Baroudellen / Baroudeurs</b><span id="n-mix">0</span></div>
-      <div class="balk"><i id="b-mix" style="width:0"></i></div>
-      <p class="namen" id="l-mix"></p>
-    </div>
-    <div class="balkrij supporter">
-      <div class="kop"><b>📣 Baroudellen als supporters</b><span id="n-supporter">0</span></div>
-      <div class="balk"><i id="b-supporter" style="width:0"></i></div>
-      <p class="namen" id="l-supporter"></p>
+    <div class="tabs">
+      <button id="tabknop-inschrijvingen" class="aan" onclick="toonTab('inschrijvingen')">📜 Inschrijvingen</button>
+      <button id="tabknop-poll" onclick="toonTab('poll')">🗳️ De Poll</button>
+      <button id="tabknop-verdacht" onclick="toonTab('verdacht')">🕵️ Verdacht</button>
+      <button id="tabknop-gezeur" onclick="toonTab('gezeur')">😤 Gezeur</button>
     </div>
 
-    <h2>📜 De inschrijvingen voor 30 september</h2>
-    <div id="inschrijvingen"></div>
+    <div class="tabblad aan" id="tab-inschrijvingen">
+      <h2>📜 De inschrijvingen voor 30 september</h2>
+      <div id="inschrijvingen"></div>
+    </div>
 
-    <h2>📈 Kijkcijfers van de teaser</h2>
-    <div id="kijkcijfers"></div>
+    <div class="tabblad" id="tab-poll">
+      <div class="balkrij versus">
+        <div class="kop"><b>⚔️ Baroudellen versus Baroudeurs (apart klassement)</b><span id="n-versus">0</span></div>
+        <div class="balk"><i id="b-versus" style="width:0"></i></div>
+        <p class="namen" id="l-versus"></p>
+      </div>
+      <div class="balkrij mix">
+        <div class="kop"><b>🤝 Mix Baroudellen / Baroudeurs</b><span id="n-mix">0</span></div>
+        <div class="balk"><i id="b-mix" style="width:0"></i></div>
+        <p class="namen" id="l-mix"></p>
+      </div>
+      <div class="balkrij supporter">
+        <div class="kop"><b>📣 Baroudellen als supporters</b><span id="n-supporter">0</span></div>
+        <div class="balk"><i id="b-supporter" style="width:0"></i></div>
+        <p class="namen" id="l-supporter"></p>
+      </div>
 
-    <h2>🕵️ Verdachte praktijken</h2>
-    <div id="verdacht"></div>
+      <h2>📈 Kijkcijfers van de teaser</h2>
+      <div id="kijkcijfers"></div>
+    </div>
 
-    <h2>📍 Herkomst der verklaringen</h2>
-    <div id="herkomst"></div>
+    <div class="tabblad" id="tab-verdacht">
+      <h2>🕵️ Verdachte praktijken</h2>
+      <div id="verdacht"></div>
 
-    <h2>😤 Het gezeur (toevoegingen aan het dossier)</h2>
-    <div id="gezeur"></div>
+      <h2>📍 Herkomst der verklaringen</h2>
+      <div id="herkomst"></div>
+    </div>
+
+    <div class="tabblad" id="tab-gezeur">
+      <h2>😤 Het gezeur (toevoegingen aan het dossier)</h2>
+      <div id="gezeur"></div>
+    </div>
 
     <p class="totaal" id="totaal"></p>
     <p style="text-align:center;margin-top:1rem"><button onclick="vergrendel()" style="width:auto;background:none;border:none;color:var(--grijs);text-decoration:underline;font-size:.75rem;padding:.4em">🔒 vergrendel dossier op dit toestel</button></p>
@@ -155,6 +179,13 @@ async function openDossier(bewaardeCode) {
       body: JSON.stringify({ admin_code: code })
     });
     const inschrijvingen = inschAntw.ok ? await inschAntw.json() : [];
+    const scoreAntw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_scorebord_dossier', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: code })
+    });
+    const scorePer = {};
+    if (scoreAntw.ok) (await scoreAntw.json()).forEach(s => scorePer[s.id] = s);
     dossierCode = code;
     localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
@@ -170,42 +201,49 @@ async function openDossier(bewaardeCode) {
       document.getElementById('l-' + k).textContent = per[k].map(v => v.name).join(' · ');
     }
 
-    // inschrijvingen voor 30 september
+    // inschrijvingen + scorebord-beheer
     (() => {
       const el = document.getElementById('inschrijvingen');
       if (!inschrijvingen.length) { el.innerHTML = '<p class="leeg">Nog niemand ingeschreven. De moed wordt nog gezocht.</p>'; return; }
       const heren = inschrijvingen.filter(i => i.division === 'baroudeur');
       const dames = inschrijvingen.filter(i => i.division === 'baroudelle');
-      const ster = n => '★'.repeat(n) + '<span style="opacity:.25">' + '★'.repeat(5 - n) + '</span>';
-      // klikbare jurysterren: het opperjurylid verifieert elke zelfscore vóór de ploegopstelling
-      const jurySterren = i => [1, 2, 3, 4, 5].map(n =>
-        `<span onclick="zetJuryNiveau('${i.id}',${n})" style="cursor:pointer;padding:.1em .04em;` +
-        `opacity:${n <= (i.jury_niveau || i.niveau) ? 1 : .25}${i.jury_niveau ? '' : ';filter:grayscale(1)'}" title="jury zet niveau ${n}">★</span>`).join('');
-      // De Zelfkennis: juist ingeschat = +3, per ster afwijking = −1
-      const zelfkennis = i => {
-        if (!i.jury_niveau) return '<span class="meta">nog te verifiëren — klik de grijze sterren</span>';
-        const afw = Math.abs(i.niveau - i.jury_niveau);
-        return afw === 0
-          ? '<span style="color:var(--groen)">De Zelfkennis: +3</span>'
-          : `<span style="color:var(--rood)">De Zelfkennis: −${afw}</span>`;
-      };
-      const geverifieerd = inschrijvingen.filter(i => i.jury_niveau).length;
+      const aangepast = i => i.jury_niveau != null && i.jury_niveau !== i.niveau;
       el.innerHTML = `<div class="kaartje"><span class="kop2">${inschrijvingen.length} inschrijving(en)</span> — ` +
         `<span style="color:var(--groen)">${heren.length} baroudeur(s)</span> · ` +
-        `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span>` +
-        `${inschrijvingen.length ? `<br><span class="meta">gemiddelde zelfscore ${(inschrijvingen.reduce((s, i) => s + i.niveau, 0) / inschrijvingen.length).toFixed(1)} ★ — bescheidenheid is schaars</span>` : ''}` +
-        `<br><span class="meta">${geverifieerd}/${inschrijvingen.length} door de jury geverifieerd — De Zelfkennis: juist = +3, per ster ernaast = −1 (verborgen regel №40)</span></div>` +
+        `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span> · ` +
+        `${inschrijvingen.filter(aangepast).length} door de jury bijgesteld<br>` +
+        `<span class="meta">sterren = geldend niveau, klik om bij te stellen (kan altijd; ongemoeid = automatisch geverifieerd; <span style="color:var(--rood)">rood</span> = door de jury aangepast)</span><br>` +
+        `<span class="meta">punten lopen automatisch volgens het reglement (№10 schoonheid, №20 verstoppers, №30 burgerplicht, №40 zelfkennis) — publiek zichtbaar op <a href="scorebord.html" style="color:var(--amber)">het scorebord</a>, zonder redenen</span></div>` +
         inschrijvingen.map(i => {
+          const sc = scorePer[i.id] || {};
+          const eff = i.jury_niveau != null ? i.jury_niveau : i.niveau;
+          const bijgesteld = aangepast(i);
+          // één rij sterren: geldend niveau, klikbaar; kleurt rood zodra de jury afwijkt van de zelfscore
+          const sterren = [1, 2, 3, 4, 5].map(n =>
+            `<span onclick="zetJuryNiveau('${i.id}',${n})" style="cursor:pointer;padding:.1em .04em;opacity:${n <= eff ? 1 : .25}" title="jury zet niveau ${n}">★</span>`).join('');
+          const opsom = [];
+          if (sc.burgerplicht) opsom.push(`+${sc.burgerplicht} burgerplicht`);
+          if (sc.verstopper) opsom.push(`${sc.verstopper} verstopper`);
+          if (sc.schoonheid) opsom.push(`+${sc.schoonheid} schoonheid`);
+          if (sc.zelfkennis != null) opsom.push(`${sc.zelfkennis > 0 ? '+' : ''}${sc.zelfkennis} zelfkennis`);
+          (sc.correcties || []).forEach(c => opsom.push(
+            `<span style="color:var(--amber)">${c.punten > 0 ? '+' : ''}${c.punten}${c.reden ? ' „' + esc(c.reden) + '"' : ''}</span> ` +
+            `<span onclick="verwijderCorrectie('${c.id}')" style="cursor:pointer" title="verwijder correctie">🗑</span>`));
           let plaats = '';
           if (i.lat != null) plaats = `, op ${afstand(i.lat, i.lon)} van het café`;
           else if (i.loc_status === 'geweigerd') plaats = ', 🚩 locatie geweigerd';
           const paars = i.division === 'baroudelle';
           return `<div class="kaartje"><span class="kop2">${esc(i.name)}</span>` +
-            `${i.alias ? ` — alias "<span style="color:var(--amber)">${esc(i.alias)}</span>"` : ' <span class="meta">(geen schuilnaam — gebrek aan fantasie wordt genoteerd)</span>'}<br>` +
+            `${i.alias ? ` — alias "<span style="color:var(--amber)">${esc(i.alias)}</span>"` : ' <span class="meta">(geen schuilnaam — gebrek aan fantasie wordt genoteerd)</span>'}` +
+            `<span style="float:right;color:var(--amber)">${sc.totaal > 0 ? '+' : ''}${sc.totaal != null ? sc.totaal : '?'} pt</span><br>` +
             `<span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> ` +
             `<span class="meta">(${tijd(i.created_at)}, ${toestelNaam(i.user_agent)}${plaats})</span><br>` +
-            `zelfscore <span style="color:var(--amber)">${ster(i.niveau)}</span> · ` +
-            `jury <span style="color:var(--amber)">${jurySterren(i)}</span> · ${zelfkennis(i)}` +
+            `niveau <span style="color:${bijgesteld ? 'var(--rood)' : 'var(--amber)'}">${sterren}</span> ` +
+            `<span class="meta">${bijgesteld ? `door de jury bijgesteld (zelfscore was ${i.niveau}★)` : 'zelfscore, automatisch geverifieerd'}</span><br>` +
+            `<span class="meta">${opsom.join(' · ')}</span><br>` +
+            `<span style="white-space:nowrap"><input class="mini-in" id="corr-p-${i.id}" type="number" placeholder="±pt">` +
+            `<input class="mini-in breed" id="corr-r-${i.id}" type="text" maxlength="120" placeholder="reden (blijft geheim)">` +
+            `<button class="mini-knop" onclick="geefCorrectie('${i.id}')">ken toe</button></span>` +
             `${i.comment ? `<br><span style="font-style:italic;color:#cfc8b8">"${esc(i.comment)}"</span>` : ''}</div>`;
         }).join('');
     })();
@@ -335,6 +373,36 @@ async function openDossier(bewaardeCode) {
     localStorage.removeItem('hert2026_dossier_code');
     if (!bewaardeCode) document.getElementById('fout').style.display = 'block';
   }
+}
+function toonTab(naam) {
+  document.querySelectorAll('.tabblad').forEach(t => t.classList.toggle('aan', t.id === 'tab-' + naam));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('aan', b.id === 'tabknop-' + naam));
+}
+// manuele correctie op het pre-koers scorebord (reden blijft geheim tot de ceremonie)
+async function geefCorrectie(id) {
+  const punten = parseInt(document.getElementById('corr-p-' + id).value, 10);
+  const reden = document.getElementById('corr-r-' + id).value.trim();
+  if (!punten) return alert('Punten mogen niet 0 zijn. De jury doet niet aan symboliek.');
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_prekoers_geef', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: dossierCode, p_inschrijving: id, p_punten: punten, p_reden: reden || null })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('De correctie is niet aangekomen. Probeer nog eens.'); }
+}
+async function verwijderCorrectie(id) {
+  try {
+    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_prekoers_verwijder', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: dossierCode, p_id: id })
+    });
+    if (!antw.ok) throw new Error();
+    openDossier(dossierCode);
+  } catch (e) { alert('Verwijderen mislukt. Probeer nog eens.'); }
 }
 // het opperjurylid verifieert een zelfscore: origineel blijft bewaard, jury_niveau is het finale oordeel
 async function zetJuryNiveau(id, niveau) {

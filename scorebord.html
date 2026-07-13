@@ -449,7 +449,8 @@ function openJuryVorm() {
 function lijnLabel(l) {
   const balk = '<span class="balk">█████████████</span>';
   if (l.soort === 'klacht') {
-    return l.titel ? `Klacht — ${esc(l.titel)}` : `Klacht — ${balk}`;
+    const antwoord = l.titel ? esc(l.titel) : balk;
+    return `Klacht — "${esc(l.tekst || '')}"<br><span style="opacity:.75">↳ de jury: ${antwoord}</span>`;
   }
   if (l.soort === 'correctie') {
     return l.titel ? `Vermelding van de jury — "${esc(l.titel)}"` : `Vermelding van de jury — ${balk}`;
@@ -501,6 +502,7 @@ function klachtHtml(naam) {
     <a onclick="openKlachtVorm()">📢 Bent u ${esc(naam)}? Dien hier uw klacht in — regel №60.</a>
     <div class="klacht-vorm" id="klachtVorm">
       <textarea id="klachtTekst" rows="3" maxlength="500" placeholder="Formuleer uw grief. Beknopt. De jury heeft weinig geduld en een lange memorie."></textarea>
+      <p class="klacht-status" style="display:block;margin-top:.3rem">Wie klaagt, klaagt in het openbaar: uw klacht en het oordeel verschijnen voor iedereen op deze uitsplitsing.</p>
       <div class="rij">
         <label>📎 bewijsstuk (foto, mag)<input type="file" id="klachtFoto" accept="image/*" style="display:none" onchange="document.getElementById('klachtFotoNaam').textContent = this.files[0] ? '📎 ' + this.files[0].name : ''"> <span id="klachtFotoNaam" style="color:var(--amber)"></span></label>
         <button id="klachtKnop" onclick="verstuurKlacht('${esc(naam)}')">verstuur naar de jury</button>

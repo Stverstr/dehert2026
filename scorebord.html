@@ -448,6 +448,9 @@ function openJuryVorm() {
 // ── de uitsplitsing per renner (uit de cache van laad) ──
 function lijnLabel(l) {
   const balk = '<span class="balk">█████████████</span>';
+  if (l.soort === 'klacht') {
+    return l.titel ? `Klacht — ${esc(l.titel)}` : `Klacht — ${balk}`;
+  }
   if (l.soort === 'correctie') {
     return l.titel ? `Vermelding van de jury — "${esc(l.titel)}"` : `Vermelding van de jury — ${balk}`;
   }

@@ -101,6 +101,7 @@ textarea.mini-in{width:100%;resize:vertical;margin:.4rem 0}
     <div class="tabs">
       <button id="tabknop-inschrijvingen" class="aan" onclick="toonTab('inschrijvingen')">📜 Inschrijvingen</button>
       <button id="tabknop-regels" onclick="toonTab('regels')">⚖️ Regels</button>
+      <button id="tabknop-klachten" onclick="toonTab('klachten')">📢 Klachten</button>
       <button id="tabknop-poll" onclick="toonTab('poll')">🗳️ De Poll</button>
       <button id="tabknop-verdacht" onclick="toonTab('verdacht')">🕵️ Verdacht</button>
       <button id="tabknop-gezeur" onclick="toonTab('gezeur')">😤 Gezeur</button>
@@ -115,6 +116,11 @@ textarea.mini-in{width:100%;resize:vertical;margin:.4rem 0}
     <div class="tabblad" id="tab-regels">
       <h2>⚖️ De regels van vóór de koers</h2>
       <div id="regelsbeheer"></div>
+    </div>
+
+    <div class="tabblad" id="tab-klachten">
+      <h2>📢 Het Klachtenloket (regel №60)</h2>
+      <div id="klachten"></div>
     </div>
 
     <div class="tabblad" id="tab-poll">
@@ -251,6 +257,12 @@ async function openDossier(bewaardeCode) {
       body: JSON.stringify({ p_code: code })
     });
     alleRegels = regelsAntw.ok ? await regelsAntw.json() : [];
+    const klachtenAntw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_klachten_dossier', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_code: code })
+    });
+    const klachten = klachtenAntw.ok ? await klachtenAntw.json() : [];
     dossierCode = code;
     localStorage.setItem('hert2026_dossier_code', code);
     document.getElementById('slot').style.display = 'none';
@@ -367,6 +379,45 @@ async function openDossier(bewaardeCode) {
           <span class="corr-link" onclick="this.style.display='none';document.getElementById('rg-v-${r.id}').style.display='block'">✎ bewerk</span>
           ${vorm(r)}</div>`).join('') +
         `<span class="corr-link" onclick="this.style.display='none';document.getElementById('rg-v-nieuw').style.display='block'">+ nieuwe regel toevoegen</span>${vorm(null)}`;
+    })();
+
+    // het klachtenloket: lezen, verbranden, +1 toekennen of maatwerk (ook voor derden)
+    (() => {
+      const el = document.getElementById('klachten');
+      const nieuw = klachten.filter(k => k.status === 'nieuw').length;
+      document.getElementById('tabknop-klachten').textContent = '📢 Klachten' + (nieuw ? ` (${nieuw})` : '');
+      if (!klachten.length) { el.innerHTML = '<p class="leeg">Nog geen klachten. De vrede is tijdelijk.</p>'; return; }
+      const STATUS = {
+        nieuw: '<span style="color:var(--amber)">🕯 nieuw</span>',
+        behandeld: '<span style="color:var(--groen)">✓ behandeld</span>',
+        verbrand: '<span style="color:var(--rood)">🔥 verbrand</span>'
+      };
+      el.innerHTML = `<div class="kaartje"><span class="kop2">${klachten.length} klacht(en)</span> — ${nieuw} te behandelen<br>` +
+        `<span class="meta">✓ terecht = +1 voor de klager, zichtbaar op het scorebord · 🔥 verbrand = geen punten, klacht geklasseerd · maatwerk = zelf punten bepalen, voor de klager of een ander (bv. het voorwerp van de klacht)</span></div>` +
+        klachten.map(k => {
+          const opties = inschrijvingen.map(i =>
+            `<option value="${i.id}"${i.id === k.inschrijving_id ? ' selected' : ''}>${esc(i.name)}</option>`).join('');
+          return `<div class="insch"${k.status !== 'nieuw' ? ' style="opacity:.55"' : ''}>
+            <div class="rij-kop"><span class="wie">${esc(k.naam)}${k.alias ? ` <span class="als">"${esc(k.alias)}"</span>` : ''}</span>
+            <span style="font-size:.78rem">${STATUS[k.status]}</span></div>
+            <span class="meta">${tijd(k.created_at)} · ${toestelNaam(k.user_agent)}</span><br>
+            <span style="font-style:italic;color:#cfc8b8">"${esc(k.tekst)}"</span>` +
+            (k.foto ? `<br><a href="${SUPA_URL}/storage/v1/object/public/hert-bewijs/${esc(k.foto)}" target="_blank" style="color:var(--amber)">📎 bekijk het bewijsstuk</a>` : '') +
+            (k.status === 'nieuw' ? `
+            <div style="margin-top:.7rem;margin-bottom:.5rem">
+              <button class="mini-knop" onclick="klachtTerecht('${k.id}','${k.inschrijving_id}')">✓ terecht (+1, zichtbaar)</button>
+              <button class="mini-knop" style="background:#5a1e12;border-color:#7a2f1d" onclick="klachtVerbrand('${k.id}')">🔥 verbrand</button>
+            </div>
+            <span class="corr-link" onclick="this.style.display='none';document.getElementById('kl-v-${k.id}').style.display='block'">± maatwerk: zelf punten bepalen (klager of iemand anders)</span>
+            <div class="corr-vorm" id="kl-v-${k.id}" style="white-space:normal">
+              <select class="mini-in" id="kl-w-${k.id}">${opties}</select>
+              <input class="mini-in" id="kl-p-${k.id}" type="number" placeholder="±pt">
+              <input class="mini-in breed" id="kl-r-${k.id}" type="text" maxlength="120" placeholder="reden">
+              <button class="mini-knop" onclick="klachtMaatwerk('${k.id}')">ken toe</button><br>
+              <label class="meta" style="cursor:pointer"><input type="checkbox" id="kl-z-${k.id}" style="width:auto;margin:0 .4em 0 0;vertical-align:middle">reden zichtbaar voor de renner op het scorebord</label>
+            </div>` : '') +
+          `</div>`;
+        }).join('');
     })();
 
     // kijkcijfers
@@ -582,6 +633,41 @@ async function geefCorrectie(id) {
     if (!antw.ok) throw new Error();
     openDossier(dossierCode);
   } catch (e) { alert('De correctie is niet aangekomen. Probeer nog eens.'); }
+}
+// het klachtenloket: hulpje voor RPC-aanroepen
+async function klachtRpc(naam, body) {
+  const antw = await fetch(SUPA_URL + '/rest/v1/rpc/' + naam, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!antw.ok) throw new Error();
+}
+async function klachtTerecht(klachtId, inschrijvingId) {
+  try {
+    await klachtRpc('hert_prekoers_geef', { admin_code: dossierCode, p_inschrijving: inschrijvingId, p_punten: 1,
+      p_reden: 'Klacht ontvankelijk verklaard. De jury waardeert de moed.', p_publiek: true });
+    await klachtRpc('hert_klacht_behandel', { admin_code: dossierCode, p_id: klachtId, p_status: 'behandeld' });
+    openDossier(dossierCode);
+  } catch (e) { alert('De toekenning mislukte. Probeer nog eens.'); }
+}
+async function klachtVerbrand(klachtId) {
+  try {
+    await klachtRpc('hert_klacht_behandel', { admin_code: dossierCode, p_id: klachtId, p_status: 'verbrand' });
+    openDossier(dossierCode);
+  } catch (e) { alert('Het vuur wou niet pakken. Probeer nog eens.'); }
+}
+async function klachtMaatwerk(klachtId) {
+  const wie = document.getElementById('kl-w-' + klachtId).value;
+  const punten = parseInt(document.getElementById('kl-p-' + klachtId).value, 10);
+  const reden = document.getElementById('kl-r-' + klachtId).value.trim();
+  const publiek = document.getElementById('kl-z-' + klachtId).checked;
+  if (!punten) return alert('Punten mogen niet 0 zijn. De jury doet niet aan symboliek.');
+  try {
+    await klachtRpc('hert_prekoers_geef', { admin_code: dossierCode, p_inschrijving: wie, p_punten: punten, p_reden: reden || null, p_publiek: publiek });
+    await klachtRpc('hert_klacht_behandel', { admin_code: dossierCode, p_id: klachtId, p_status: 'behandeld' });
+    openDossier(dossierCode);
+  } catch (e) { alert('Het maatwerk mislukte. Probeer nog eens.'); }
 }
 // regelbeheer: bewaren (nieuw of bestaand), onthullen/verbergen, verwijderen
 async function bewaarRegel(id) {

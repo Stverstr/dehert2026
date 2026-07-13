@@ -87,6 +87,26 @@ body{
   padding:.55em .9em;cursor:pointer;letter-spacing:.08em;
 }
 .jury-vorm .fout-klein{color:#ff8f8f;margin-top:.5rem;display:none}
+.klacht-zone{
+  margin-top:1.3rem;border-top:1px dashed #2c3d47;padding-top:1rem;
+  font-family:'Special Elite',monospace;font-size:.8rem;color:#5a656d;text-align:center;
+}
+.klacht-zone a{color:#77828a;cursor:pointer;text-decoration:underline dotted}
+.klacht-vorm{display:none;margin-top:.8rem;text-align:left}
+.klacht-vorm textarea{
+  width:100%;background:#0a0f14;border:1px solid #24333d;color:#ece5d3;
+  font-family:'Special Elite',monospace;font-size:.85rem;padding:.6em .7em;
+  resize:vertical;outline:none;
+}
+.klacht-vorm .rij{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-top:.6rem;flex-wrap:wrap}
+.klacht-vorm label{cursor:pointer;color:#77828a;font-size:.75rem}
+.klacht-vorm button{
+  background:#5a1e12;border:1px solid #7a2f1d;color:#ffd9a0;
+  font-family:'Special Elite',monospace;font-size:.8rem;
+  padding:.55em .9em;cursor:pointer;letter-spacing:.08em;
+}
+.klacht-vorm button:disabled{opacity:.5;cursor:wait}
+.klacht-status{margin-top:.6rem;font-size:.78rem}
 .aanhef .fluister{
   font-style:italic;
   letter-spacing:.32em;
@@ -294,6 +314,7 @@ footer a{color:#77828a}
     <h3 id="popupNaam"></h3>
     <p class="onder-h3" id="popupSub"></p>
     <div id="popupLijnen"></div>
+    <div id="popupKlacht"></div>
     <div class="opper-zone" id="opperZone"></div>
   </div>
 </div>
@@ -319,7 +340,8 @@ async function rpc(naam, body) {
     body: JSON.stringify(body)
   });
   if (!antw.ok) throw new Error('status ' + antw.status);
-  return antw.json();
+  const tekst = await antw.text();
+  return tekst ? JSON.parse(tekst) : null;
 }
 
 function toonTab(naam) {
@@ -444,6 +466,8 @@ function toonPopup(naam) {
     ? '<span class="badge">🔓 opperzicht actief</span>'
     : '<a onclick="openJuryVorm()">Enkel de opperjury leest achter de balken.</a>';
 
+  document.getElementById('popupKlacht').innerHTML = klachtHtml(naam);
+
   if (pers.punten == null) {
     document.getElementById('popupSub').textContent = 'dossier aangelegd — inzage volgt';
     document.getElementById('popupLijnen').innerHTML =
@@ -466,6 +490,62 @@ function toonPopup(naam) {
 
 function sluitPopup() {
   document.getElementById('popupSluier').classList.remove('open');
+}
+
+// ── het Klachtenloket (regel №60): klacht indienen op eigen naam, foto mag mee ──
+function klachtHtml(naam) {
+  return `<div class="klacht-zone">
+    <a onclick="openKlachtVorm()">📢 Bent u ${esc(naam)}? Dien hier uw klacht in — regel №60.</a>
+    <div class="klacht-vorm" id="klachtVorm">
+      <textarea id="klachtTekst" rows="3" maxlength="500" placeholder="Formuleer uw grief. Beknopt. De jury heeft weinig geduld en een lange memorie."></textarea>
+      <div class="rij">
+        <label>📎 bewijsstuk (foto, mag)<input type="file" id="klachtFoto" accept="image/*" style="display:none" onchange="document.getElementById('klachtFotoNaam').textContent = this.files[0] ? '📎 ' + this.files[0].name : ''"> <span id="klachtFotoNaam" style="color:var(--amber)"></span></label>
+        <button id="klachtKnop" onclick="verstuurKlacht('${esc(naam)}')">verstuur naar de jury</button>
+      </div>
+      <p class="klacht-status" id="klachtStatus"></p>
+    </div>
+  </div>`;
+}
+function openKlachtVorm() {
+  document.getElementById('klachtVorm').style.display = 'block';
+  document.getElementById('klachtTekst').focus();
+}
+async function verstuurKlacht(naam) {
+  const tekst = document.getElementById('klachtTekst').value.trim();
+  const status = document.getElementById('klachtStatus');
+  status.style.color = '#ff8f8f';
+  if (tekst.length < 5) { status.textContent = 'Zo kort? Dat is geen klacht, dat is een zucht. Formuleer.'; return; }
+  const knop = document.getElementById('klachtKnop');
+  knop.disabled = true;
+  knop.textContent = 'wordt bezorgd…';
+  try {
+    let fotoPad = null;
+    const f = document.getElementById('klachtFoto').files[0];
+    if (f) {
+      if (f.size > 8 * 1024 * 1024) throw new Error('foto-te-groot');
+      const ext = ((f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg');
+      fotoPad = 'klachten/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + ext;
+      const up = await fetch(SUPA_URL + '/storage/v1/object/hert-bewijs/' + fotoPad, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': f.type || 'image/jpeg' },
+        body: f
+      });
+      if (!up.ok) throw new Error('upload');
+    }
+    await rpc('hert_klacht_indienen', {
+      p_naam: naam, p_tekst: tekst,
+      p_device: localStorage.getItem('hert2026_device'),
+      p_ua: navigator.userAgent.slice(0, 200), p_foto: fotoPad
+    });
+    document.getElementById('klachtVorm').innerHTML =
+      '<p class="klacht-status" style="color:var(--amber);display:block">📜 Uw klacht is genoteerd en verzegeld.<br>Terecht = +1. Belachelijk = ook iets. De jury beslist.<br>Het vuur staat alvast aan.</p>';
+  } catch (e) {
+    knop.disabled = false;
+    knop.textContent = 'verstuur naar de jury';
+    status.textContent = e.message === 'foto-te-groot'
+      ? 'Dat bewijsstuk is te zwaar (max 8 MB). Verklein het.'
+      : 'De duif is niet vertrokken. Probeer nog eens.';
+  }
 }
 document.getElementById('klassement').addEventListener('click', e => {
   const rij = e.target.closest('tr.klik');

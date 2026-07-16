@@ -283,17 +283,22 @@ async function openDossier(bewaardeCode) {
       const el = document.getElementById('inschrijvingen');
       const REGELNAAM = {
         schoonheid: '№10 De Schoonheidspremie', verstopper: '№20 De Verstoppers',
-        burgerplicht: '№30 De Burgerplicht', zelfkennis: '№40 De Zelfkennis', vroegte: '№50 De Vroege Vogels'
+        burgerplicht: '№30 De Burgerplicht', zelfkennis: '№40 De Zelfkennis', vroegte: '№50 De Vroege Vogels',
+        aanhang: '№70 De Trouwe Aanhang', seingever: '№80 De Helpende Hand'
       };
       if (!inschrijvingen.length) { el.innerHTML = '<p class="leeg">Nog niemand ingeschreven. De moed wordt nog gezocht.</p>'; return; }
       const heren = inschrijvingen.filter(i => i.division === 'baroudeur');
       const dames = inschrijvingen.filter(i => i.division === 'baroudelle');
+      const sups = inschrijvingen.filter(i => i.division === 'supporter');
+      const seins = inschrijvingen.filter(i => i.division === 'seingever');
       const aangepast = i => i.jury_niveau != null && i.jury_niveau !== i.niveau;
       el.innerHTML =
         `<div class="kaartje"><span class="kop2">${inschrijvingen.length} inschrijving(en)</span> — ` +
         `<span style="color:var(--groen)">${heren.length} baroudeur(s)</span> · ` +
-        `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span> · ` +
-        `${inschrijvingen.filter(aangepast).length} bijgesteld<br>` +
+        `<span style="color:var(--paars)">${dames.length} baroudelle(n)</span>` +
+        (sups.length ? ` · <span style="color:var(--amber)">${sups.length} supporter(s)</span>` : '') +
+        (seins.length ? ` · <span style="color:#8fa3ad">${seins.length} seingever(s)</span>` : '') +
+        ` · ${inschrijvingen.filter(aangepast).length} bijgesteld<br>` +
         `<span class="meta">sterren = geldend niveau, klik om bij te stellen — <span style="color:var(--rood)">rood</span> = door de jury aangepast, origineel blijft bewaard</span></div>` +
         inschrijvingen.map(i => {
           const sc = scorePer[i.id] || {};
@@ -314,11 +319,17 @@ async function openDossier(bewaardeCode) {
           let plaats = '';
           if (i.lat != null) plaats = ` · op ${afstand(i.lat, i.lon)} van het café`;
           else if (i.loc_status === 'geweigerd') plaats = ' · 🚩 locatie geweigerd';
-          const paars = i.division === 'baroudelle';
+          const ROL = {
+            baroudeur:  { kleur: 'var(--groen)', label: '🚴 baroudeur' },
+            baroudelle: { kleur: 'var(--paars)', label: '🚴‍♀️ baroudelle' },
+            supporter:  { kleur: 'var(--amber)', label: '📣 supporter' },
+            seingever:  { kleur: '#8fa3ad', label: '🚩 jury / seingever' }
+          };
+          const rol = ROL[i.division] || ROL.baroudeur;
           return `<div class="insch">
             <div class="rij-kop"><span class="wie">${esc(i.name)}${i.alias ? ` <span class="als">"${esc(i.alias)}"</span>` : ''}</span>` +
             `<span class="tot">${sc.totaal != null ? (sc.totaal > 0 ? '+' : '') + sc.totaal + ' pt' : '?'}</span></div>` +
-            `<span class="meta"><span style="color:${paars ? 'var(--paars)' : 'var(--groen)'}">${paars ? '🚴‍♀️ baroudelle' : '🚴 baroudeur'}</span> · ${tijd(i.created_at)} · ${toestelNaam(i.user_agent)}${plaats}${i.alias ? '' : ' · geen schuilnaam (gebrek aan fantasie genoteerd)'} · <span onclick="verwijderInschrijving('${i.id}','${esc(i.name).replace(/'/g, '')}')" style="cursor:pointer" title="verwijder deze inschrijving (nep of dubbel)">🗑</span></span><br>` +
+            `<span class="meta"><span style="color:${rol.kleur}">${rol.label}</span> · ${tijd(i.created_at)} · ${toestelNaam(i.user_agent)}${plaats}${i.alias ? '' : ' · geen schuilnaam (gebrek aan fantasie genoteerd)'} · <span onclick="verwijderInschrijving('${i.id}','${esc(i.name).replace(/'/g, '')}')" style="cursor:pointer" title="verwijder deze inschrijving (nep of dubbel)">🗑</span></span><br>` +
             `<span class="sterren" style="color:${bijgesteld ? 'var(--rood)' : 'var(--amber)'}">${sterren}</span> ` +
             `<span class="meta">${bijgesteld ? `bijgesteld — zelfscore was ${i.niveau}★` : 'zelfscore, automatisch geverifieerd'}</span><br>` +
             `<span class="corr-link" id="pl-k-${i.id}" onclick="klapPunten('${i.id}', this)">▸ punten &amp; correcties (${lijnen.length})</span>` +

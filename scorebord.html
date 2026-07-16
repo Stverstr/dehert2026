@@ -26,6 +26,7 @@
   --amber-diep:#c47a1e;
   --papier:#d8d2c4;
   --inkt:#b9b1a0;
+  --rood:#ff8f8f;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -78,6 +79,19 @@ body{
 .klik-hint{
   text-align:center;font-family:'Special Elite',monospace;
   font-size:.78rem;color:#77828a;padding:.8rem 0 .1rem;
+}
+/* een eenzame renner van een andere club, nog altijd te snel voor deze koers */
+.cyclone-baan{
+  position:fixed;left:0;bottom:2vh;width:120px;z-index:-1;
+  pointer-events:none;opacity:.32;will-change:transform;
+  transform:translateX(-40vw);
+  animation:cycloneflits 48s linear 6s infinite;
+}
+.cyclone-baan svg{width:100%;height:auto;display:block;overflow:visible}
+@keyframes cycloneflits{
+  0%{transform:translateX(-40vw)}
+  4%{transform:translateX(115vw)}
+  100%{transform:translateX(115vw)}
 }
 .klik-hint b{color:#cfc8b8;font-weight:400}
 .jury-zone{
@@ -203,6 +217,8 @@ table.stand .pt{text-align:right;color:var(--amber);white-space:nowrap}
 table.stand tr:first-child td{border-top:none}
 .stip{display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.5em;vertical-align:baseline}
 .alias{color:var(--mist);font-size:.85em}
+.rol-badge{font-size:.8em}
+.mini-sterren{font-size:.72em;letter-spacing:.05em;white-space:nowrap}
 .leeg{color:#77828a;font-family:'Special Elite',monospace;font-size:.9rem;text-align:center;padding:1.2rem 0}
 .regel{
   border:1px solid #24333d;background:#0d1319;
@@ -337,6 +353,33 @@ footer a{color:#77828a}
   </div>
 </div>
 
+<div class="cyclone-baan" aria-hidden="true">
+  <!-- volledig zelfvoorzienend: iOS Safari kan geen <use> over SVG-grenzen heen -->
+  <svg viewBox="-150 -64 230 98">
+    <title>🌪 te snel voor deze koers</title>
+    <defs>
+      <filter id="cy-zacht" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+      <filter id="cy-zachter" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="12"/></filter>
+      <g id="cy-renner">
+        <circle cx="0" cy="0" r="17" fill="none" stroke="currentColor" stroke-width="3.4"/>
+        <circle cx="62" cy="0" r="17" fill="none" stroke="currentColor" stroke-width="3.4"/>
+        <path d="M0 0 L24 2 L38 -14 L15 -16 Z" fill="currentColor"/>
+        <path d="M38 -14 L62 0 L52 -18 Z" fill="currentColor"/>
+        <path d="M24 2 L33 -2 L28 12 L20 10 Z" fill="currentColor"/>
+        <path d="M15 -16 C 20 -36 34 -42 46 -38 C 56 -35 60 -28 61 -22 L52 -18 C 44 -26 30 -26 24 -18 Z" fill="currentColor"/>
+        <circle cx="49" cy="-46" r="8.5" fill="currentColor"/>
+        <path d="M46 -38 L58 -26 L63 -30 L54 -40 Z" fill="currentColor"/>
+        <path d="M28 -20 L36 -4 L30 10 L24 8 L29 -4 L22 -14 Z" fill="currentColor"/>
+      </g>
+    </defs>
+    <line x1="-140" y1="6" x2="-14" y2="6" stroke="#f5c542" stroke-width="6" opacity=".9"/>
+    <line x1="-105" y1="-22" x2="-8" y2="-22" stroke="#4a63e0" stroke-width="6" opacity=".8"/>
+    <use href="#cy-renner" filter="url(#cy-zachter)" style="color:#f5c542"/>
+    <use href="#cy-renner" filter="url(#cy-zacht)" style="color:#4a63e0" opacity=".9"/>
+    <use href="#cy-renner" style="color:#1c2a6e"/>
+  </svg>
+</div>
+
 <footer>
   <span class="gewei">🦌</span>
   Nog niet ingeschreven? <a href="inschrijven.html">Herstel dat.</a><br>
@@ -388,11 +431,23 @@ async function laad() {
     if (!p.length) {
       el.innerHTML = '<p class="leeg">Nog geen namen, dus nog geen punten.<br>Dat is de veiligste positie die u ooit zult hebben.</p>';
     } else {
+      const DIV_STIJL = {
+        baroudeur:  { kleur: 'var(--groen)', badge: '' },
+        baroudelle: { kleur: 'var(--paars)', badge: '' },
+        supporter:  { kleur: 'var(--amber)', badge: ' <span class="rol-badge" title="supporter">📣</span>' },
+        seingever:  { kleur: 'var(--mist)', badge: ' <span class="rol-badge" title="jury / seingever">🚩</span>' }
+      };
       el.innerHTML = `<table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>` +
-        p.map((x, i) => `<tr class="klik" data-id="${esc(x.id)}" title="klik voor de uitsplitsing">
+        p.map((x, i) => {
+          const st = DIV_STIJL[x.divisie] || DIV_STIJL.baroudeur;
+          const sterren = x.sterren
+            ? ` <span class="mini-sterren" style="color:${x.sterren_bijgesteld ? 'var(--rood)' : 'var(--amber)'}" title="${x.sterren_bijgesteld ? 'niveau, bijgesteld door de jury' : 'niveau, zelfverklaard'}">${'★'.repeat(x.sterren)}</span>`
+            : '';
+          return `<tr class="klik" data-id="${esc(x.id)}" title="klik voor de uitsplitsing">
           <td class="pos">${zicht ? i + 1 : '·'}</td>
-          <td><span class="stip" style="background:${x.divisie === 'baroudelle' ? 'var(--paars)' : 'var(--groen)'}"></span>${esc(x.naam)}${x.alias ? ` <span class="alias">"${esc(x.alias)}"</span>` : ''}</td>
-          <td class="pt">${x.punten == null ? '<span title="nog niet vrijgegeven">🔒</span>' : (x.punten > 0 ? '+' : '') + x.punten}</td></tr>`).join('') + '</table>' +
+          <td><span class="stip" style="background:${st.kleur}"></span>${esc(x.naam)}${x.alias ? ` <span class="alias">"${esc(x.alias)}"</span>` : ''}${st.badge}${sterren}</td>
+          <td class="pt">${x.punten == null ? '<span title="nog niet vrijgegeven">🔒</span>' : (x.punten > 0 ? '+' : '') + x.punten}</td></tr>`;
+        }).join('') + '</table>' +
         `<p class="klik-hint">👆 <b>Klik op een naam</b> voor de puntenuitsplitsing.<br>Op uw éigen naam kunt u ook klagen — regel №60.</p>` +
         (!detail.punten_publiek
           ? `<p class="slot-noot">${isOpper

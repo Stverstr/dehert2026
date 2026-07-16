@@ -162,6 +162,15 @@ body{
 .optie.gekozen.paarse .vak{background:var(--paars);outline-color:var(--paars)}
 .optie b{font-weight:400;color:#ece5d3}
 .optie small{display:block;color:#77828a;font-size:.82em;margin-top:.15em}
+/* de nevenrollen: kleiner, stiller, maar even bindend */
+.rol-tussen{
+  font-family:'Special Elite',monospace;font-size:.72rem;color:#5a656d;
+  text-align:center;letter-spacing:.08em;margin:1.1rem 0 .7rem;
+}
+.optie.mini{padding:.6rem .85rem;font-size:.82rem;border-style:dashed;background:#0a0f14}
+.optie.mini .vak{width:.9rem;height:.9rem}
+.optie.mini.gekozen{border-color:var(--amber-diep);box-shadow:0 0 18px rgba(255,179,71,.1)}
+.optie.mini.gekozen .vak{background:var(--amber);outline-color:var(--amber)}
 .veld{margin-bottom:1.4rem}
 .veld label{
   display:block;
@@ -265,6 +274,9 @@ footer{
   font-size:.95rem;
 }
 footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscale(.4)}
+/* een groet aan de waarnemers, in hun eigen kleuren */
+footer .waarnemer{display:block;margin-top:.9em;font-size:.76rem;color:#4a63e0;opacity:.8}
+footer .waarnemer b{color:#f5c542;font-weight:400}
 </style>
 </head>
 <body>
@@ -289,9 +301,9 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
   </div>
 
   <p class="intro">
-    Schrijf u in. Hieronder. Nu — want <b style="color:var(--amber);font-weight:400">vroeg
+    Schrijf u in. Hieronder. Nu, want <b style="color:var(--amber);font-weight:400">vroeg
     inschrijven wordt beloond</b> en getreuzel bestraft (regel №50, De Vroege Vogels).
-    De ploegen stelt de jury nadien samen — volstrekt ondoorgrondelijk.
+    De ploegen stelt de jury nadien samen, volstrekt ondoorgrondelijk.
   </p>
 
   <form id="inschrijfForm">
@@ -319,6 +331,22 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       </label>
     </div>
 
+    <p class="rol-tussen">Niet van plan te fietsen? Ook dan hoort u in het klassement.</p>
+    <div class="opties">
+      <label class="optie mini">
+        <input type="radio" name="division" value="supporter">
+        <span class="vak"></span>
+        <span><b>📣 &nbsp;Supporter</b>
+        <small>moedigt aan vanop de oever · +1, regel №70</small></span>
+      </label>
+      <label class="optie mini">
+        <input type="radio" name="division" value="seingever">
+        <span class="vak"></span>
+        <span><b>🚩 &nbsp;Jury / seingever</b>
+        <small>ziet alles, regelt alles · +5, regel №80</small></span>
+      </label>
+    </div>
+
     <div class="veld">
       <label>Uw niveau <span style="text-transform:none">(wees eerlijk — de jury controleert)</span></label>
       <div class="sterren-blok">
@@ -327,7 +355,7 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
       </div>
       <p class="ster-uitleg" id="sterUitleg"></p>
       <p class="ster-uitleg" style="margin-top:.8em;color:var(--amber);border-left:2px solid var(--amber-diep);padding-left:.8em">
-        ⚖️ Te hoog gokken kost punten. Te laag gokken — de klassieke truc — óók.
+        ⚖️ Te hoog gokken kost punten. Te laag gokken, de klassieke truc, óók.
         Juist zitten loont.
       </p>
     </div>
@@ -358,6 +386,7 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
   <span class="gewei">🦌</span>
   Georkestreerde chaos, tweede editie.<br>
   Wie zich niet inschrijft, wordt ingeschreven. De jury kent u toch al.
+  <span class="waarnemer">Waarnemers in het blauw hoeven zich niet in te schrijven. Zij worden sowieso opgemerkt<b>.</b></span>
 </footer>
 
 <script>
@@ -473,7 +502,7 @@ inschrijfForm.addEventListener('submit', async e => {
   const divisie = inschrijfForm.querySelector('input[name="division"]:checked');
   const commentaar = document.getElementById('in-commentaar').value.trim();
   if (!naam) return toonFout('Zonder naam geen rugnummer. Vul uw naam in.');
-  if (!divisie) return toonFout('Baroudeur of Baroudelle — de jury eist duidelijkheid.');
+  if (!divisie) return toonFout('Kies een rol. De jury eist duidelijkheid.');
   inschrijfKnop.disabled = true;
   inschrijfKnop.textContent = 'Wordt bezegeld…';
   meld('inschrijf_poging');
@@ -494,12 +523,17 @@ inschrijfForm.addEventListener('submit', async e => {
     });
     if (!antw.ok) throw new Error('status ' + antw.status);
     meld('inschrijf_gelukt');
-    const rol = divisie.value === 'baroudelle' ? 'Baroudelle' : 'Baroudeur';
+    const ROL_ZIN = {
+      baroudeur: 'rijdt op 30 september als <b>Baroudeur</b>',
+      baroudelle: 'rijdt op 30 september als <b>Baroudelle</b>',
+      supporter: 'staat op 30 september langs het parcours als <b>Supporter</b>',
+      seingever: 'waakt op 30 september over de koers als <b>Jury / seingever</b>'
+    };
     const boodschap = locatieBoodschap(locatie);
     localStorage.setItem('hert2026_ingeschreven', '1');
     localStorage.setItem('hert2026_inschrijfdank',
       `De jury neemt akte.<br><b>${naam.replace(/</g, '&lt;')}</b>${alias ? ', in de verslagen "<b>' + alias.replace(/</g, '&lt;') + '</b>",' : ''} ` +
-      `rijdt op 30 september als <b>${rol}</b> — zelfverklaard ${'★'.repeat(gekozenNiveau)}.<br>` +
+      `${ROL_ZIN[divisie.value]}, zelfverklaard ${'★'.repeat(gekozenNiveau)}.<br>` +
       `De ploegen volgen. Op het moment dat de jury dat gepast acht.` +
       (boodschap ? `<br><br><span style="color:#ffd9a0">📍 ${boodschap}</span>` : ''));
     toonDank();

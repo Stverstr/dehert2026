@@ -595,10 +595,10 @@ function klachtHtml(pers) {
   return `<div class="klacht-zone">
     <a class="klacht-open" onclick="openKlachtVorm()">📢 Bent u ${esc(pers.naam)}? Dien hier uw klacht in</a>
     <div class="klacht-vorm" id="klachtVorm">
-      <textarea id="klachtTekst" rows="3" maxlength="500" placeholder="Formuleer uw grief. Beknopt. De jury heeft weinig geduld en een lange memorie."></textarea>
-      <p class="klacht-status" style="display:block;margin-top:.3rem;color:#b9b1a0">⚠️ Wie klaagt, <b style="color:var(--amber);text-transform:uppercase;letter-spacing:.06em">klaagt in het openbaar</b>: uw klacht en het oordeel verschijnen voor iedereen op deze uitsplitsing.</p>
+      <textarea id="klachtTekst" rows="3" maxlength="500" placeholder="Schrijf hier uw klacht. Kort en duidelijk."></textarea>
+      <p class="klacht-status" style="display:block;margin-top:.3rem;color:#b9b1a0">⚠️ Uw klacht is <b style="color:var(--amber);text-transform:uppercase;letter-spacing:.06em">openbaar</b>: iedereen kan ze hier lezen, samen met het antwoord van de jury.</p>
       <div class="rij">
-        <label>📎 bewijsstuk (foto, mag)<input type="file" id="klachtFoto" accept="image/*" style="display:none" onchange="document.getElementById('klachtFotoNaam').textContent = this.files[0] ? '📎 ' + this.files[0].name : ''"> <span id="klachtFotoNaam" style="color:var(--amber)"></span></label>
+        <label>📎 foto toevoegen (mag)<input type="file" id="klachtFoto" accept="image/*" style="display:none" onchange="document.getElementById('klachtFotoNaam').textContent = this.files[0] ? '📎 ' + this.files[0].name : ''"> <span id="klachtFotoNaam" style="color:var(--amber)"></span></label>
         <button id="klachtKnop" onclick="verstuurKlacht('${esc(pers.id)}')">verstuur naar de jury</button>
       </div>
       <p class="klacht-status" id="klachtStatus"></p>
@@ -613,7 +613,7 @@ async function verstuurKlacht(persId) {
   const tekst = document.getElementById('klachtTekst').value.trim();
   const status = document.getElementById('klachtStatus');
   status.style.color = '#ff8f8f';
-  if (tekst.length < 5) { status.textContent = 'Zo kort? Dat is geen klacht, dat is een zucht. Formuleer.'; return; }
+  if (tekst.length < 5) { status.textContent = 'Iets meer uitleg graag. Zo kort is het geen klacht.'; return; }
   const knop = document.getElementById('klachtKnop');
   knop.disabled = true;
   knop.textContent = 'wordt bezorgd…';

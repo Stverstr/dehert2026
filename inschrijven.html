@@ -274,12 +274,12 @@ footer{
   font-size:.95rem;
 }
 footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscale(.4)}
-/* de waarnemer in het blauw: duikt af en toe op en kijkt even mee */
-#meekijker{
+/* de waarnemers in het blauw: duiken af en toe op en kijken even mee */
+.meekijker{
   position:fixed;width:72px;z-index:5;pointer-events:none;
   opacity:0;transition:transform 1.1s ease, opacity .9s ease;
 }
-#meekijker svg{width:100%;height:auto;display:block;overflow:visible}
+.meekijker svg{width:100%;height:auto;display:block;overflow:visible}
 </style>
 </head>
 <body>
@@ -391,7 +391,7 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
   Wie zich niet inschrijft, wordt ingeschreven. De jury kent u toch al.
 </footer>
 
-<div id="meekijker" aria-hidden="true">
+<div id="meekijker" class="meekijker" aria-hidden="true">
   <!-- volledig zelfvoorzienend: iOS Safari kan geen <use> over SVG-grenzen heen -->
   <svg viewBox="-20 -58 104 80">
     <title>🌪 komt even meekijken</title>
@@ -572,29 +572,34 @@ inschrijfForm.addEventListener('submit', async e => {
   }
 });
 
-// de waarnemer in het blauw: duikt af en toe langs een rand op, kijkt even mee, verdwijnt weer
-const meekijker = document.getElementById('meekijker');
-function meekijkerPiek() {
+// de waarnemers in het blauw: duiken af en toe langs een rand op, kijken even mee, verdwijnen weer
+function laatKijken(kijker) {
   const links = Math.random() < .5;
-  meekijker.style.top = (12 + Math.random() * 68) + 'vh';
-  meekijker.style.left = links ? '0' : 'auto';
-  meekijker.style.right = links ? 'auto' : '0';
+  kijker.style.top = (12 + Math.random() * 68) + 'vh';
+  kijker.style.left = links ? '0' : 'auto';
+  kijker.style.right = links ? 'auto' : '0';
   const spiegel = links ? '' : ' scaleX(-1)';
   const uit = `translateX(${links ? '-115%' : '115%'})${spiegel}`;
   const kijkt = `translateX(${links ? '-30%' : '30%'})${spiegel} rotate(${links ? -4 : 4}deg)`;
-  meekijker.style.transition = 'none';
-  meekijker.style.transform = uit;
-  void meekijker.offsetWidth;
-  meekijker.style.transition = 'transform 1.1s ease, opacity .9s ease';
-  meekijker.style.opacity = '.85';
-  meekijker.style.transform = kijkt;
+  kijker.style.transition = 'none';
+  kijker.style.transform = uit;
+  void kijker.offsetWidth;
+  kijker.style.transition = 'transform 1.1s ease, opacity .9s ease';
+  kijker.style.opacity = '.85';
+  kijker.style.transform = kijkt;
   setTimeout(() => {
-    meekijker.style.opacity = '0';
-    meekijker.style.transform = uit;
+    kijker.style.opacity = '0';
+    kijker.style.transform = uit;
   }, 2600);
-  setTimeout(meekijkerPiek, 12000 + Math.random() * 20000);
+  setTimeout(() => laatKijken(kijker), 8000 + Math.random() * 16000);
 }
-setTimeout(meekijkerPiek, 5000 + Math.random() * 6000);
+const eersteKijker = document.getElementById('meekijker');
+const kijkers = [eersteKijker, eersteKijker.cloneNode(true), eersteKijker.cloneNode(true)];
+kijkers.slice(1).forEach(k => { k.removeAttribute('id'); document.body.appendChild(k); });
+kijkers.forEach((k, i) => {
+  k.style.width = (58 + Math.random() * 24) + 'px';
+  setTimeout(() => laatKijken(k), 3000 + i * 3500 + Math.random() * 5000);
+});
 </script>
 </body>
 </html>

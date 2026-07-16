@@ -85,12 +85,12 @@ body{
   position:fixed;left:0;bottom:2vh;width:120px;z-index:-1;
   pointer-events:none;opacity:.32;will-change:transform;
   transform:translateX(-40vw);
-  animation:cycloneflits 48s linear 6s infinite;
+  animation:cycloneflits 10s linear 3s infinite;
 }
 .cyclone-baan svg{width:100%;height:auto;display:block;overflow:visible}
 @keyframes cycloneflits{
   0%{transform:translateX(-40vw)}
-  4%{transform:translateX(115vw)}
+  18%{transform:translateX(115vw)}
   100%{transform:translateX(115vw)}
 }
 .klik-hint b{color:#cfc8b8;font-weight:400}
@@ -218,7 +218,8 @@ table.stand tr:first-child td{border-top:none}
 .stip{display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.5em;vertical-align:baseline}
 .alias{color:var(--mist);font-size:.85em}
 .rol-badge{font-size:.8em}
-.mini-sterren{font-size:.72em;letter-spacing:.05em;white-space:nowrap}
+.ster-kol{text-align:left;white-space:nowrap;padding-left:.6em;width:1%}
+.mini-sterren{font-size:.82em;letter-spacing:.05em}
 .leeg{color:#77828a;font-family:'Special Elite',monospace;font-size:.9rem;text-align:center;padding:1.2rem 0}
 .regel{
   border:1px solid #24333d;background:#0d1319;
@@ -437,15 +438,16 @@ async function laad() {
         supporter:  { kleur: 'var(--amber)', badge: ' <span class="rol-badge" title="supporter">📣</span>' },
         seingever:  { kleur: 'var(--mist)', badge: ' <span class="rol-badge" title="jury / seingever">🚩</span>' }
       };
-      el.innerHTML = `<table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>` +
+      el.innerHTML = `<table class="stand"><tr><th></th><th>Renner</th><th></th><th style="text-align:right">Punten</th></tr>` +
         p.map((x, i) => {
           const st = DIV_STIJL[x.divisie] || DIV_STIJL.baroudeur;
           const sterren = x.sterren
-            ? ` <span class="mini-sterren" style="color:${x.sterren_bijgesteld ? 'var(--rood)' : 'var(--amber)'}" title="${x.sterren_bijgesteld ? 'niveau, bijgesteld door de jury' : 'niveau, zelfverklaard'}">${'★'.repeat(x.sterren)}</span>`
+            ? `<span class="mini-sterren" style="color:${x.sterren_bijgesteld ? 'var(--rood)' : 'var(--amber)'}" title="${x.sterren_bijgesteld ? 'niveau, bijgesteld door de jury' : 'niveau, zelfverklaard'}">${'★'.repeat(x.sterren)}</span>`
             : '';
           return `<tr class="klik" data-id="${esc(x.id)}" title="klik voor de uitsplitsing">
           <td class="pos">${zicht ? i + 1 : '·'}</td>
-          <td><span class="stip" style="background:${st.kleur}"></span>${esc(x.naam)}${x.alias ? ` <span class="alias">"${esc(x.alias)}"</span>` : ''}${st.badge}${sterren}</td>
+          <td><span class="stip" style="background:${st.kleur}"></span>${esc(x.naam)}${x.alias ? ` <span class="alias">"${esc(x.alias)}"</span>` : ''}${st.badge}</td>
+          <td class="ster-kol">${sterren}</td>
           <td class="pt">${x.punten == null ? '<span title="nog niet vrijgegeven">🔒</span>' : (x.punten > 0 ? '+' : '') + x.punten}</td></tr>`;
         }).join('') + '</table>' +
         `<p class="klik-hint">👆 <b>Klik op een naam</b> voor de puntenuitsplitsing.<br>Op uw éigen naam kunt u ook klagen — regel №60.</p>` +

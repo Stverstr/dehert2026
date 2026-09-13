@@ -170,12 +170,18 @@ async function laad() {
     q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_deliberations?order=sort'),
     q('hert_rider_points?select=*'), rpc('hert_scorebord').catch(() => null)
   ]);
-  const prekoers = {};
-  if (voork && voork.personen) voork.personen.forEach(p => { prekoers[(p.naam || '').trim().toLowerCase()] = p.punten; });
-  Object.assign(D, { event: event[0], teams, riders, rounds, scores, delibs, riderPoints, prekoers });
+  const prekoers = {}, aliassen = {};
+  if (voork && voork.personen) voork.personen.forEach(p => {
+    const k = (p.naam || '').trim().toLowerCase();
+    prekoers[k] = p.punten;
+    if (p.alias) aliassen[k] = p.alias;
+  });
+  Object.assign(D, { event: event[0], teams, riders, rounds, scores, delibs, riderPoints, prekoers, aliassen });
 }
 
 function team(id) { return D.teams.find(t => t.id === id); }
+// op het bord rijden de schuilnamen; de echte naam is de reserve
+function toon(r) { return D.aliassen[(r.name || '').trim().toLowerCase()] || r.name; }
 function teamTotaal(teamId) {
   let t = 0;
   D.scores.filter(s => s.team_id === teamId).forEach(s => t += s.base_points + s.bonus - s.penalty);
@@ -194,7 +200,7 @@ function juryFeed() {
   D.riderPoints.forEach(p => {
     const r = D.riders.find(x => x.id === p.rider_id);
     items.push({ t: p.created_at, soort: '🏅 renner', delta: p.punten,
-      tekst: `<b>${esc(r ? r.name : '?')}</b>${p.reason ? ' — <i>' + esc(p.reason) + '</i>' : ''}` });
+      tekst: `<b>${esc(r ? toon(r) : '?')}</b>${p.reason ? ' — <i>' + esc(p.reason) + '</i>' : ''}` });
   });
   D.delibs.filter(d => d.revealed && !d.sealed).forEach(d => {
     const tm = d.team_id ? team(d.team_id) : null;
@@ -220,7 +226,7 @@ function render() {
     const tm = r.team_id ? team(r.team_id) : null;
     const stip = tm ? tm.color : (r.division === 'baroudellen' ? 'var(--paars)' : 'var(--groen)');
     return `<div class="rij"><span class="pos">${i + 1}</span><span class="stip" style="background:${esc(stip)}"></span>
-      <span class="naam">${esc(r.name)}</span><span class="pt">${r.punten}</span></div>`;
+      <span class="naam">${esc(toon(r))}</span><span class="pt">${r.punten}</span></div>`;
   }).join('');
 
   document.getElementById('p-ploeg').innerHTML = D.teams

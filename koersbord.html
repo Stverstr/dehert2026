@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>De Hert — Het Koersbord</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦌</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Cormorant:ital,wght@0,400;0,600;0,700;1,500;1,600&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nacht:#06090d; --nacht2:#0a1016; --kader:#223039; --kader2:#2c3d47;
+  --mist:#8fa3ad; --groen:#3ddc84; --groen-diep:#1d6b47;
+  --paars:#d97bb2; --amber:#ffb347; --amber-diep:#c47a1e;
+  --papier:#d8d2c4; --inkt:#b9b1a0; --grijs:#77828a; --rood:#ff8f8f;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:clamp(11px,0.95vw,20px)}
+body{background:var(--nacht);color:var(--papier);font-family:'Cormorant',serif;min-height:100vh;overflow-x:clip;padding:0 1.2rem 1rem}
+.graan{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+header{display:flex;align-items:baseline;gap:1.2rem;flex-wrap:wrap;padding:1rem .3rem .7rem;border-bottom:1px dashed var(--kader2)}
+header .t1{font-family:'Abril Fatface',serif;font-size:1.9rem;color:#e9e2d0}
+header .t1 .gewei{margin-right:.35em}
+header .fase{font-family:'Special Elite',monospace;font-size:.85rem;letter-spacing:.22em;text-transform:uppercase;color:var(--amber)}
+header .ronde-nu{font-style:italic;color:var(--inkt);font-size:1.05rem}
+header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.3rem;color:var(--grijs)}
+
+.mededeling{background:linear-gradient(90deg,#2a1f0d,#1a1409);border:1px solid var(--amber-diep);color:#ffd9a0;font-family:'Special Elite',monospace;font-size:1rem;padding:.75em 1em;margin:.8rem 0 0;line-height:1.5}
+.mededeling::before{content:"📢 "}
+
+.bord{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:1rem;margin-top:1rem}
+@media(max-width:60rem){.bord{grid-template-columns:1fr}}
+.paneel{position:relative;background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid var(--kader);padding:1rem 1rem 1.1rem}
+.paneel::before{content:"";position:absolute;inset:6px;border:1px dashed var(--kader2);pointer-events:none}
+.paneel h2{font-family:'Special Elite',monospace;font-size:.95rem;letter-spacing:.16em;text-transform:uppercase;color:var(--papier);margin-bottom:.2rem}
+.paneel .sub{font-family:'Special Elite',monospace;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grijs);margin-bottom:.7rem}
+
+/* individueel: twee kolommen */
+.ind{columns:2;column-gap:1.2rem}
+.ind .rij{display:flex;align-items:baseline;gap:.45em;padding:.14em 0;border-bottom:1px solid #10171d;break-inside:avoid;font-size:.98rem}
+.ind .pos{font-family:'Special Elite',monospace;font-size:.72em;color:var(--grijs);min-width:1.7em;text-align:right}
+.ind .rij:nth-child(-n+3) .pos{color:var(--amber)}
+.ind .naam{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ind .pt{font-family:'Special Elite',monospace;color:var(--amber);font-size:.85em}
+.stip{display:inline-block;width:.6em;height:.6em;border-radius:50%;flex:none;vertical-align:baseline}
+
+/* ploegen: groot */
+.ploeg-rij{display:flex;align-items:center;gap:.7rem;padding:.55rem .2rem;border-bottom:1px solid #131c23}
+.ploeg-rij .pos{font-family:'Abril Fatface',serif;font-size:1.4rem;color:var(--grijs);min-width:1.2em}
+.ploeg-rij:first-of-type .pos{color:var(--amber)}
+.ploeg-rij .hesje{width:1.15em;height:1.15em;border-radius:.25em;flex:none;border:1px solid rgba(0,0,0,.4)}
+.ploeg-rij .naam{flex:1;font-size:1.35rem}
+.ploeg-rij .pt{font-family:'Abril Fatface',serif;font-size:1.7rem;color:var(--amber)}
+
+/* jury-feed */
+.feed .item{padding:.5rem 0;border-bottom:1px solid #10171d;animation:onthul .8s ease}
+@keyframes onthul{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.feed .kop{display:flex;gap:.6em;align-items:baseline;font-family:'Special Elite',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grijs)}
+.feed .kop .delta{margin-left:auto;font-size:1.05rem;letter-spacing:0}
+.feed .delta.plus{color:var(--groen)} .feed .delta.min{color:var(--rood)}
+.feed .tekst{font-size:1.02rem;line-height:1.4;margin-top:.15rem}
+.feed .tekst i{color:var(--inkt)}
+.feed .leeg{font-style:italic;color:var(--grijs);padding:.6rem 0}
+
+footer{text-align:center;margin-top:.9rem;font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.14em;color:#49545c}
+</style>
+</head>
+<body>
+<!-- 🌪 Dit bord werd geijkt door een onafhankelijke blauw-gele instantie. De cijfers kloppen, aldus niemand. -->
+<div class="graan"></div>
+
+<header>
+  <span class="t1"><span class="gewei">🦌</span>Grote Sluitingsprijs Café De Hert</span>
+  <span class="fase" id="h-fase"></span>
+  <span class="ronde-nu" id="h-ronde"></span>
+  <span class="klok" id="h-klok"></span>
+</header>
+<div id="h-notice"></div>
+
+<div class="bord">
+  <div class="paneel">
+    <h2>🏅 Het individueel klassement</h2>
+    <div class="sub">voorklassement + koersdag</div>
+    <div class="ind" id="p-ind"></div>
+  </div>
+  <div class="paneel">
+    <h2>De ploegen</h2>
+    <div class="sub">zes kleuren, één gewei</div>
+    <div id="p-ploeg"></div>
+  </div>
+  <div class="paneel">
+    <h2>⚖️ De jury spreekt</h2>
+    <div class="sub">laatste beslissingen eerst · protest is zinloos maar welkom</div>
+    <div class="feed" id="p-feed"></div>
+  </div>
+</div>
+
+<footer>De jury noteert alles. Ook nu. † live-cijfers, geijkt door een onafhankelijke blauw-gele waarnemer</footer>
+
+<script>
+const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
+const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
+const FASEN = {
+  lobby: 'De verzameling', round_intro: 'De onthulling', round_active: 'Koers!',
+  round_done: 'Tussenstand', deliberation: 'De Beraadslaging', ceremony: 'De Slotceremonie', finished: 'Het is volbracht'
+};
+const D = { event: null, teams: [], riders: [], rounds: [], scores: [], delibs: [], riderPoints: [], prekoers: {} };
+
+async function q(pad) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${pad}`, { headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY } });
+  if (!r.ok) throw new Error('fout ' + r.status);
+  return r.json();
+}
+async function rpc(fn, args) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args || {})
+  });
+  if (!r.ok) throw new Error('fout ' + r.status);
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function tijd(ts) { return new Date(ts).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }); }
+
+async function laad() {
+  const [event, teams, riders, rounds, scores, delibs, riderPoints, voork] = await Promise.all([
+    q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
+    q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_deliberations?order=sort'),
+    q('hert_rider_points?select=*'), rpc('hert_scorebord').catch(() => null)
+  ]);
+  const prekoers = {};
+  if (voork && voork.personen) voork.personen.forEach(p => { prekoers[(p.naam || '').trim().toLowerCase()] = p.punten; });
+  Object.assign(D, { event: event[0], teams, riders, rounds, scores, delibs, riderPoints, prekoers });
+}
+
+function team(id) { return D.teams.find(t => t.id === id); }
+function teamTotaal(teamId) {
+  let t = 0;
+  D.scores.filter(s => s.team_id === teamId).forEach(s => t += s.base_points + s.bonus - s.penalty);
+  D.delibs.filter(d => d.revealed && !d.sealed && d.team_id === teamId).forEach(d => t += d.delta);
+  return t;
+}
+function individueel() {
+  const per = {};
+  D.riderPoints.forEach(p => per[p.rider_id] = (per[p.rider_id] || 0) + p.punten);
+  return D.riders
+    .map(r => ({ ...r, punten: (D.prekoers[(r.name || '').trim().toLowerCase()] || 0) + (per[r.id] || 0) }))
+    .sort((a, b) => b.punten - a.punten || a.name.localeCompare(b.name));
+}
+function juryFeed() {
+  const items = [];
+  D.riderPoints.forEach(p => {
+    const r = D.riders.find(x => x.id === p.rider_id);
+    items.push({ t: p.created_at, soort: '🏅 renner', delta: p.punten,
+      tekst: `<b>${esc(r ? r.name : '?')}</b>${p.reason ? ' — <i>' + esc(p.reason) + '</i>' : ''}` });
+  });
+  D.delibs.filter(d => d.revealed && !d.sealed).forEach(d => {
+    const tm = d.team_id ? team(d.team_id) : null;
+    items.push({ t: d.created_at, soort: tm ? '⚖️ ploeg' : '📢 mededeling', delta: d.delta || 0,
+      tekst: `<b>${esc(d.title)}</b>${tm ? ' — ' + esc(tm.name) : ''}${d.body ? '<br><i>' + esc(d.body) + '</i>' : ''}` });
+  });
+  D.scores.filter(s => s.bonus || s.penalty).forEach(s => {
+    const tm = team(s.team_id), ro = D.rounds.find(r => r.id === s.round_id);
+    items.push({ t: s.updated_at, soort: '⚖️ ploeg', delta: (s.bonus || 0) - (s.penalty || 0),
+      tekst: `<b>${esc(tm ? tm.name : '?')}</b> — ${esc(ro && ro.status !== 'hidden' ? ro.title : 'een ronde')}${s.bonus ? ': +' + s.bonus + ' bonus' : ''}${s.penalty ? (s.bonus ? ',' : ':') + ' −' + s.penalty + ' straf' : ''}${s.reason ? '<br><i>' + esc(s.reason) + '</i>' : ''}` });
+  });
+  return items.sort((a, b) => new Date(b.t) - new Date(a.t)).slice(0, 9);
+}
+
+function render() {
+  const e = D.event || {};
+  document.getElementById('h-fase').textContent = FASEN[e.phase] || '';
+  const ar = D.rounds.find(r => r.id === e.active_round_id);
+  document.getElementById('h-ronde').textContent = ar ? (ar.status !== 'hidden' ? '· ' + ar.title : '· de volgende ronde is nog geheim') : '';
+  document.getElementById('h-notice').innerHTML = e.notice ? `<div class="mededeling">${esc(e.notice)}</div>` : '';
+
+  document.getElementById('p-ind').innerHTML = individueel().map((r, i) => {
+    const tm = r.team_id ? team(r.team_id) : null;
+    const stip = tm ? tm.color : (r.division === 'baroudellen' ? 'var(--paars)' : 'var(--groen)');
+    return `<div class="rij"><span class="pos">${i + 1}</span><span class="stip" style="background:${esc(stip)}"></span>
+      <span class="naam">${esc(r.name)}</span><span class="pt">${r.punten}</span></div>`;
+  }).join('');
+
+  document.getElementById('p-ploeg').innerHTML = D.teams
+    .map(t => ({ ...t, punten: teamTotaal(t.id) }))
+    .sort((a, b) => b.punten - a.punten || a.sort - b.sort)
+    .map((t, i) => `<div class="ploeg-rij"><span class="pos">${i + 1}</span>
+      <span class="hesje" style="background:${esc(t.color)}"></span>
+      <span class="naam">${esc(t.name)}</span><span class="pt">${t.punten}</span></div>`).join('');
+
+  const feed = juryFeed();
+  document.getElementById('p-feed').innerHTML = feed.length ? feed.map(x => `<div class="item">
+      <div class="kop"><span>${x.soort}</span><span>${tijd(x.t)}</span>
+        ${x.delta ? `<span class="delta ${x.delta > 0 ? 'plus' : 'min'}">${x.delta > 0 ? '+' : ''}${x.delta}</span>` : ''}</div>
+      <div class="tekst">${x.tekst}</div></div>`).join('')
+    : '<p class="leeg">De jury heeft nog niets beslist. Dat duurt nooit lang.</p>';
+}
+
+function klok() { document.getElementById('h-klok').textContent = new Date().toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }); }
+
+(async () => {
+  klok(); setInterval(klok, 10000);
+  try { await laad(); render(); } catch (e) { console.error(e); }
+  setInterval(async () => { try { await laad(); render(); } catch (e) {} }, 5000);
+})();
+</script>
+</body>
+</html>

@@ -901,7 +901,7 @@ function deelnemersKaart() {
       <button class="mini geel" onclick="bewerkDeelnemer(null)">+ deelnemer</button>
       <button class="mini groen" onclick="verdeelTeams()">⚖️ Slangendraft: verdeel in gemengde ploegen</button>
     </div>
-    <p class="klein" style="margin-top:.6rem">verdeling: gemengde ploegen van 5 à 6 (zes hesjeskleuren), slangendraft met de sterretjes als draftvolgorde (★★★★★ = ijzersterk)</p></div>`;
+    <p class="klein" style="margin-top:.6rem">verdeling: gemengde ploegen van 5 à 6 (zes hesjeskleuren), slangendraft met de sterretjes als draftvolgorde (★★★★★ = ijzersterk). eenmalig tijdens De Verzameling: daarna liggen de ploegen vast, bijsturen kan enkel per renner.</p></div>`;
 }
 async function zetNiveau(id, niveau) {
   const r = S.pub.riders.find(x => x.id === id);
@@ -941,6 +941,8 @@ async function bewaarDeelnemer(id) {
   } catch (e) { modalFout(e.message); }
 }
 async function verdeelTeams() {
+  // vaste ploegen: de draft kan alleen tijdens De Verzameling; daarna liggen de ploegen vast
+  if (S.pub.event && S.pub.event.phase !== 'lobby') return toast('⚠️ De ploegen liggen vast: de koers is al begonnen. Bijsturen kan enkel per renner via ✏️.');
   const ds = S.pub.riders;
   if (ds.length < 8) return toast('⚠️ Minstens 8 renners nodig voor een draft');
   // aantal ploegen: mikken op ±5 renners per ploeg, begrensd door de hesjeskleuren

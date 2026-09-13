@@ -217,7 +217,7 @@ const FASEN = {
   round_done: 'Tussenstand', deliberation: 'De Beraadslaging', ceremony: 'De Slotceremonie', finished: 'Het is volbracht'
 };
 const FASEN_SUB = {
-  lobby: 'zeven kleuren \u00b7 \u00e9\u00e9n gewei \u00b7 nul objectiviteit',
+  lobby: 'zes kleuren \u00b7 \u00e9\u00e9n gewei \u00b7 nul objectiviteit',
   round_intro: 'de opdracht is onthuld \u2014 te laat om nog te oefenen',
   round_active: 'er wordt gereden \u2014 de jury ziet alles. ook d\u00e1t.',
   round_done: 'tussenstand \u2014 voorlopig, betwistbaar en omkoopbaar',
@@ -638,7 +638,7 @@ function scoreBlok(r) {
         <button class="mini groen" onclick="bewaarScore('${r.id}','${t.id}')">ok</button>
       </div>`;
     }).join('')}
-    <p class="klein" style="margin-top:.5rem">tip: rang 1-7 = 10·8·6·5·4·3·2 punten (De Afvalling: 5·4·3·2, de rest 1). bonus voor jurymagie, straf voor gebroken contracten.</p>
+    <p class="klein" style="margin-top:.5rem">tip: rang 1-6 = 10·8·6·5·4·3 punten (De Afvalling: 5·4·3·2, de rest 1). bonus voor jurymagie, straf voor gebroken contracten.</p>
   </details>`;
 }
 async function bewaarScore(rid, tid) {
@@ -901,7 +901,7 @@ function deelnemersKaart() {
       <button class="mini geel" onclick="bewerkDeelnemer(null)">+ deelnemer</button>
       <button class="mini groen" onclick="verdeelTeams()">⚖️ Slangendraft: verdeel in gemengde ploegen</button>
     </div>
-    <p class="klein" style="margin-top:.6rem">verdeling: gemengde ploegen van 4-5, slangendraft met de sterretjes als draftvolgorde (★★★★★ = ijzersterk)</p></div>`;
+    <p class="klein" style="margin-top:.6rem">verdeling: gemengde ploegen van 5 à 6 (zes hesjeskleuren), slangendraft met de sterretjes als draftvolgorde (★★★★★ = ijzersterk)</p></div>`;
 }
 async function zetNiveau(id, niveau) {
   const r = S.pub.riders.find(x => x.id === id);
@@ -943,12 +943,9 @@ async function bewaarDeelnemer(id) {
 async function verdeelTeams() {
   const ds = S.pub.riders;
   if (ds.length < 8) return toast('⚠️ Minstens 8 renners nodig voor een draft');
-  // aantal ploegen: 4-5 renners per ploeg, gemengd over de hele lijst
-  let aantal = Math.max(2, Math.round(ds.length / 4.5));
-  if (ds.length / aantal > 5) aantal = Math.ceil(ds.length / 5);
-  if (ds.length / aantal < 4) aantal = Math.max(2, Math.floor(ds.length / 4));
+  // aantal ploegen: mikken op ±5 renners per ploeg, begrensd door de hesjeskleuren
+  const aantal = Math.max(2, Math.min(S.pub.teams.length, Math.round(ds.length / 5)));
   const doelTeams = S.pub.teams.slice().sort((a, b) => a.sort - b.sort).slice(0, aantal);
-  if (doelTeams.length < aantal) return toast(`⚠️ ${aantal} ploegen nodig, maar er bestaan er maar ${doelTeams.length}. Maak er bij via Ploegen & codes.`);
   if (!confirm(`${ds.length} renners via slangendraft verdelen over ${aantal} gemengde ploegen (${doelTeams.map(t => t.name).join(', ')})? De bestaande indeling wordt overschreven.`)) return;
   // slangendraft op de sterretjes (sterksten eerst, richting keert per draftronde)
   const volgorde = ds.slice().sort((a, b) => (b.niveau || 3) - (a.niveau || 3) || Math.random() - .5);

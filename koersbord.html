@@ -171,12 +171,13 @@ async function laad() {
     q('hert_rider_points?select=*'), rpc('hert_scorebord').catch(() => null)
   ]);
   const prekoers = {}, aliassen = {};
-  if (voork && voork.personen) voork.personen.forEach(p => {
+  const personen = (voork && voork.personen) || [];
+  personen.forEach(p => {
     const k = (p.naam || '').trim().toLowerCase();
     prekoers[k] = p.punten;
     if (p.alias) aliassen[k] = p.alias;
   });
-  Object.assign(D, { event: event[0], teams, riders, rounds, scores, delibs, riderPoints, prekoers, aliassen });
+  Object.assign(D, { event: event[0], teams, riders, rounds, scores, delibs, riderPoints, prekoers, aliassen, personen });
 }
 
 function team(id) { return D.teams.find(t => t.id === id); }
@@ -189,11 +190,21 @@ function teamTotaal(teamId) {
   return t;
 }
 function individueel() {
+  // iedereen op het voorklassement (renners, supporters, seingevers) + koersdagpunten waar die bestaan
   const per = {};
   D.riderPoints.forEach(p => per[p.rider_id] = (per[p.rider_id] || 0) + p.punten);
-  return D.riders
-    .map(r => ({ ...r, punten: (D.prekoers[(r.name || '').trim().toLowerCase()] || 0) + (per[r.id] || 0) }))
-    .sort((a, b) => b.punten - a.punten || a.name.localeCompare(b.name));
+  const koersVan = {};
+  D.riders.forEach(r => { koersVan[(r.name || '').trim().toLowerCase()] = { koers: per[r.id] || 0, team_id: r.team_id }; });
+  const lijst = (D.personen || []).map(p => {
+    const x = koersVan[(p.naam || '').trim().toLowerCase()] || {};
+    return { naam: p.alias || p.naam, divisie: p.divisie, team_id: x.team_id || null, punten: (p.punten || 0) + (x.koers || 0) };
+  });
+  // renners die (nog) niet op het voorklassement staan toch tonen
+  const bekend = new Set((D.personen || []).map(p => (p.naam || '').trim().toLowerCase()));
+  D.riders.filter(r => !bekend.has((r.name || '').trim().toLowerCase())).forEach(r => {
+    lijst.push({ naam: r.name, divisie: r.division === 'baroudellen' ? 'baroudelle' : 'baroudeur', team_id: r.team_id, punten: per[r.id] || 0 });
+  });
+  return lijst.sort((a, b) => b.punten - a.punten || a.naam.localeCompare(b.naam));
 }
 function juryFeed() {
   const items = [];
@@ -222,11 +233,12 @@ function render() {
   document.getElementById('h-ronde').textContent = ar ? (ar.status !== 'hidden' ? '· ' + ar.title : '· de volgende ronde is nog geheim') : '';
   document.getElementById('h-notice').innerHTML = e.notice ? `<div class="mededeling">${esc(e.notice)}</div>` : '';
 
+  const DIVSTIP = { baroudeur: 'var(--groen)', baroudelle: 'var(--paars)', supporter: 'var(--amber)', seingever: 'var(--mist)' };
   document.getElementById('p-ind').innerHTML = individueel().map((r, i) => {
     const tm = r.team_id ? team(r.team_id) : null;
-    const stip = tm ? tm.color : (r.division === 'baroudellen' ? 'var(--paars)' : 'var(--groen)');
+    const stip = tm ? tm.color : (DIVSTIP[r.divisie] || 'var(--grijs)');
     return `<div class="rij"><span class="pos">${i + 1}</span><span class="stip" style="background:${esc(stip)}"></span>
-      <span class="naam">${esc(toon(r))}</span><span class="pt">${r.punten}</span></div>`;
+      <span class="naam">${esc(r.naam)}</span><span class="pt">${r.punten}</span></div>`;
   }).join('');
 
   document.getElementById('p-ploeg').innerHTML = D.teams

@@ -18,7 +18,11 @@
   --papier:#d8d2c4; --inkt:#b9b1a0; --grijs:#77828a; --rood:#ff8f8f;
 }
 *{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
 body{background:var(--nacht);color:var(--papier);font-family:'Cormorant',serif;font-size:1.1rem;min-height:100vh;overflow-x:clip}
+.kaart{scroll-margin-top:4.2rem}
+.snelnav{position:sticky;top:0;z-index:30;background:rgba(6,9,13,.94);display:flex;gap:.35rem;flex-wrap:wrap;padding:.5rem .1rem;border-bottom:1px solid var(--kader);margin-bottom:.9rem}
+.snelnav a{font-family:'Special Elite',monospace;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--inkt);border:1px solid var(--kader);padding:.45em .7em;text-decoration:none;background:#0d1319}
 ::selection{background:var(--paars-diep);color:#fff}
 button{font-family:'Special Elite',monospace;cursor:pointer}
 h1,h2,h3{font-weight:400}
@@ -186,7 +190,8 @@ details{margin-top:.6rem} summary{cursor:pointer;font-family:'Special Elite',mon
     <button onclick="inloggen()">Betreed de koers</button>
     <p class="fout" id="login-fout"></p>
   </div>
-  <button class="scherm-link" onclick="startScherm()">📺 Groot scherm (geen code nodig)</button>
+  <button class="scherm-link" onclick="location.href='koersbord.html'">📺 Het Koersbord — live tv-overzicht (geen code)</button>
+  <button class="scherm-link" style="margin-top:.9rem" onclick="startScherm()">🎭 Groot scherm — onthullingen & ceremonie</button>
   <p class="quip" id="login-quip"></p>
 </div>
 
@@ -380,11 +385,11 @@ function persoonlijkTabel(limiet) {
   <table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>
   ${k.map((r, i) => { const t = r.team_id ? team(r.team_id) : null; return `<tr>
     <td class="pos">${i + 1}</td>
-    <td>${t ? `<span class="teamstip" style="background:${esc(t.color)}"></span>` : ''}${esc(r.name)}${r.division ? `<span class="divlabel">${DIV[r.division]}</span>` : ''}</td>
+    <td>${t ? `<span class="teamstip" style="background:${esc(t.color)}"></span>` : ''}${esc(r.name)}<span class="divlabel">${r.division ? DIV[r.division] : r.role === 'supporter' ? '📣' : r.role === 'seingever' ? '🚩' : ''}</span></td>
     <td class="pt">${r.punten}${r.koers ? ` <span class="divlabel">(${r.koers > 0 ? '+' : ''}${r.koers} vandaag)</span>` : ''}</td></tr>`; }).join('')}</table>`;
 }
 function klassementKaart() {
-  return `<div class="kaart dossier"><h2>Het Klassement</h2>
+  return `<div class="kaart dossier" id="k-klassement"><h2>Het Klassement</h2>
     <div class="tabs">
       ${['ploegen', 'individueel'].map(d =>
         `<button class="${S.tab === d ? 'aan' : ''}" onclick="S.tab='${d}';render()">${d === 'ploegen' ? 'Ploegen' : '🏅 Individueel'}</button>`).join('')}
@@ -410,7 +415,10 @@ function zichtTeam() {
       ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}
       ${e.phase === 'round_done' ? '<p class="wacht" style="margin-top:1rem">Ronde afgelopen. De jury telt. Of doet alsof.</p>' : ''}</div>`;
   }
+  const nav = [['k-ploeg', '🚴 Ploeg'], ['k-klassement', '🏆 Stand'], ['k-rondes', '🏁 Rondes'], ['k-kanalen', '💰 Kanalen']]
+    .map(([id, l]) => `<a href="#${id}">${l}</a>`).join('');
   return mededeling() + nu
+    + `<nav class="snelnav">${nav}</nav>`
     + ploegKaart()
     + missiesBlok()
     + reglementBlok()
@@ -421,7 +429,7 @@ function zichtTeam() {
 }
 function ploegKaart() {
   const leden = S.pub.riders.filter(r => r.team_id === S.team.id);
-  return `<div class="kaart dossier"><h2><span class="teamstip" style="background:${esc(S.team.color)}"></span>${esc(S.team.name)}
+  return `<div class="kaart dossier" id="k-ploeg"><h2><span class="teamstip" style="background:${esc(S.team.color)}"></span>${esc(S.team.name)}
       <span class="r"><button class="mini" onclick="hernoemPloeg()">✏️ naam & motto</button></span></h2>
     ${S.team.motto ? `<p class="stil" style="margin-bottom:.8rem">"${esc(S.team.motto)}"</p>` : ''}
     ${leden.length ? leden.map(r => `<div class="score-rij"><span class="tnaam">${r.is_captain ? '👑 ' : '🚴 '}${esc(r.name)}</span></div>`).join('')
@@ -456,7 +464,7 @@ function missiesBlok() {
 }
 function rondesBlok(divisie, juryModus) {
   const rondes = S.pub.rounds.filter(r => r.status !== 'skipped');
-  return `<div class="kaart dossier"><h2>De Rondes</h2>
+  return `<div class="kaart dossier" id="k-rondes"><h2>De Rondes</h2>
     ${rondes.map(r => {
       const brief = briefVan(r.id);
       const zichtbaar = r.status !== 'hidden';
@@ -473,7 +481,7 @@ function rondesBlok(divisie, juryModus) {
     }).join('')}</div>`;
 }
 function actiesBlok() {
-  return `<div class="kaart dossier"><h2>Duistere kanalen</h2>
+  return `<div class="kaart dossier" id="k-kanalen"><h2>Duistere kanalen</h2>
     <div class="acties">
       <button class="grote-knop geel" onclick="openOmkoop()">💰 Omkopen<small>de jury heeft principes. rekbare.</small></button>
       <button class="grote-knop roze" onclick="openKliklijn()">📸 Kliklijn<small>verklik een ander team, met bewijs</small></button>
@@ -584,7 +592,9 @@ function zichtJury() {
       + regelsJuryKaart(opper)
       + (opper ? beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst());
   }
-  return tabbalk + mededeling()
+  const nav = [['k-regie', '🎬 Regie'], ['k-klassement', '🏆 Stand'], ['k-rondes', '🏁 Rondes'], ['k-inbox', '📬 Inbox'], ['k-punten', '🏅 Punten'], ['k-logboek', '📓 Logboek']]
+    .map(([id, l]) => `<a href="#${id}">${l}</a>`).join('');
+  return tabbalk + `<nav class="snelnav">${nav}</nav>` + mededeling()
     + faseKaart(opper)
     + klassementKaart()
     + rondesBlok('alle', true)
@@ -596,7 +606,7 @@ function zichtJury() {
 function faseKaart(opper) {
   const e = S.pub.event;
   const fasen = opper ? Object.keys(FASEN) : ['lobby', 'round_intro', 'round_active', 'round_done'];
-  return `<div class="kaart dossier"><h2>Regie <span class="r">fase: ${FASEN[e.phase]}</span></h2>
+  return `<div class="kaart dossier" id="k-regie"><h2>Regie <span class="r">fase: ${FASEN[e.phase]}</span></h2>
     <div class="fase-rij">${fasen.map(f =>
       `<button class="mini ${e.phase === f ? 'geel' : ''}" onclick="zetFase('${f}')">${FASEN[f]}</button>`).join('')}</div>
     <details><summary>📢 Mededeling aan iedereen</summary>
@@ -653,7 +663,7 @@ async function bewaarScore(rid, tid) {
 function inboxKaart() {
   const j = S.juryData || { bribes: [], snitches: [] };
   const open = [...j.bribes.filter(b => b.status === 'pending'), ...j.snitches.filter(s => s.status === 'nieuw')].length;
-  return `<div class="kaart dossier"><h2>📬 Inbox der duistere kanalen <span class="r">${open} onbehandeld</span></h2>
+  return `<div class="kaart dossier" id="k-inbox"><h2>📬 Inbox der duistere kanalen <span class="r">${open} onbehandeld</span></h2>
     ${j.bribes.map(b => { const t = team(b.team_id); return `<div class="bericht">
       <div class="van">💰 ${esc(t ? t.name : '?')} <span class="status">${esc(b.status)}</span></div>
       <div class="inhoud">${esc(b.offer)}</div>
@@ -686,12 +696,12 @@ function antwoordSnitch(id, status) { vraagAntwoord(resp => rpc('hert_respond_sn
 
 function puntenRennerKaart() {
   const recent = S.pub.riderPoints.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 12);
-  return `<div class="kaart dossier"><h2>🏅 Individuele punten</h2>
+  return `<div class="kaart dossier" id="k-punten"><h2>🏅 Individuele punten</h2>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">
       <select id="ip-renner" style="background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;max-width:12rem">
         ${S.pub.teams.map(t => `<optgroup label="${esc(t.name)}">` +
           S.pub.riders.filter(r => r.team_id === t.id).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('') + '</optgroup>').join('')}
-        <optgroup label="— zonder team —">${S.pub.riders.filter(r => !r.team_id).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
+        <optgroup label="— aanhang & zonder ploeg —">${S.pub.riders.filter(r => !r.team_id).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
       </select>
       <input id="ip-punten" type="number" value="1" style="width:4rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;text-align:center">
       <input id="ip-reden" type="text" placeholder="reden (bv. legendarische trash talk)"
@@ -771,7 +781,7 @@ async function zetMissie(id, status) { try { await rpc('hert_set_mission_status'
 
 function notitiesKaart() {
   const n = (S.juryData && S.juryData.notes) || [];
-  return `<div class="kaart dossier"><h2>📓 Het jury-logboek</h2>
+  return `<div class="kaart dossier" id="k-logboek"><h2>📓 Het jury-logboek</h2>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">
       <select id="note-team" style="background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em">
         <option value="">— algemeen —</option>
@@ -880,23 +890,34 @@ async function bewaarTeam(id) {
 function deelnemersKaart() {
   const sterren = r => [1, 2, 3, 4, 5].map(n =>
     `<span onclick="zetNiveau('${r.id}',${n})" style="cursor:pointer;padding:.15em .05em;opacity:${n <= (r.niveau || 3) ? 1 : .25}" title="niveau ${n}">★</span>`).join('');
-  const rij = r => {
-    const t = r.team_id ? team(r.team_id) : null;
-    return `<div class="score-rij">
+  const rolLabel = r => r.division ? DIV[r.division] : r.role === 'supporter' ? '📣 supporter' : r.role === 'seingever' ? '🚩 seingever' : '⚠️ geen rol';
+  const rolKleur = r => r.division === 'baroudellen' ? 'var(--paars)' : r.division === 'baroudeurs' ? 'var(--groen)' : 'var(--amber)';
+  const rij = r => `<div class="score-rij">
       <span class="tnaam">${r.is_captain ? '👑 ' : ''}${esc(r.name)}</span>
-      <span class="klein" style="min-width:6.5em;color:${r.division === 'baroudellen' ? 'var(--paars)' : 'var(--groen)'}">${r.division ? DIV[r.division] : '⚠️ geen afdeling'}</span>
+      <span class="klein" style="min-width:6.5em;color:${rolKleur(r)}">${rolLabel(r)}</span>
       <span style="letter-spacing:.1em;color:var(--amber);min-width:5.5em;user-select:none">${sterren(r)}</span>
-      <span class="klein" style="min-width:7em">${t ? esc(t.name) : '— nog geen team —'}</span>
       <button class="mini" onclick="bewerkDeelnemer('${r.id}')">✏️</button>
     </div>`;
-  };
-  const per = d => S.pub.riders.filter(r => r.division === d);
-  return `<div class="kaart dossier"><h2>🚴 Deelnemers <span class="r">${S.pub.riders.length} ingeschreven</span></h2>
-    <p class="klein" style="margin-bottom:.6rem">Baroudeurs — ${per('baroudeurs').length}</p>
-    ${per('baroudeurs').map(rij).join('')}
-    <p class="klein" style="margin:1rem 0 .6rem">Baroudellen — ${per('baroudellen').length}</p>
-    ${per('baroudellen').map(rij).join('')}
-    ${S.pub.riders.filter(r => !r.division).map(rij).join('')}
+  const sorteer = leden => leden.slice().sort((a, b) => (b.niveau || 3) - (a.niveau || 3) || a.name.localeCompare(b.name));
+  const groep = (titel, kleur, leden, extra) => leden.length ? `
+    <div style="border:1px solid var(--kader);border-left:4px solid ${kleur};background:#0d1319;padding:.55rem .8rem .35rem;margin-bottom:.8rem">
+      <p class="klein" style="margin-bottom:.25rem;color:var(--inkt)"><span class="teamstip" style="background:${kleur}"></span>${titel} — ${leden.length} man${extra}</p>
+      ${sorteer(leden).map(rij).join('')}
+    </div>` : '';
+  const perPloeg = S.pub.teams.map(t => {
+    const leden = S.pub.riders.filter(r => r.team_id === t.id);
+    const totaal = leden.reduce((s, r) => s + (r.niveau || 3), 0);
+    return groep(esc(t.name), esc(t.color), leden, ` · ${totaal}★ samen`);
+  }).join('');
+  const isRenner = r => r.division === 'baroudeurs' || r.division === 'baroudellen';
+  const zonder = S.pub.riders.filter(r => isRenner(r) && (!r.team_id || !team(r.team_id)));
+  const aanhang = S.pub.riders.filter(r => !isRenner(r));
+  const nB = S.pub.riders.filter(r => r.division === 'baroudeurs').length;
+  const nBl = S.pub.riders.filter(r => r.division === 'baroudellen').length;
+  return `<div class="kaart dossier"><h2>🚴 Deelnemers <span class="r">${S.pub.riders.length} ingeschreven · ${nB} baroudeurs · ${nBl} baroudellen · ${aanhang.length} aanhang</span></h2>
+    ${perPloeg}
+    ${groep('Nog geen ploeg', 'var(--grijs)', zonder, ' — de draft of het potloodje wijst ze een kleur toe')}
+    ${groep('De aanhang — supporters & seingevers', 'var(--amber-diep)', aanhang, ' — rijden niet mee in de draft, tellen wél mee in het individueel klassement')}
     <div style="margin-top:1rem">
       <button class="mini geel" onclick="bewerkDeelnemer(null)">+ deelnemer</button>
       <button class="mini groen" onclick="verdeelTeams()">⚖️ Slangendraft: verdeel in gemengde ploegen</button>
@@ -943,7 +964,7 @@ async function bewaarDeelnemer(id) {
 async function verdeelTeams() {
   // vaste ploegen: de draft kan alleen tijdens De Verzameling; daarna liggen de ploegen vast
   if (S.pub.event && S.pub.event.phase !== 'lobby') return toast('⚠️ De ploegen liggen vast: de koers is al begonnen. Bijsturen kan enkel per renner via ✏️.');
-  const ds = S.pub.riders;
+  const ds = S.pub.riders.filter(r => r.division === 'baroudeurs' || r.division === 'baroudellen');
   if (ds.length < 8) return toast('⚠️ Minstens 8 renners nodig voor een draft');
   // aantal ploegen: mikken op ±5 renners per ploeg, begrensd door de hesjeskleuren
   const aantal = Math.max(2, Math.min(S.pub.teams.length, Math.round(ds.length / 5)));

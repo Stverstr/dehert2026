@@ -62,6 +62,7 @@ header.top .uitlog{background:none;border:none;color:var(--grijs);font-size:.65r
 .nu .brief{font-size:1.15rem;font-style:italic;line-height:1.6;margin-top:1rem;text-align:left;white-space:pre-wrap}
 .nu.groen{border-color:var(--groen-diep);box-shadow:0 0 40px rgba(61,220,132,.08)}
 .nu.paars{border-color:var(--paars-diep);box-shadow:0 0 40px rgba(217,123,178,.09)}
+.nu.gemengd{border-color:var(--amber-diep);box-shadow:0 0 40px rgba(255,179,71,.08)}
 .nu .wacht{font-style:italic;color:var(--inkt);line-height:1.7}
 @keyframes onthul{from{opacity:0;transform:scale(.94);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
 .nu .onthuld{animation:onthul 1.2s ease}
@@ -92,6 +93,7 @@ table.stand td.pos{width:2em;font-family:'Special Elite',monospace;color:var(--g
 .ronde .brief{margin-top:.6rem;font-size:1.02rem;line-height:1.55;white-space:pre-wrap}
 .ronde.paars-r{border-left:3px solid var(--paars-diep)}
 .ronde.groen-r{border-left:3px solid var(--groen-diep)}
+.ronde.gemengd-r{border-left:3px solid var(--amber-diep)}
 .ronde .jury-info{margin-top:.7rem;padding:.7rem;background:#0a0f14;border:1px dashed var(--kader2);font-family:'Special Elite',monospace;font-size:.78rem;line-height:1.7;color:var(--inkt)}
 
 /* ===== missies ===== */
@@ -215,7 +217,7 @@ const FASEN = {
   round_done: 'Tussenstand', deliberation: 'De Beraadslaging', ceremony: 'De Slotceremonie', finished: 'Het is volbracht'
 };
 const FASEN_SUB = {
-  lobby: 'zes ploegen \u00b7 \u00e9\u00e9n gewei \u00b7 nul objectiviteit',
+  lobby: 'zeven kleuren \u00b7 \u00e9\u00e9n gewei \u00b7 nul objectiviteit',
   round_intro: 'de opdracht is onthuld \u2014 te laat om nog te oefenen',
   round_active: 'er wordt gereden \u2014 de jury ziet alles. ook d\u00e1t.',
   round_done: 'tussenstand \u2014 voorlopig, betwistbaar en omkoopbaar',
@@ -231,15 +233,15 @@ const TAGLINES = [
   'De enige koers waar omkoping in het reglement staat.',
   'Vlakker dan dit wordt koers niet. Sneller ook niet, aldus een blauw-gele bron.'
 ];
-const DIV = { baroudeurs: 'Baroudeurs', baroudellen: 'Baroudellen' };
-const DIVKLEUR = { baroudeurs: 'groen', baroudellen: 'paars' };
+const DIV = { baroudeurs: 'Baroudeurs', baroudellen: 'Baroudellen', gemengd: 'Gemengd' };
+const DIVKLEUR = { baroudeurs: 'groen', baroudellen: 'paars', gemengd: 'gemengd' };
 
 const S = {
   rol: null, code: null, team: null, scherm: false, juryTab: 'koers',
-  pub: { event: null, teams: [], riders: [], jury: [], rounds: [], scores: [], secrets: [], delibs: [], prizes: [] },
+  pub: { event: null, teams: [], riders: [], jury: [], rounds: [], scores: [], secrets: [], delibs: [], prizes: [], prekoers: {} },
   geheim: null,   // team secrets
   juryData: null, // jury view
-  tab: 'algemeen',
+  tab: 'ploegen',
   timer: null
 };
 
@@ -264,13 +266,16 @@ function toast(t) { const el = document.getElementById('toast'); el.textContent 
 
 /* ---------- data laden ---------- */
 async function laadPubliek() {
-  const [event, teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules] = await Promise.all([
+  const [event, teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules, voork] = await Promise.all([
     q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
     q('hert_jury_members?order=sort'), q('hert_rounds?order=sort'), q('hert_scores?select=*'),
     q('hert_round_secrets?select=round_id,brief'), q('hert_deliberations?order=sort'), q('hert_prizes?order=sort'),
-    q('hert_rider_points?select=*'), q('hert_rules?order=sort')
+    q('hert_rider_points?select=*'), q('hert_rules?order=sort'),
+    rpc('hert_scorebord').catch(() => null)
   ]);
-  S.pub = { event: event[0], teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules };
+  const prekoers = {};
+  if (voork && voork.personen) voork.personen.forEach(p => { prekoers[(p.naam || '').trim().toLowerCase()] = p.punten; });
+  S.pub = { event: event[0], teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules, prekoers };
 }
 async function laadRol() {
   if (S.rol === 'team') S.geheim = await rpc('hert_team_secrets', { p_code: S.code });
@@ -312,7 +317,7 @@ async function start() {
 function team(id) { return S.pub.teams.find(t => t.id === id); }
 function actieveRonde() { return S.pub.rounds.find(r => r.id === (S.pub.event && S.pub.event.active_round_id)); }
 function briefVan(rondeId) { const s = S.pub.secrets.find(x => x.round_id === rondeId); return s ? s.brief : null; }
-function rondeNr(r) { return S.pub.rounds.filter(x => x.division === r.division && x.sort <= r.sort && x.sort < 13).length; }
+function rondeNr(r) { return S.pub.rounds.filter(x => x.sort <= r.sort && x.sort < 90).length; }
 function totaal(teamId) {
   let t = 0;
   S.pub.scores.filter(s => s.team_id === teamId).forEach(s => t += s.base_points + s.bonus - s.penalty);
@@ -320,11 +325,15 @@ function totaal(teamId) {
   return t;
 }
 function persoonlijkKlassement() {
+  // individueel = voorklassement (prekoers, via hert_scorebord) + koersdag (rider_points), gematcht op naam
   const per = {};
   S.pub.riderPoints.forEach(p => per[p.rider_id] = (per[p.rider_id] || 0) + p.punten);
   return S.pub.riders
-    .map(r => ({ ...r, punten: per[r.id] || 0 }))
-    .filter(r => r.punten !== 0)
+    .map(r => {
+      const voork = S.pub.prekoers[(r.name || '').trim().toLowerCase()] || 0;
+      const koers = per[r.id] || 0;
+      return { ...r, voork, koers, punten: voork + koers };
+    })
     .sort((a, b) => b.punten - a.punten || a.name.localeCompare(b.name));
 }
 function klassement(divisie) {
@@ -355,35 +364,36 @@ function mededeling() {
   const e = S.pub.event;
   return (e && e.notice) ? `<div class="mededeling">${esc(e.notice)}</div>` : '';
 }
-function standTabel(divisie) {
-  const k = klassement(divisie);
+function standTabel() {
+  const k = klassement('algemeen');
   return `<table class="stand"><tr><th></th><th>Ploeg</th><th style="text-align:right">Punten</th></tr>
   ${k.map((t, i) => `<tr>
     <td class="pos">${i + 1}</td>
-    <td><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}${divisie === 'algemeen' ? `<span class="divlabel">${DIV[t.division]}</span>` : ''}</td>
+    <td><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}</td>
     <td class="pt">${t.punten}</td></tr>`).join('')}</table>`;
 }
-function persoonlijkTabel() {
-  const k = persoonlijkKlassement();
-  if (!k.length) return '<p class="stil">Nog geen individuele punten uitgedeeld. Nog niemand is mooi geweest, blijkbaar.</p>';
-  return `<table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>
+function persoonlijkTabel(limiet) {
+  let k = persoonlijkKlassement();
+  if (!k.length) return '<p class="stil">Nog geen renners in het klassement. Verdacht stil.</p>';
+  if (limiet) k = k.slice(0, limiet);
+  return `<p class="klein" style="margin-bottom:.5rem">voorklassement + koersdag</p>
+  <table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>
   ${k.map((r, i) => { const t = r.team_id ? team(r.team_id) : null; return `<tr>
     <td class="pos">${i + 1}</td>
     <td>${t ? `<span class="teamstip" style="background:${esc(t.color)}"></span>` : ''}${esc(r.name)}${r.division ? `<span class="divlabel">${DIV[r.division]}</span>` : ''}</td>
-    <td class="pt">${r.punten}</td></tr>`; }).join('')}</table>`;
+    <td class="pt">${r.punten}${r.koers ? ` <span class="divlabel">(${r.koers > 0 ? '+' : ''}${r.koers} vandaag)</span>` : ''}</td></tr>`; }).join('')}</table>`;
 }
 function klassementKaart() {
   return `<div class="kaart dossier"><h2>Het Klassement</h2>
     <div class="tabs">
-      ${['algemeen', 'baroudeurs', 'baroudellen', 'individueel'].map(d =>
-        `<button class="${S.tab === d ? 'aan' : ''}" onclick="S.tab='${d}';render()">${d === 'algemeen' ? 'Algemeen' : d === 'individueel' ? '🏅 Individueel' : DIV[d]}</button>`).join('')}
-    </div>${S.tab === 'individueel' ? persoonlijkTabel() : standTabel(S.tab)}</div>`;
+      ${['ploegen', 'individueel'].map(d =>
+        `<button class="${S.tab === d ? 'aan' : ''}" onclick="S.tab='${d}';render()">${d === 'ploegen' ? 'Ploegen' : '🏅 Individueel'}</button>`).join('')}
+    </div>${S.tab === 'individueel' ? persoonlijkTabel() : standTabel()}</div>`;
 }
 
 /* ========== TEAMZICHT ========== */
 function zichtTeam() {
   const e = S.pub.event, ar = actieveRonde();
-  const mijnDiv = S.team.division;
   let nu = '';
   if (e.phase === 'lobby' || !ar) {
     nu = `<div class="kaart nu"><div class="fase">${FASEN[e.phase] || ''}</div>
@@ -393,28 +403,19 @@ function zichtTeam() {
   } else if (e.phase === 'deliberation' || e.phase === 'ceremony' || e.phase === 'finished') {
     nu = beraadslagingBlok() + prijzenBlok();
   } else {
-    const eigen = ar.division === mijnDiv;
-    const kleur = DIVKLEUR[ar.division];
     const brief = briefVan(ar.id);
-    if (eigen) {
-      nu = `<div class="kaart nu ${kleur}"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)} ${DIV[ar.division]}</div>
-        <div class="grootst onthuld">${esc(ar.title)}</div>
-        ${e.phase === 'round_active' ? '<p class="klein" style="color:var(--groen)">▶ DE KOERS IS BEZIG — RIJDEN!</p>' : ''}
-        ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}
-        ${e.phase === 'round_done' ? '<p class="wacht" style="margin-top:1rem">Ronde afgelopen. De jury telt. Of doet alsof.</p>' : ''}</div>`;
-    } else {
-      nu = `<div class="kaart nu ${kleur}"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)} ${DIV[ar.division]}</div>
-        <div class="grootst">De ${DIV[ar.division]} rijden</div>
-        <p class="wacht">Jullie staan langs de kant. Officieel: supporteren.<br>
-        Officieus: observeren, noteren, en eventueel iets melden op de kliklijn. 📸</p></div>`;
-    }
+    nu = `<div class="kaart nu gemengd"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)}</div>
+      <div class="grootst onthuld">${esc(ar.title)}</div>
+      ${e.phase === 'round_active' ? '<p class="klein" style="color:var(--groen)">▶ DE KOERS IS BEZIG — RIJDEN!</p>' : ''}
+      ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}
+      ${e.phase === 'round_done' ? '<p class="wacht" style="margin-top:1rem">Ronde afgelopen. De jury telt. Of doet alsof.</p>' : ''}</div>`;
   }
   return mededeling() + nu
     + ploegKaart()
     + missiesBlok()
     + reglementBlok()
     + klassementKaart()
-    + rondesBlok(mijnDiv)
+    + rondesBlok('alle')
     + actiesBlok()
     + inzendingenBlok();
 }
@@ -454,16 +455,15 @@ function missiesBlok() {
     </div>`).join('')}</div>`;
 }
 function rondesBlok(divisie, juryModus) {
-  const rondes = S.pub.rounds.filter(r => (divisie === 'alle' || r.division === divisie) && r.status !== 'skipped');
-  return `<div class="kaart dossier"><h2>De Rondes ${divisie !== 'alle' ? '— ' + DIV[divisie] : ''}</h2>
+  const rondes = S.pub.rounds.filter(r => r.status !== 'skipped');
+  return `<div class="kaart dossier"><h2>De Rondes</h2>
     ${rondes.map(r => {
       const brief = briefVan(r.id);
       const zichtbaar = r.status !== 'hidden';
       const ji = juryModus ? juryInfoVan(r.id) : null;
-      return `<div class="ronde ${DIVKLEUR[r.division]}-r">
-        <div class="kop"><span class="nr">${r.sort >= 13 ? 'R' : rondeNr(r)}</span>
+      return `<div class="ronde ${DIVKLEUR[r.division] || 'gemengd'}-r">
+        <div class="kop"><span class="nr">${r.sort >= 90 ? 'R' : rondeNr(r)}</span>
           <span class="naam">${zichtbaar || juryModus ? esc(r.title) : '█████████'}</span>
-          ${juryModus ? `<span class="klein">${DIV[r.division]}</span>` : ''}
           <span class="chip ${r.status}">${{hidden:'geheim',revealed:'onthuld',racing:'bezig',finished:'gereden'}[r.status]}</span></div>
         <div class="teaser">${esc(r.teaser || '')}</div>
         ${(zichtbaar && brief) || (juryModus && brief) ? `<div class="brief">${esc(brief)}</div>` : ''}
@@ -625,8 +625,8 @@ async function zetRonde(id, status) { try { await rpc('hert_set_round_status', {
 
 function scoreBlok(r) {
   if (r.status === 'hidden') return '';
-  const teams = S.pub.teams.filter(t => t.division === r.division);
-  return `<details class="score-blok"><summary>🧮 Punten ronde — ${DIV[r.division]}</summary>
+  const teams = S.pub.teams;
+  return `<details class="score-blok"><summary>🧮 Punten ronde</summary>
     ${teams.map(t => {
       const sc = S.pub.scores.find(s => s.round_id === r.id && s.team_id === t.id) || {};
       return `<div class="score-rij" id="sr-${r.id}-${t.id}">
@@ -638,7 +638,7 @@ function scoreBlok(r) {
         <button class="mini groen" onclick="bewaarScore('${r.id}','${t.id}')">ok</button>
       </div>`;
     }).join('')}
-    <p class="klein" style="margin-top:.5rem">tip: pos 1-2-3 = 3-2-1 punten. bonus voor jury-magie, straf voor onveiligheid (max 3).</p>
+    <p class="klein" style="margin-top:.5rem">tip: rang 1-7 = 10·8·6·5·4·3·2 punten (De Afvalling: 5·4·3·2, de rest 1). bonus voor jurymagie, straf voor gebroken contracten.</p>
   </details>`;
 }
 async function bewaarScore(rid, tid) {
@@ -856,9 +856,10 @@ function bewerkTeam(id) {
   openModal(`<h3>${id ? 'Ploeg bewerken' : 'Nieuwe ploeg'}</h3>
     <label>Naam</label><input type="text" id="f-naam" value="${esc(t.name || '')}">
     <label>Afdeling</label><select id="f-div">
+      <option value="gemengd" ${(t.division || 'gemengd') === 'gemengd' ? 'selected' : ''}>Gemengde ploeg</option>
       <option value="baroudeurs" ${t.division === 'baroudeurs' ? 'selected' : ''}>Baroudeurs</option>
       <option value="baroudellen" ${t.division === 'baroudellen' ? 'selected' : ''}>Baroudellen</option></select>
-    <label>Kleur</label><input type="text" id="f-kleur" value="${esc(t.color || '#3ddc84')}">
+    <label>Kleur (hesjeskleur)</label><input type="text" id="f-kleur" value="${esc(t.color || '#3ddc84')}">
     <label>Motto</label><input type="text" id="f-motto" value="${esc(t.motto || '')}">
     <label>Volgorde</label><input type="number" id="f-sort" value="${t.sort ?? 0}">
     <label>Geheime teamcode</label><input type="text" id="f-code" value="${esc(c.code || '')}" placeholder="bv. KOPMAN">
@@ -898,10 +899,9 @@ function deelnemersKaart() {
     ${S.pub.riders.filter(r => !r.division).map(rij).join('')}
     <div style="margin-top:1rem">
       <button class="mini geel" onclick="bewerkDeelnemer(null)">+ deelnemer</button>
-      <button class="mini groen" onclick="verdeelTeams('baroudeurs')">⚖️ Verdeel Baroudeurs in teams</button>
-      <button class="mini groen" onclick="verdeelTeams('baroudellen')">⚖️ Verdeel Baroudellen in teams</button>
+      <button class="mini groen" onclick="verdeelTeams()">⚖️ Slangendraft: verdeel in gemengde ploegen</button>
     </div>
-    <p class="klein" style="margin-top:.6rem">verdeling: ploegen van 4-5, niveaus gespreid via slangendraft (★★★★★ = ijzersterk)</p></div>`;
+    <p class="klein" style="margin-top:.6rem">verdeling: gemengde ploegen van 4-5, slangendraft met de sterretjes als draftvolgorde (★★★★★ = ijzersterk)</p></div>`;
 }
 async function zetNiveau(id, niveau) {
   const r = S.pub.riders.find(x => x.id === id);
@@ -940,27 +940,17 @@ async function bewaarDeelnemer(id) {
     sluitModal(); toast('✓ Bewaard'); vernieuw(true);
   } catch (e) { modalFout(e.message); }
 }
-async function verdeelTeams(divisie) {
-  const ds = S.pub.riders.filter(r => r.division === divisie);
-  if (ds.length < 4) return toast('⚠️ Minstens 4 deelnemers nodig in deze afdeling');
-  // aantal ploegen: 4-5 per ploeg
-  let aantal = Math.max(1, Math.round(ds.length / 4.5));
+async function verdeelTeams() {
+  const ds = S.pub.riders;
+  if (ds.length < 8) return toast('⚠️ Minstens 8 renners nodig voor een draft');
+  // aantal ploegen: 4-5 renners per ploeg, gemengd over de hele lijst
+  let aantal = Math.max(2, Math.round(ds.length / 4.5));
   if (ds.length / aantal > 5) aantal = Math.ceil(ds.length / 5);
-  if (aantal > 1 && ds.length / aantal < 4) aantal = Math.max(1, Math.floor(ds.length / 4));
-  let doelTeams = S.pub.teams.filter(t => t.division === divisie).slice(0, aantal);
-  if (doelTeams.length < aantal) {
-    if (!confirm(`Er zijn ${aantal} ploegen nodig maar slechts ${doelTeams.length} ${DIV[divisie]}-ploegen. Extra ploegen aanmaken?`)) return;
-    for (let i = doelTeams.length; i < aantal; i++) {
-      await rpc('hert_upsert_team', { p_code: S.code, p_id: null,
-        p_name: `${DIV[divisie]} ${i + 1}`, p_division: divisie,
-        p_color: divisie === 'baroudellen' ? '#d97bb2' : '#3ddc84', p_motto: null,
-        p_sort: 90 + i, p_team_code: `${divisie === 'baroudellen' ? 'ELLE' : 'BAROU'}${i + 1}${Math.floor(Math.random() * 90 + 10)}` });
-    }
-    await laadPubliek();
-    doelTeams = S.pub.teams.filter(t => t.division === divisie).slice(0, aantal);
-  }
-  if (!confirm(`${ds.length} deelnemers verdelen over ${aantal} ploeg(en) (${DIV[divisie]})? Bestaande teamindeling van deze afdeling wordt overschreven.`)) return;
-  // slangendraft op niveau (sterksten eerst, richting keert per ronde)
+  if (ds.length / aantal < 4) aantal = Math.max(2, Math.floor(ds.length / 4));
+  const doelTeams = S.pub.teams.slice().sort((a, b) => a.sort - b.sort).slice(0, aantal);
+  if (doelTeams.length < aantal) return toast(`⚠️ ${aantal} ploegen nodig, maar er bestaan er maar ${doelTeams.length}. Maak er bij via Ploegen & codes.`);
+  if (!confirm(`${ds.length} renners via slangendraft verdelen over ${aantal} gemengde ploegen (${doelTeams.map(t => t.name).join(', ')})? De bestaande indeling wordt overschreven.`)) return;
+  // slangendraft op de sterretjes (sterksten eerst, richting keert per draftronde)
   const volgorde = ds.slice().sort((a, b) => (b.niveau || 3) - (a.niveau || 3) || Math.random() - .5);
   const toewijzing = [];
   volgorde.forEach((r, i) => {
@@ -986,6 +976,7 @@ function bewerkRonde(id) {
   openModal(`<h3>${id ? 'Ronde bewerken' : 'Nieuwe ronde'}</h3>
     <label>Titel</label><input type="text" id="f-titel" value="${esc(r.title || '')}">
     <label>Afdeling</label><select id="f-div">
+      <option value="gemengd" ${(r.division || 'gemengd') === 'gemengd' ? 'selected' : ''}>Gemengd (iedereen samen)</option>
       <option value="baroudeurs" ${r.division === 'baroudeurs' ? 'selected' : ''}>Baroudeurs</option>
       <option value="baroudellen" ${r.division === 'baroudellen' ? 'selected' : ''}>Baroudellen</option></select>
     <label>Volgorde</label><input type="number" id="f-sort" value="${r.sort ?? 0}">
@@ -1091,7 +1082,7 @@ function zichtScherm() {
     midden = prijzenBlok() || '<div class="kaart nu"><p class="wacht">De prijzenkast is nog op slot. De spanning is opzettelijk.</p></div>';
   } else if (ar && e.phase !== 'lobby') {
     const brief = briefVan(ar.id);
-    midden = `<div class="kaart nu ${DIVKLEUR[ar.division]}"><div class="fase">${FASEN[e.phase]} — ${DIV[ar.division]}</div>
+    midden = `<div class="kaart nu gemengd"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)}</div>
       <div class="grootst onthuld">${esc(ar.title)}</div>
       ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || '')}</p>`}</div>`;
   } else {
@@ -1105,11 +1096,8 @@ function zichtScherm() {
       <div class="t2">${esc(FASEN_SUB[e.phase] || FASEN[e.phase] || '')}</div></div>
     ${mededeling()}${midden}
     <div class="scherm-grid">
-      <div class="kaart dossier"><h2>Algemeen klassement</h2>${standTabel('algemeen')}</div>
-      <div>
-        <div class="kaart dossier"><h2>Baroudeurs</h2>${standTabel('baroudeurs')}</div>
-        <div class="kaart dossier"><h2>Baroudellen</h2>${standTabel('baroudellen')}</div>
-      </div>
+      <div class="kaart dossier"><h2>Ploegenklassement</h2>${standTabel()}</div>
+      <div class="kaart dossier"><h2>🏅 Individueel</h2>${persoonlijkTabel(12)}</div>
     </div>`;
 }
 

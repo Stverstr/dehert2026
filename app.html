@@ -487,12 +487,16 @@ function klachtKaart() {
   const s = (S.geheim && S.geheim.snitches) || [];
   const veld = 'width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:\'Special Elite\',monospace;font-size:1rem;padding:.7em';
   return `<div class="kaart dossier"><h2>📸 Klacht indienen <span class="r">de kliklijn</span></h2>
-    <p class="stil" style="margin-bottom:.4rem">Zag u een andere ploeg iets doen wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker.</p>
-    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Over welke ploeg gaat het?</label>
-    <select id="kl-over" style="${veld}">${andere.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
-    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Wat hebben ze uitgespookt?</label>
+    <p class="stil" style="margin-bottom:.4rem">Zag u iets wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker.</p>
+    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Tegen wie? (mag ook zomaar)</label>
+    <select id="kl-over" style="${veld}">
+      <option value="">— gewoon een klacht, tegen niemand in het bijzonder —</option>
+      <optgroup label="tegen een ploeg">${andere.map(t => `<option value="t:${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>
+      <optgroup label="tegen één iemand">${S.pub.riders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(r => `<option value="r:${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
+    </select>
+    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Wat is er gebeurd?</label>
     <textarea id="kl-tekst" maxlength="500" style="${veld};min-height:5em;resize:vertical"></textarea>
-    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Bewijsfoto (mag, hoeft niet)</label>
+    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Bewijsfoto (mag, hoeft niet) — trek er ter plekke een of kies uit uw galerij</label>
     <input type="file" id="kl-foto" accept="image/*" style="color:var(--grijs);font-size:.85rem">
     <button class="grote-knop roze" style="width:100%;margin-top:1.1rem" onclick="verstuurKlacht(this)">📸 Verstuur naar de jury</button>
     <p id="kl-fout" style="color:var(--rood);font-family:'Special Elite',monospace;font-size:.8rem;margin-top:.6rem;display:none"></p>
@@ -519,7 +523,14 @@ async function verstuurKlacht(knop) {
       if (!up.ok) throw new Error('foto-upload mislukt');
       foto = `${SUPA_URL}/storage/v1/object/public/hert-bewijs/${pad}`;
     }
-    await rpc('hert_submit_snitch', { p_code: S.code, p_about: document.getElementById('kl-over').value, p_complaint: tekst, p_photo: foto });
+    const doel = document.getElementById('kl-over').value;
+    let about = null, klacht = tekst;
+    if (doel.startsWith('t:')) about = doel.slice(2);
+    else if (doel.startsWith('r:')) {
+      const r = S.pub.riders.find(x => x.id === doel.slice(2));
+      if (r) { klacht = `🎯 Over ${r.name}: ${tekst}`; about = r.team_id || null; }
+    }
+    await rpc('hert_submit_snitch', { p_code: S.code, p_about: about, p_complaint: klacht, p_photo: foto });
     toast('📸 Genoteerd. De jury apprecieert uw gebrek aan loyaliteit.');
     vernieuw(true);
   } catch (e) {
@@ -663,8 +674,8 @@ function inboxKaart() {
         <button class="mini" onclick="antwoordBribe('${b.id}','verworpen')">verwerp</button>
         <button class="mini rood" onclick="antwoordBribe('${b.id}','teruggeslagen')">sla terug</button></div>` : ''}
     </div>`; }).join('')}
-    ${j.snitches.map(s => { const van = team(s.from_team_id), over = team(s.about_team_id); return `<div class="bericht">
-      <div class="van">📸 ${esc(van ? van.name : '?')} verklikt ${esc(over ? over.name : '?')} <span class="status">${esc(s.status)}</span></div>
+    ${j.snitches.map(s => { const van = team(s.from_team_id), over = s.about_team_id ? team(s.about_team_id) : null; return `<div class="bericht">
+      <div class="van">📸 ${esc(van ? van.name : '?')} verklikt ${over ? esc(over.name) : 'niemand in het bijzonder'} <span class="status">${esc(s.status)}</span></div>
       <div class="inhoud">${esc(s.complaint)}</div>
       ${s.photo_url ? `<img src="${esc(s.photo_url)}" alt="bewijs">` : ''}
       ${s.jury_response ? `<div class="antwoord">${esc(s.jury_response)}</div>` : ''}

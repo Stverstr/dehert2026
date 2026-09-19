@@ -75,6 +75,8 @@ header.top .uitlog{background:none;border:none;color:var(--grijs);font-size:.65r
 .tabs{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
 .tabs button{background:#0d1319;border:1px solid var(--kader);color:var(--inkt);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.55em .95em}
 .tabs button.aan{border-color:var(--amber-diep);color:var(--amber)}
+.tabs.hoofdtabs{position:sticky;top:0;z-index:30;background:rgba(6,9,13,.94);padding:.55rem 0;margin:0 0 1rem;border-bottom:1px solid var(--kader)}
+.tabs.hoofdtabs button{font-size:.78rem;padding:.7em 1em;flex:1 1 auto}
 table.stand{width:100%;border-collapse:collapse;font-size:1rem}
 table.stand td,table.stand th{padding:.5em .4em;text-align:left;border-bottom:1px solid #131c23}
 table.stand th{font-family:'Special Elite',monospace;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grijs)}
@@ -242,7 +244,7 @@ const DIV = { baroudeurs: 'Baroudeurs', baroudellen: 'Baroudellen', gemengd: 'Ge
 const DIVKLEUR = { baroudeurs: 'groen', baroudellen: 'paars', gemengd: 'gemengd' };
 
 const S = {
-  rol: null, code: null, team: null, scherm: false, juryTab: 'koers',
+  rol: null, code: null, team: null, scherm: false, juryTab: 'koers', teamTab: 'ploeg',
   pub: { event: null, teams: [], riders: [], jury: [], rounds: [], scores: [], secrets: [], delibs: [], prizes: [], prekoers: {} },
   geheim: null,   // team secrets
   juryData: null, // jury view
@@ -415,17 +417,17 @@ function zichtTeam() {
       ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}
       ${e.phase === 'round_done' ? '<p class="wacht" style="margin-top:1rem">Ronde afgelopen. De jury telt. Of doet alsof.</p>' : ''}</div>`;
   }
-  const nav = [['k-ploeg', '🚴 Ploeg'], ['k-klassement', '🏆 Stand'], ['k-rondes', '🏁 Rondes'], ['k-kanalen', '💰 Kanalen']]
-    .map(([id, l]) => `<a href="#${id}">${l}</a>`).join('');
-  return mededeling() + nu
-    + `<nav class="snelnav">${nav}</nav>`
-    + ploegKaart()
-    + missiesBlok()
-    + reglementBlok()
-    + klassementKaart()
-    + rondesBlok('alle')
-    + actiesBlok()
-    + inzendingenBlok();
+  // aparte pagina's per tab: geen ellenlange scroll meer
+  const tabs = [['ploeg', '🚴 Ploeg'], ['rondes', '🏁 Rondes'], ['stand', '🏆 Stand'], ['klacht', '📸 Klacht'], ['regels', '📜 Regels']];
+  const tabbalk = `<div class="tabs hoofdtabs">${tabs.map(([id, l]) =>
+    `<button class="${S.teamTab === id ? 'aan' : ''}" onclick="S.teamTab='${id}';render();scrollTo(0,0)">${l}</button>`).join('')}</div>`;
+  let blad = '';
+  if (S.teamTab === 'rondes') blad = rondesBlok('alle');
+  else if (S.teamTab === 'stand') blad = klassementKaart();
+  else if (S.teamTab === 'klacht') blad = klachtKaart();
+  else if (S.teamTab === 'regels') blad = reglementBlok();
+  else blad = ploegKaart() + missiesBlok();
+  return mededeling() + nu + tabbalk + blad;
 }
 function ploegKaart() {
   const leden = S.pub.riders.filter(r => r.team_id === S.team.id);
@@ -480,24 +482,50 @@ function rondesBlok(divisie, juryModus) {
       </div>`;
     }).join('')}</div>`;
 }
-function actiesBlok() {
-  return `<div class="kaart dossier" id="k-kanalen"><h2>Duistere kanalen</h2>
-    <div class="acties">
-      <button class="grote-knop geel" onclick="openOmkoop()">💰 Omkopen<small>de jury heeft principes. rekbare.</small></button>
-      <button class="grote-knop roze" onclick="openKliklijn()">📸 Kliklijn<small>verklik een ander team, met bewijs</small></button>
-    </div></div>`;
+function klachtKaart() {
+  const andere = S.pub.teams.filter(t => t.id !== S.team.id);
+  const s = (S.geheim && S.geheim.snitches) || [];
+  const veld = 'width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:\'Special Elite\',monospace;font-size:1rem;padding:.7em';
+  return `<div class="kaart dossier"><h2>📸 Klacht indienen <span class="r">de kliklijn</span></h2>
+    <p class="stil" style="margin-bottom:.4rem">Zag u een andere ploeg iets doen wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker.</p>
+    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Over welke ploeg gaat het?</label>
+    <select id="kl-over" style="${veld}">${andere.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
+    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Wat hebben ze uitgespookt?</label>
+    <textarea id="kl-tekst" maxlength="500" style="${veld};min-height:5em;resize:vertical"></textarea>
+    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Bewijsfoto (mag, hoeft niet)</label>
+    <input type="file" id="kl-foto" accept="image/*" style="color:var(--grijs);font-size:.85rem">
+    <button class="grote-knop roze" style="width:100%;margin-top:1.1rem" onclick="verstuurKlacht(this)">📸 Verstuur naar de jury</button>
+    <p id="kl-fout" style="color:var(--rood);font-family:'Special Elite',monospace;font-size:.8rem;margin-top:.6rem;display:none"></p>
+    ${s.length ? `<div class="score-blok"><p class="klein" style="margin-bottom:.5rem">uw eerdere meldingen</p>` +
+      s.map(x => `<div class="bericht"><div class="van">📸 klikmelding <span class="status">${esc(x.status)}</span></div>
+        <div class="inhoud">${esc(x.complaint)}</div>
+        ${x.jury_response ? `<div class="antwoord">Jury: ${esc(x.jury_response)}</div>` : ''}</div>`).join('') + '</div>' : ''}
+  </div>`;
 }
-function inzendingenBlok() {
-  const g = S.geheim || {};
-  const b = g.bribes || [], s = g.snitches || [];
-  if (!b.length && !s.length) return '';
-  return `<div class="kaart dossier"><h2>Uw dossierstukken</h2>
-    ${b.map(x => `<div class="bericht"><div class="van">💰 omkoopvoorstel <span class="status">${esc(x.status)}</span></div>
-      <div class="inhoud">${esc(x.offer)}</div>
-      ${x.jury_response ? `<div class="antwoord">Jury: ${esc(x.jury_response)}</div>` : ''}</div>`).join('')}
-    ${s.map(x => `<div class="bericht"><div class="van">📸 klikmelding <span class="status">${esc(x.status)}</span></div>
-      <div class="inhoud">${esc(x.complaint)}</div>
-      ${x.jury_response ? `<div class="antwoord">Jury: ${esc(x.jury_response)}</div>` : ''}</div>`).join('')}</div>`;
+async function verstuurKlacht(knop) {
+  const fout = document.getElementById('kl-fout');
+  fout.style.display = 'none';
+  const tekst = document.getElementById('kl-tekst').value.trim();
+  if (!tekst) { fout.textContent = 'Een klacht zonder woorden is geen klacht.'; fout.style.display = 'block'; return; }
+  try {
+    knop.disabled = true; knop.textContent = 'Bezig…';
+    let foto = null;
+    const f = document.getElementById('kl-foto').files[0];
+    if (f) {
+      const pad = `klik-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${(f.name.split('.').pop() || 'jpg').toLowerCase()}`;
+      const up = await fetch(`${SUPA_URL}/storage/v1/object/hert-bewijs/${pad}`, {
+        method: 'POST', headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': f.type || 'image/jpeg' }, body: f
+      });
+      if (!up.ok) throw new Error('foto-upload mislukt');
+      foto = `${SUPA_URL}/storage/v1/object/public/hert-bewijs/${pad}`;
+    }
+    await rpc('hert_submit_snitch', { p_code: S.code, p_about: document.getElementById('kl-over').value, p_complaint: tekst, p_photo: foto });
+    toast('📸 Genoteerd. De jury apprecieert uw gebrek aan loyaliteit.');
+    vernieuw(true);
+  } catch (e) {
+    knop.disabled = false; knop.textContent = '📸 Verstuur naar de jury';
+    fout.textContent = e.message; fout.style.display = 'block';
+  }
 }
 function beraadslagingBlok() {
   const d = S.pub.delibs.filter(x => x.revealed && !x.sealed);
@@ -524,7 +552,7 @@ function prijzenBlok() {
 
 function reglementBlok() {
   const regels = S.pub.rules || [];
-  if (!regels.length) return '';
+  if (!regels.length) return '<div class="kaart dossier"><h2>📜 Het Reglement</h2><p class="stil">De jury houdt het reglement nog even voor zichzelf. Dat voorspelt zelden iets goeds.</p></div>';
   const MOMENT = { vooraf: 'vooraf bekend', tijdens: 'tijdens de koers', ceremonie: 'slotceremonie' };
   return `<div class="kaart dossier"><h2>📜 Het Reglement <span class="r">er zijn ook regels die u niet ziet</span></h2>
     ${regels.map(g => `<div class="bericht"><div class="van">${MOMENT[g.moment] || ''}</div>
@@ -536,45 +564,7 @@ function openModal(html) { document.getElementById('modal').innerHTML = '<button
 function sluitModal() { document.getElementById('modal-achter').style.display = 'none'; }
 function modalFout(t) { const f = document.querySelector('#modal .fout'); f.textContent = t; f.style.display = 'block'; }
 
-function openOmkoop() {
-  openModal(`<h3>💰 Omkoopvoorstel</h3>
-    <p class="stil">Richt uw bod aan de jury. Wees gul. Wees creatief. Wees discreet (de andere teams zien dit niet — de jury onthoudt het wél).</p>
-    <label>Uw voorstel</label><textarea id="m-offer" maxlength="500" placeholder="Bv. een plateau pinten voor de voorzitter bij winst van ronde 3…"></textarea>
-    <button class="verzend" onclick="verstuurOmkoop()">Doe het bod</button><p class="fout"></p>`);
-}
-async function verstuurOmkoop() {
-  try { await rpc('hert_submit_bribe', { p_code: S.code, p_offer: document.getElementById('m-offer').value.trim() });
-    sluitModal(); toast('💰 Bod bezorgd aan de jury. Ze zwijgen erover. Voorlopig.'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-function openKliklijn() {
-  const andere = S.pub.teams.filter(t => t.id !== S.team.id);
-  openModal(`<h3>📸 De Kliklijn</h3>
-    <p class="stil">Verraad wordt gewaardeerd én genoteerd. Foto's maken uw zaak sterker.</p>
-    <label>Over welk team?</label>
-    <select id="m-about">${andere.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
-    <label>Uw klacht</label><textarea id="m-klacht" maxlength="500" placeholder="Wat hebben ze uitgespookt?"></textarea>
-    <label>Bewijsfoto (optioneel)</label><input type="file" id="m-foto" accept="image/*">
-    <button class="verzend" onclick="verstuurKlik()">Verklik</button><p class="fout"></p>`);
-}
-async function verstuurKlik() {
-  const knop = document.querySelector('#modal .verzend');
-  try {
-    knop.disabled = true; knop.textContent = 'Bezig…';
-    let foto = null;
-    const f = document.getElementById('m-foto').files[0];
-    if (f) {
-      const pad = `klik-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${(f.name.split('.').pop() || 'jpg').toLowerCase()}`;
-      const up = await fetch(`${SUPA_URL}/storage/v1/object/hert-bewijs/${pad}`, {
-        method: 'POST', headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': f.type || 'image/jpeg' }, body: f
-      });
-      if (!up.ok) throw new Error('foto-upload mislukt');
-      foto = `${SUPA_URL}/storage/v1/object/public/hert-bewijs/${pad}`;
-    }
-    await rpc('hert_submit_snitch', { p_code: S.code, p_about: document.getElementById('m-about').value, p_complaint: document.getElementById('m-klacht').value.trim(), p_photo: foto });
-    sluitModal(); toast('📸 Genoteerd. De jury apprecieert uw gebrek aan loyaliteit.'); vernieuw(true);
-  } catch (e) { knop.disabled = false; knop.textContent = 'Verklik'; modalFout(e.message); }
-}
+// omkopen gebeurt aan de toog, in bitterballen — daar heeft de jury geen formulier voor nodig
 
 /* ========== JURYZICHT ========== */
 function juryInfoVan(rondeId) {

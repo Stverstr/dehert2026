@@ -227,7 +227,13 @@ async function laad() {
   S.pub = { event: event[0], teams, riders, rounds, scores, secrets, delibs, riderPoints, rules, prizes, personen, alias, prefeed: prefeed || [] };
 }
 async function vernieuw(stil) {
-  try { await laad(); render(); }
+  try {
+    await laad();
+    // niet hertekenen terwijl iemand een klacht aan het opstellen is:
+    // dat veegt de gekozen namen, de tekst en de foto weg
+    if (stil && S.tab === 'klacht' && document.getElementById('kl-tekst')) return;
+    render();
+  }
   catch (e) { if (!stil) toast('⚠️ ' + e.message); }
 }
 
@@ -455,7 +461,8 @@ function klachtKaart() {
   return `<div class="kaart dossier"><h2>📸 Klacht indienen <span class="r">de kliklijn</span></h2>
     <p class="stil" style="margin-bottom:.4rem">Zag u iets wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker. De jury antwoordt via de micro, of helemaal niet.</p>
     <div class="veld"><label>Van wie komt de klacht? (uw eigen naam)</label>
-      <select id="kl-van" onchange="localStorage.setItem('hert_klacht_van', this.value)">
+      <select id="kl-van" onchange="if(this.value)localStorage.setItem('hert_klacht_van', this.value)">
+        <option value="">— kies uw naam —</option>
         ${renners.map(r => `<option value="${r.id}">${esc(toon(r.name))}</option>`).join('')}
       </select></div>
     <div class="veld"><label>Tegen wie? (mag ook zomaar)</label>
@@ -477,6 +484,7 @@ async function verstuurKlacht(knop) {
   fout.style.display = 'none';
   const van = document.getElementById('kl-van').value;
   const tekst = document.getElementById('kl-tekst').value.trim();
+  if (!van) { fout.textContent = 'Kies eerst uw naam. Anoniem klagen is voor lafaards.'; fout.style.display = 'block'; return; }
   if (!tekst) { fout.textContent = 'Een klacht zonder woorden is geen klacht.'; fout.style.display = 'block'; return; }
   try {
     knop.disabled = true; knop.textContent = 'Bezig…';

@@ -181,7 +181,7 @@ async function laad() {
     q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
     q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_round_secrets?select=round_id,brief'),
     q('hert_deliberations?order=sort'), q('hert_rider_points?select=*'), q('hert_rules?order=sort'),
-    q('hert_prizes?order=sort'), rpc('hert_scorebord').catch(() => null)
+    q('hert_prizes?order=sort'), rpc('hert_scorebord_detail').catch(() => null)
   ]);
   const personen = (bord && bord.personen) || [];
   const alias = {};
@@ -214,11 +214,11 @@ function individueel() {
     const k = (p.naam || '').trim().toLowerCase();
     const x = koersVan[k] || {};
     return { key: k, naam: p.alias || p.naam, echt: p.naam, divisie: p.divisie, team_id: x.team_id || null,
-      rider_id: x.rider_id || null, voork: p.punten || 0, koers: x.koers || 0, punten: (p.punten || 0) + (x.koers || 0) };
+      rider_id: x.rider_id || null, voork: p.punten || 0, lijnen: p.lijnen || [], koers: x.koers || 0, punten: (p.punten || 0) + (x.koers || 0) };
   });
   const bekend = new Set(lijst.map(x => x.key));
   S.pub.riders.filter(r => !bekend.has((r.name || '').trim().toLowerCase())).forEach(r => {
-    lijst.push({ key: r.id, naam: r.name, echt: r.name, divisie: null, team_id: r.team_id, rider_id: r.id, voork: 0, koers: per[r.id] || 0, punten: per[r.id] || 0 });
+    lijst.push({ key: r.id, naam: r.name, echt: r.name, divisie: null, team_id: r.team_id, rider_id: r.id, voork: 0, lijnen: [], koers: per[r.id] || 0, punten: per[r.id] || 0 });
   });
   return lijst.sort((a, b) => b.punten - a.punten || a.naam.localeCompare(b.naam));
 }
@@ -381,11 +381,25 @@ function persoonlijkTabel() {
   }).join('')}</table>`;
 }
 function rennerDetail(r) {
-  const lijnen = [{ w: `voorklassement (${esc(r.echt)})`, p: r.voork }];
+  // volledige uitsplitsing: het voorklassement regel per regel, dan de koersdag
+  const lijnen = [];
+  (r.lijnen || []).forEach(l => {
+    let w;
+    if (l.soort === 'klacht') {
+      const t = (l.tekst || '').length > 90 ? l.tekst.slice(0, 90) + '…' : (l.tekst || '');
+      w = `Klacht: "${t}" ↳ ${l.titel || 'de jury zwijgt'}`;
+    } else if (l.geheim || !l.titel) {
+      w = l.regel ? `Regel №${l.regel} — de jury zwijgt over de reden` : 'de jury zwijgt over de reden';
+    } else {
+      w = (l.regel ? `№${l.regel} · ` : '') + l.titel + (l.van ? ` (van ${l.van})` : '');
+    }
+    lijnen.push({ w, p: l.punten });
+  });
+  if (!lijnen.length) lijnen.push({ w: `voorklassement (${r.echt})`, p: r.voork });
   if (r.rider_id) {
     S.pub.riderPoints.filter(p => p.rider_id === r.rider_id)
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      .forEach(p => lijnen.push({ w: `${tijd(p.created_at)}${p.reason ? ' — ' + p.reason : ' — de jury zwijgt over de reden'}`, p: p.punten }));
+      .forEach(p => lijnen.push({ w: `🏁 koersdag ${tijd(p.created_at)}${p.reason ? ' — ' + p.reason : ' — de jury zwijgt over de reden'}`, p: p.punten }));
   }
   return lijnen.map(l => `<div class="lijn"><span class="w">${esc(l.w)}</span><span class="p ${l.p < 0 ? 'min' : ''}">${l.p > 0 ? '+' : ''}${l.p}</span></div>`).join('');
 }
@@ -403,9 +417,9 @@ function klachtKaart() {
   const renners = S.pub.riders.slice().sort((a, b) => toon(a.name).localeCompare(toon(b.name)));
   return `<div class="kaart dossier"><h2>📸 Klacht indienen <span class="r">de kliklijn</span></h2>
     <p class="stil" style="margin-bottom:.4rem">Zag u iets wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker. De jury antwoordt via de micro, of helemaal niet.</p>
-    <div class="veld"><label>Van welke ploeg komt de klacht?</label>
+    <div class="veld"><label>Van wie komt de klacht? (uw eigen naam)</label>
       <select id="kl-van" onchange="localStorage.setItem('hert_klacht_van', this.value)">
-        ${S.pub.teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}
+        ${renners.map(r => `<option value="${r.id}">${esc(toon(r.name))}</option>`).join('')}
       </select></div>
     <div class="veld"><label>Tegen wie? (mag ook zomaar)</label>
       <select id="kl-over">

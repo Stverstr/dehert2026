@@ -533,8 +533,8 @@ function inboxKaart() {
         <button class="mini" onclick="antwoordBribe('${b.id}','verworpen')">verwerp</button>
         <button class="mini rood" onclick="antwoordBribe('${b.id}','teruggeslagen')">sla terug</button></div>` : ''}
     </div>`; }).join('')}
-    ${j.snitches.map(s => { const van = team(s.from_team_id), over = s.about_team_id ? team(s.about_team_id) : null; return `<div class="bericht">
-      <div class="van">📸 ${esc(van ? van.name : '?')} verklikt ${over ? esc(over.name) : 'niemand in het bijzonder'} <span class="status">${esc(s.status)}</span></div>
+    ${j.snitches.map(s => { const van = s.from_team_id ? team(s.from_team_id) : null, over = s.about_team_id ? team(s.about_team_id) : null; return `<div class="bericht">
+      <div class="van">📸 ${van ? esc(van.name) : 'iemand van de aanhang'} verklikt ${over ? esc(over.name) : 'niemand in het bijzonder'} <span class="status">${esc(s.status)}</span></div>
       <div class="inhoud">${esc(s.complaint)}</div>
       ${s.photo_url ? `<img src="${esc(s.photo_url)}" alt="bewijs">` : ''}
       ${s.jury_response ? `<div class="antwoord">${esc(s.jury_response)}</div>` : ''}

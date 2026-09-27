@@ -420,7 +420,7 @@ function persoonlijkTabel() {
     const stip = tm ? tm.color : (r.divisie === 'baroudelle' ? 'var(--paars)' : r.divisie === 'supporter' ? 'var(--amber)' : r.divisie === 'seingever' ? 'var(--mist)' : 'var(--groen)');
     return `<tr class="klik" onclick="S.openRenner=S.openRenner==='${r.key}'?null:'${r.key}';render()">
       <td class="pos">${i + 1}</td>
-      <td><span class="teamstip" style="background:${esc(stip)}"></span>${esc(r.naam)} <span class="divlabel">${S.openRenner === r.key ? '▾' : '▸'}</span></td>
+      <td><span class="teamstip" style="background:${esc(stip)}"></span>${esc(r.naam)}${r.echt && r.echt !== r.naam ? `<span class="divlabel">${esc(r.echt)}</span>` : ''} <span class="divlabel">${S.openRenner === r.key ? '▾' : '▸'}</span></td>
       <td class="pt">${r.punten}</td></tr>
     ${S.openRenner === r.key ? `<tr><td colspan="3"><div class="detail">${rennerDetail(r)}</div></td></tr>` : ''}`;
   }).join('')}</table>`;

@@ -44,6 +44,7 @@ header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.
 .ind .pos{font-family:'Special Elite',monospace;font-size:.72em;color:var(--grijs);min-width:1.7em;text-align:right}
 .ind .rij:nth-child(-n+3) .pos{color:var(--amber)}
 .ind .naam{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ind .echt{font-size:.72em;color:#5a656d;font-style:italic;margin-left:.45em}
 .ind .pt{font-family:'Special Elite',monospace;color:var(--amber);font-size:.85em}
 .stip{display:inline-block;width:.6em;height:.6em;border-radius:50%;flex:none;vertical-align:baseline}
 
@@ -203,7 +204,7 @@ function individueel() {
   D.riders.forEach(r => { koersVan[(r.name || '').trim().toLowerCase()] = { koers: per[r.id] || 0, team_id: r.team_id }; });
   const lijst = (D.personen || []).map(p => {
     const x = koersVan[(p.naam || '').trim().toLowerCase()] || {};
-    return { naam: p.alias || p.naam, divisie: p.divisie, team_id: x.team_id || null, punten: (p.punten || 0) + (x.koers || 0) };
+    return { naam: p.alias || p.naam, echt: p.alias && p.alias !== p.naam ? p.naam : null, divisie: p.divisie, team_id: x.team_id || null, punten: (p.punten || 0) + (x.koers || 0) };
   });
   // renners die (nog) niet op het voorklassement staan toch tonen
   const bekend = new Set((D.personen || []).map(p => (p.naam || '').trim().toLowerCase()));
@@ -250,7 +251,7 @@ function render() {
     const tm = r.team_id ? team(r.team_id) : null;
     const stip = tm ? tm.color : (DIVSTIP[r.divisie] || 'var(--grijs)');
     return `<div class="rij"><span class="pos">${i + 1}</span><span class="stip" style="background:${esc(stip)}"></span>
-      <span class="naam">${esc(r.naam)}</span><span class="pt">${r.punten}</span></div>`;
+      <span class="naam">${esc(r.naam)}${r.echt ? `<span class="echt">${esc(r.echt)}</span>` : ''}</span><span class="pt">${r.punten}</span></div>`;
   }).join('');
 
   document.getElementById('p-ploeg').innerHTML = D.teams

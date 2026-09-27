@@ -270,11 +270,13 @@ function juryFeed() {
   const items = [];
   (S.pub.prefeed || []).forEach(p => {
     items.push({ t: p.tijd, soort: p.klacht ? '📢 klacht' : '🏅 renner', delta: p.punten,
+      echt: p.alias && p.alias !== p.naam ? p.naam : null,
       html: `<b>${esc(p.alias || p.naam)}</b>${p.klacht ? `: "${esc(p.klacht)}${p.klacht.length >= 110 ? '…' : ''}"<br>↳ ` : ' — '}<i>${esc(p.reden || 'de jury zwijgt over de reden')}</i>` });
   });
   S.pub.riderPoints.forEach(p => {
     const r = S.pub.riders.find(x => x.id === p.rider_id);
     items.push({ t: p.created_at, soort: '🏅 renner', delta: p.punten,
+      echt: r && toon(r.name) !== r.name ? r.name : null,
       html: `<b>${esc(r ? toon(r.name) : '?')}</b>${p.reason ? ' — <i>' + esc(p.reason) + '</i>' : ''}` });
   });
   S.pub.delibs.filter(d => d.revealed && !d.sealed).forEach(d => {
@@ -450,7 +452,7 @@ function jurySpreekt() {
   const feed = juryFeed();
   return `<div class="kaart dossier"><h2>⚖️ De jury spreekt <span class="r">laatste beslissingen eerst</span></h2>
     ${feed.length ? feed.map(x => `<div class="bericht">
-      <div class="van">${x.soort} · ${tijd(x.t)}${x.delta ? `<span class="delta ${x.delta > 0 ? 'plus' : 'min'}">${x.delta > 0 ? '+' : ''}${x.delta}</span>` : ''}</div>
+      <div class="van">${x.soort} · ${tijd(x.t)}${x.delta ? `<span class="delta ${x.delta > 0 ? 'plus' : 'min'}">${x.delta > 0 ? '+' : ''}${x.delta}</span>` : ''}${x.echt ? `<span style="float:right;color:#5a656d;margin-right:1em;letter-spacing:.04em">${esc(x.echt)}</span>` : ''}</div>
       <div class="inhoud">${x.html}</div></div>`).join('')
     : '<p class="stil">De jury heeft nog niets beslist. Dat duurt nooit lang.</p>'}</div>`;
 }

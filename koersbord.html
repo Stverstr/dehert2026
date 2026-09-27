@@ -216,11 +216,13 @@ function juryFeed() {
   const items = [];
   (D.prefeed || []).forEach(p => {
     items.push({ t: p.tijd, soort: p.klacht ? '📢 klacht' : '🏅 renner', delta: p.punten,
+      echt: p.alias && p.alias !== p.naam ? p.naam : null,
       tekst: `<b>${esc(p.alias || p.naam)}</b>${p.klacht ? `: "${esc(p.klacht.length >= 110 ? p.klacht.slice(0, 70) + '…' : p.klacht)}"<br>↳ ` : ' — '}<i>${esc(p.reden || 'de jury zwijgt')}</i>` });
   });
   D.riderPoints.forEach(p => {
     const r = D.riders.find(x => x.id === p.rider_id);
     items.push({ t: p.created_at, soort: '🏅 renner', delta: p.punten,
+      echt: r && toon(r) !== r.name ? r.name : null,
       tekst: `<b>${esc(r ? toon(r) : '?')}</b>${p.reason ? ' — <i>' + esc(p.reason) + '</i>' : ''}` });
   });
   D.delibs.filter(d => d.revealed && !d.sealed).forEach(d => {
@@ -261,7 +263,8 @@ function render() {
   const feed = juryFeed();
   document.getElementById('p-feed').innerHTML = feed.length ? feed.map(x => `<div class="item">
       <div class="kop"><span>${x.soort}</span><span>${tijd(x.t)}</span>
-        ${x.delta ? `<span class="delta ${x.delta > 0 ? 'plus' : 'min'}">${x.delta > 0 ? '+' : ''}${x.delta}</span>` : ''}</div>
+        ${x.echt ? `<span style="margin-left:auto;color:#49545c;letter-spacing:.04em">${esc(x.echt)}</span>` : ''}
+        ${x.delta ? `<span class="delta ${x.delta > 0 ? 'plus' : 'min'}"${x.echt ? ' style="margin-left:.8em"' : ''}>${x.delta > 0 ? '+' : ''}${x.delta}</span>` : ''}</div>
       <div class="tekst">${x.tekst}</div></div>`).join('')
     : '<p class="leeg">De jury heeft nog niets beslist. Dat duurt nooit lang.</p>';
 }

@@ -245,7 +245,7 @@ const DIV = { baroudeurs: 'Baroudeurs', baroudellen: 'Baroudellen', gemengd: 'Ge
 const DIVKLEUR = { baroudeurs: 'groen', baroudellen: 'paars', gemengd: 'gemengd' };
 
 const S = {
-  rol: null, code: null, team: null, scherm: false, juryTab: 'koers', teamTab: 'ploeg',
+  rol: null, code: null, team: null, scherm: false, juryTab: 'rondes', teamTab: 'ploeg',
   pub: { event: null, teams: [], riders: [], jury: [], rounds: [], scores: [], secrets: [], delibs: [], prizes: [], prekoers: {} },
   geheim: null,   // team secrets
   juryData: null, // jury view
@@ -289,7 +289,12 @@ async function laadRol() {
   if (S.rol === 'jury' || S.rol === 'opper') S.juryData = await rpc('hert_jury_view', { p_code: S.code });
 }
 async function vernieuw(stil) {
-  try { await laadPubliek(); await laadRol(); render(); }
+  try {
+    await laadPubliek(); await laadRol();
+    const a = document.activeElement;
+    if (stil && a && ['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName)) return;
+    render();
+  }
   catch (e) { if (!stil) toast('⚠️ ' + e.message); }
 }
 
@@ -402,24 +407,6 @@ function klassementKaart() {
 }
 
 /* ========== TEAMZICHT ========== */
-function rondesBlok(divisie, juryModus) {
-  const rondes = S.pub.rounds.filter(r => r.status !== 'skipped');
-  return `<div class="kaart dossier" id="k-rondes"><h2>De Rondes</h2>
-    ${rondes.map(r => {
-      const brief = briefVan(r.id);
-      const zichtbaar = r.status !== 'hidden';
-      const ji = juryModus ? juryInfoVan(r.id) : null;
-      return `<div class="ronde ${DIVKLEUR[r.division] || 'gemengd'}-r">
-        <div class="kop"><span class="nr">${r.sort >= 90 ? 'R' : rondeNr(r)}</span>
-          <span class="naam">${zichtbaar || juryModus ? esc(r.title) : '█████████'}</span>
-          <span class="chip ${r.status}">${{hidden:'geheim',revealed:'onthuld',racing:'bezig',finished:'gereden'}[r.status]}</span></div>
-        <div class="teaser">${esc(r.teaser || '')}</div>
-        ${(zichtbaar && brief) || (juryModus && brief) ? `<div class="brief">${esc(brief)}</div>` : ''}
-        ${ji ? `<div class="jury-info"><b>JURY:</b> ${esc(ji.jury_instructions || '—')}${ji.materials ? `<br><b>MATERIAAL:</b> ${esc(ji.materials)}` : ''}</div>` : ''}
-        ${juryModus ? rondeKnoppen(r) + scoreBlok(r) : ''}
-      </div>`;
-    }).join('')}</div>`;
-}
 function delibKaart(x) {
   const t = x.team_id ? team(x.team_id) : null;
   return `<div class="delib"><div class="dt">${esc(x.title)}</div>
@@ -442,27 +429,115 @@ function juryInfoVan(rondeId) {
 }
 function zichtJury() {
   const opper = S.rol === 'opper';
-  const tabbalk = `<div class="tabs" style="margin-bottom:1.1rem">
-    <button class="${S.juryTab === 'koers' ? 'aan' : ''}" onclick="S.juryTab='koers';render();scrollTo(0,0)">🏁 De Koers</button>
-    <button class="${S.juryTab === 'beheer' ? 'aan' : ''}" onclick="S.juryTab='beheer';render();scrollTo(0,0)">⚙️ Beheer & draaiboek</button>
-  </div>`;
-  if (S.juryTab === 'beheer') {
-    return tabbalk
-      + (opper ? deelnemersKaart() : '')
-      + regelsJuryKaart(opper)
-      + (opper ? beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst());
-  }
-  const nav = [['k-regie', '🎬 Regie'], ['k-klassement', '🏆 Stand'], ['k-rondes', '🏁 Rondes'], ['k-inbox', '📬 Inbox'], ['k-punten', '🏅 Punten'], ['k-logboek', '📓 Logboek']]
-    .map(([id, l]) => `<a href="#${id}">${l}</a>`).join('');
-  return tabbalk + `<nav class="snelnav">${nav}</nav>` + mededeling()
-    + faseKaart(opper)
-    + klassementKaart()
-    + rondesBlok('alle', true)
-    + inboxKaart()
-    + puntenRennerKaart()
-    + missiesJuryKaart()
-    + notitiesKaart();
+  const nieuw = ((S.juryData && S.juryData.snitches) || []).filter(x => x.status === 'nieuw').length;
+  const tabs = [['rondes', '🏁 Rondes'], ['klachten', `📢 Klachten${nieuw ? ' (' + nieuw + ')' : ''}`],
+    ['punten', '🏅 Punten'], ['ploegen', '🚴 Ploegen'], ['meer', '⋯ Meer']];
+  const tabbalk = `<div class="tabs hoofdtabs">${tabs.map(([id, l]) =>
+    `<button class="${S.juryTab === id ? 'aan' : ''}" onclick="S.juryTab='${id}';render();scrollTo(0,0)">${l}</button>`).join('')}</div>`;
+  let blad = '';
+  if (S.juryTab === 'klachten') blad = klachtenJury();
+  else if (S.juryTab === 'punten') blad = puntenRennerKaart() + ploegPuntenKaart();
+  else if (S.juryTab === 'ploegen') blad = (opper ? deelnemersKaart() : '') + ploegenBeheerKaart();
+  else if (S.juryTab === 'meer') blad = faseKaart(opper) + klassementKaart()
+    + (opper ? beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst())
+    + regelsJuryKaart(opper) + missiesJuryKaart() + notitiesKaart();
+  else blad = rondesSimpel();
+  return tabbalk + mededeling() + blad;
 }
+
+/* ========== RONDES: open · winnaar · dicht ========== */
+function rondeSchaal(r) {
+  if (r.race_type === 'afvalling') return [5, 4, 3, 2, 1, 1];
+  if (r.race_type === 'foto') return null;
+  return [10, 8, 6, 5, 4, 3];
+}
+function rondesSimpel() {
+  const rondes = S.pub.rounds.filter(r => r.sort < 90 && r.status !== 'skipped');
+  return `<div class="kaart dossier"><h2>🏁 De Rondes <span class="r">open · uitslag · dicht</span></h2>
+    ${rondes.map(r => {
+      const ji = juryInfoVan(r.id);
+      const open = r.status === 'racing' || r.status === 'revealed';
+      let knoppen = '';
+      if (r.status === 'hidden') knoppen = `<button class="mini groen" onclick="rondeOpen('${r.id}')">🔓 Open de ronde</button>`;
+      else if (open) knoppen = `<button class="mini geel" onclick="rondeDicht('${r.id}')">🏆 Sluit de ronde</button>
+        <button class="mini" onclick="zetRonde('${r.id}','hidden')">🔒 toch terug dicht</button>`;
+      else knoppen = `<button class="mini" onclick="zetRonde('${r.id}','racing')">↩︎ heropen</button>`;
+      return `<div class="ronde gemengd-r">
+        <div class="kop"><span class="nr">${rondeNr(r)}</span><span class="naam">${esc(r.title)}</span>
+          <span class="chip ${r.status}">${{hidden:'dicht',revealed:'open',racing:'open — bezig',finished:'gereden'}[r.status]}</span></div>
+        ${ji ? `<div class="jury-info"><b>JURY:</b> ${esc(ji.jury_instructions || '—')}${ji.materials ? `<br><b>MATERIAAL:</b> ${esc(ji.materials)}` : ''}</div>` : ''}
+        <div style="margin-top:.6rem">${knoppen} ${S.rol === 'opper' ? `<button class="mini" onclick="bewerkRonde('${r.id}')">✏️</button>` : ''}</div>
+        ${r.status !== 'hidden' ? uitslagBlok(r) : ''}
+      </div>`;
+    }).join('')}</div>`;
+}
+async function rondeOpen(id) {
+  try {
+    await rpc('hert_set_round_status', { p_code: S.code, p_round: id, p_status: 'racing' });
+    toast('🔓 Ronde open — de briefing staat bij iedereen op het scherm');
+    vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+async function rondeDicht(id) {
+  try {
+    await rpc('hert_set_round_status', { p_code: S.code, p_round: id, p_status: 'finished' });
+    toast('🏆 Ronde gesloten — vul hieronder de uitslag in');
+    vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+function uitslagBlok(r) {
+  const schaal = rondeSchaal(r);
+  const scores = S.pub.scores.filter(x => x.round_id === r.id);
+  if (!schaal) {
+    return `<details class="score-blok" ${!scores.length ? 'open' : ''}><summary>📸 Punten per ploeg (herkend 2 · schaamteloos 3 · max 9)</summary>
+      ${S.pub.teams.map(t => { const sc = scores.find(x => x.team_id === t.id) || {}; return `
+        <div class="score-rij"><span class="tnaam"><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}</span>
+        <input type="number" min="0" max="12" id="fp-${r.id}-${t.id}" value="${sc.base_points ?? ''}"></div>`; }).join('')}
+      <button class="mini groen" style="margin-top:.5rem" onclick="kenFotoPunten('${r.id}')">✓ Ken de punten toe</button></details>`;
+  }
+  const volgens = scores.slice().sort((a, b) => (a.finish_pos || 99) - (b.finish_pos || 99));
+  return `<details class="score-blok" ${!scores.length && r.status !== 'hidden' ? 'open' : ''}><summary>🏆 De uitslag <span style="color:var(--grijs)">(1e t/m 6e = ${schaal.join(' · ')})</span></summary>
+    ${S.pub.teams.map((zz, i) => {
+      const huidig = volgens.find(x => x.finish_pos === i + 1);
+      return `<div class="score-rij"><span class="lbl" style="min-width:2.2em">${i + 1}e</span>
+        <select id="rang-${r.id}-${i}" style="flex:1;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.45em">
+          <option value="">—</option>
+          ${S.pub.teams.map(t => `<option value="${t.id}" ${huidig && huidig.team_id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
+        </select><span class="lbl">+${schaal[i]}</span></div>`;
+    }).join('')}
+    <button class="mini groen" style="margin-top:.5rem" onclick="kenRangPunten('${r.id}')">✓ Ken de punten toe</button>
+    <p class="klein" style="margin-top:.4rem">bonus of straf geef je via het tabblad Punten; de uitslag komt meteen op alle borden</p></details>`;
+}
+async function kenRangPunten(rid) {
+  const r = S.pub.rounds.find(x => x.id === rid);
+  const schaal = rondeSchaal(r);
+  const keuzes = S.pub.teams.map((zz, i) => document.getElementById(`rang-${rid}-${i}`).value);
+  const gekozen = keuzes.filter(Boolean);
+  if (!gekozen.length) return toast('⚠️ Duid minstens de winnaar aan');
+  if (new Set(gekozen).size !== gekozen.length) return toast('⚠️ Eén ploeg staat twee keer in de uitslag');
+  try {
+    for (let i = 0; i < keuzes.length; i++) {
+      if (!keuzes[i]) continue;
+      const sc = S.pub.scores.find(x => x.round_id === rid && x.team_id === keuzes[i]) || {};
+      await rpc('hert_set_score', { p_code: S.code, p_round: rid, p_team: keuzes[i], p_finish: i + 1,
+        p_base: schaal[i], p_bonus: sc.bonus || 0, p_penalty: sc.penalty || 0, p_reason: null });
+    }
+    toast('🏆 Uitslag genoteerd'); vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+async function kenFotoPunten(rid) {
+  try {
+    for (const t of S.pub.teams) {
+      const veld = document.getElementById(`fp-${rid}-${t.id}`);
+      if (!veld || veld.value === '') continue;
+      const sc = S.pub.scores.find(x => x.round_id === rid && x.team_id === t.id) || {};
+      await rpc('hert_set_score', { p_code: S.code, p_round: rid, p_team: t.id, p_finish: null,
+        p_base: parseInt(veld.value, 10) || 0, p_bonus: sc.bonus || 0, p_penalty: sc.penalty || 0, p_reason: null });
+    }
+    toast('📸 Punten genoteerd'); vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+
 function faseKaart(opper) {
   const e = S.pub.event;
   const fasen = opper ? Object.keys(FASEN) : ['lobby', 'round_intro', 'round_active', 'round_done'];
@@ -481,78 +556,90 @@ async function zetFase(f) { try { await rpc('hert_set_phase', { p_code: S.code, 
 async function zetNotice() { try { await rpc('hert_set_phase', { p_code: S.code, p_phase: S.pub.event.phase, p_notice: document.getElementById('notice-in').value.trim() || null }); toast('📢 Verzonden'); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
 async function wisNotice() { try { await rpc('hert_set_phase', { p_code: S.code, p_phase: S.pub.event.phase, p_notice: null }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
 
-function rondeKnoppen(r) {
-  const acties = [];
-  if (r.status === 'hidden') acties.push(['revealed', '🔓 Onthul', 'geel']);
-  if (r.status === 'revealed') acties.push(['racing', '🏁 Start koers', 'groen'], ['hidden', '🔒 Verberg', '']);
-  if (r.status === 'racing') acties.push(['finished', '🏆 Finish', 'geel']);
-  if (r.status === 'finished') acties.push(['racing', '↩︎ Heropen', '']);
-  return `<div style="margin-top:.6rem">${acties.map(([s, l, k]) =>
-    `<button class="mini ${k}" onclick="zetRonde('${r.id}','${s}')">${l}</button>`).join('')}
-    ${S.rol === 'opper' ? `<button class="mini" onclick="bewerkRonde('${r.id}')">✏️ Bewerk</button>` : ''}</div>`;
+function tijd(ts) {
+  const d = new Date(ts), nu = new Date();
+  const klok = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === nu.toDateString()) return klok;
+  return d.toLocaleDateString('nl-BE', { day: 'numeric', month: 'numeric' }) + ' · ' + klok;
 }
-async function zetRonde(id, status) { try { await rpc('hert_set_round_status', { p_code: S.code, p_round: id, p_status: status }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-
-function scoreBlok(r) {
-  if (r.status === 'hidden') return '';
-  const teams = S.pub.teams;
-  return `<details class="score-blok"><summary>🧮 Punten ronde</summary>
-    ${teams.map(t => {
-      const sc = S.pub.scores.find(s => s.round_id === r.id && s.team_id === t.id) || {};
-      return `<div class="score-rij" id="sr-${r.id}-${t.id}">
-        <span class="tnaam"><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}</span>
-        <span class="lbl">pos</span><input type="number" data-v="finish" value="${sc.finish_pos ?? ''}">
-        <span class="lbl">pnt</span><input type="number" data-v="base" value="${sc.base_points ?? ''}">
-        <span class="lbl">bonus</span><input type="number" data-v="bonus" value="${sc.bonus ?? ''}">
-        <span class="lbl">straf</span><input type="number" data-v="penalty" value="${sc.penalty ?? ''}">
-        <button class="mini groen" onclick="bewaarScore('${r.id}','${t.id}')">ok</button>
+function klachtInzender(x) {
+  const m = (x.complaint || '').match(/^🖋 Van ([^:]+):/);
+  if (!m) return null;
+  const naam = m[1].trim().toLowerCase();
+  return S.pub.riders.find(r => r.name.trim().toLowerCase() === naam) || null;
+}
+function klachtenJury() {
+  const lijst = (S.juryData && S.juryData.snitches) || [];
+  const nieuw = lijst.filter(x => x.status === 'nieuw').length;
+  return `<div class="kaart dossier"><h2>📢 De Klachten <span class="r">${nieuw} onbehandeld</span></h2>
+    ${lijst.map(x => {
+      const inz = klachtInzender(x);
+      const van = x.from_team_id ? team(x.from_team_id) : null;
+      const over = x.about_team_id ? team(x.about_team_id) : null;
+      const tekst = (x.complaint || '').replace(/^🖋 Van [^:]+: /, '');
+      return `<div class="bericht"${x.status !== 'nieuw' ? ' style="opacity:.65"' : ''}>
+        <div class="van">📢 ${inz ? esc(inz.name) : van ? esc(van.name) : 'onbekend'}${van && inz ? ' (' + esc(van.name) + ')' : ''}${over ? ' · over ' + esc(over.name) : ''} · ${tijd(x.created_at)} <span class="status">${esc(x.status)}</span></div>
+        <div class="inhoud">${esc(tekst)}</div>
+        ${x.photo_url ? `<img src="${esc(x.photo_url)}" alt="bewijs">` : ''}
+        ${x.jury_response ? `<div class="antwoord">${esc(x.jury_response)}</div>` : ''}
+        ${x.status === 'nieuw' ? `<div style="margin-top:.5rem">
+          <button class="mini groen" onclick="behandelKlacht('${x.id}','aanvaard')">✓ aanvaard (+1)</button>
+          <button class="mini rood" onclick="behandelKlacht('${x.id}','verworpen')">✗ verwerp (−1)</button>
+          <button class="mini" onclick="behandelKlacht('${x.id}','genegeerd')">— negeer (0)</button>
+        </div>` : ''}
+        <details style="margin-top:.4rem"><summary>✒️ maatwerk: eigen punten & commentaar</summary>
+          <div style="margin-top:.5rem">
+            <input id="mw-c-${x.id}" type="text" maxlength="300" placeholder="commentaar aan de inzender (komt in de app)"
+              style="width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.55em;margin-bottom:.4rem">
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+              <input id="mw-p-${x.id}" type="number" value="0" style="width:4rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.45em;text-align:center">
+              <span class="klein">punten voor</span>
+              <select id="mw-w-${x.id}" style="flex:1;min-width:10rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.45em">
+                ${inz ? `<option value="r:${inz.id}">✒️ de inzender (${esc(inz.name)})</option>` : ''}
+                <optgroup label="een ploeg">${S.pub.teams.map(t => `<option value="t:${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>
+                <optgroup label="iemand anders">${S.pub.riders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(r => `<option value="r:${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
+              </select>
+              <button class="mini geel" onclick="maatwerkKlacht('${x.id}')">ken toe & antwoord</button>
+            </div></div>
+        </details>
       </div>`;
-    }).join('')}
-    <p class="klein" style="margin-top:.5rem">tip: rang 1-6 = 10·8·6·5·4·3 punten (De Afvalling: 5·4·3·2, de rest 1). bonus voor jurymagie, straf voor gebroken contracten.</p>
-  </details>`;
+    }).join('') || '<p class="stil">Nog geen klachten. Verdacht rustig.</p>'}</div>`;
 }
-async function bewaarScore(rid, tid) {
-  const rij = document.getElementById(`sr-${rid}-${tid}`);
-  const v = n => { const x = rij.querySelector(`input[data-v=${n}]`).value; return x === '' ? null : parseInt(x, 10); };
+async function behandelKlacht(id, oordeel) {
+  const x = S.juryData.snitches.find(y => y.id === id);
+  const inz = klachtInzender(x);
+  const kort = (x.complaint || '').replace(/^🖋 Van [^:]+: /, '').slice(0, 60);
+  const map = {
+    aanvaard: ['ontvankelijk', '+1. De jury waardeert de oplettendheid.', 1],
+    verworpen: ['teruggeslagen', '−1. De jury verwerpt dit gezeur.', -1],
+    genegeerd: ['geseponeerd', 'Genoteerd en geklasseerd. Zonder gevolg.', 0]
+  };
+  const [status, antwoord, punten] = map[oordeel];
   try {
-    await rpc('hert_set_score', { p_code: S.code, p_round: rid, p_team: tid, p_finish: v('finish'), p_base: v('base') ?? 0, p_bonus: v('bonus') ?? 0, p_penalty: v('penalty') ?? 0, p_reason: null });
-    toast('🧮 Score bewaard'); vernieuw(true);
+    await rpc('hert_respond_snitch', { p_code: S.code, p_id: id, p_status: status, p_response: antwoord });
+    if (punten && inz) await rpc('hert_geef_punten_renner', { p_code: S.code, p_rider: inz.id, p_punten: punten, p_reden: `Klacht ${oordeel}: "${kort}"` });
+    if (punten && !inz) toast('⚠️ Inzender niet herkend, punten niet toegekend');
+    else toast(oordeel === 'aanvaard' ? '✓ Aanvaard, +1 voor de klager' : oordeel === 'verworpen' ? '✗ Verworpen, −1 voor de klager' : '— Genegeerd');
+    vernieuw(true);
   } catch (e) { toast('⚠️ ' + e.message); }
 }
-
-function inboxKaart() {
-  const j = S.juryData || { bribes: [], snitches: [] };
-  const open = [...j.bribes.filter(b => b.status === 'pending'), ...j.snitches.filter(s => s.status === 'nieuw')].length;
-  return `<div class="kaart dossier" id="k-inbox"><h2>📬 Inbox der duistere kanalen <span class="r">${open} onbehandeld</span></h2>
-    ${j.bribes.map(b => { const t = team(b.team_id); return `<div class="bericht">
-      <div class="van">💰 ${esc(t ? t.name : '?')} <span class="status">${esc(b.status)}</span></div>
-      <div class="inhoud">${esc(b.offer)}</div>
-      ${b.jury_response ? `<div class="antwoord">${esc(b.jury_response)}</div>` : ''}
-      ${b.status === 'pending' ? `<div style="margin-top:.5rem">
-        <button class="mini groen" onclick="antwoordBribe('${b.id}','aanvaard')">aanvaard 😈</button>
-        <button class="mini" onclick="antwoordBribe('${b.id}','verworpen')">verwerp</button>
-        <button class="mini rood" onclick="antwoordBribe('${b.id}','teruggeslagen')">sla terug</button></div>` : ''}
-    </div>`; }).join('')}
-    ${j.snitches.map(s => { const van = s.from_team_id ? team(s.from_team_id) : null, over = s.about_team_id ? team(s.about_team_id) : null; return `<div class="bericht">
-      <div class="van">📸 ${van ? esc(van.name) : 'iemand van de aanhang'} verklikt ${over ? esc(over.name) : 'niemand in het bijzonder'} <span class="status">${esc(s.status)}</span></div>
-      <div class="inhoud">${esc(s.complaint)}</div>
-      ${s.photo_url ? `<img src="${esc(s.photo_url)}" alt="bewijs">` : ''}
-      ${s.jury_response ? `<div class="antwoord">${esc(s.jury_response)}</div>` : ''}
-      ${s.status === 'nieuw' ? `<div style="margin-top:.5rem">
-        <button class="mini groen" onclick="antwoordSnitch('${s.id}','ontvankelijk')">ontvankelijk</button>
-        <button class="mini" onclick="antwoordSnitch('${s.id}','geseponeerd')">seponeer</button>
-        <button class="mini rood" onclick="antwoordSnitch('${s.id}','teruggeslagen')">tegen verklikker</button></div>` : ''}
-    </div>`; }).join('')}
-    ${!j.bribes.length && !j.snitches.length ? '<p class="stil">Nog geen omkoping, nog geen verraad. Teleurstellend.</p>' : ''}</div>`;
+async function maatwerkKlacht(id) {
+  const x = S.juryData.snitches.find(y => y.id === id);
+  const kort = (x.complaint || '').replace(/^🖋 Van [^:]+: /, '').slice(0, 60);
+  const commentaar = document.getElementById('mw-c-' + id).value.trim();
+  const punten = parseInt(document.getElementById('mw-p-' + id).value, 10) || 0;
+  const wie = document.getElementById('mw-w-' + id).value;
+  if (!commentaar && !punten) return toast('⚠️ Geef commentaar of punten, anders valt er niets toe te kennen');
+  try {
+    await rpc('hert_respond_snitch', { p_code: S.code, p_id: id,
+      p_status: x.status === 'nieuw' ? 'ontvankelijk' : x.status,
+      p_response: commentaar || x.jury_response });
+    const reden = `Klachtgevolg: "${kort}"${commentaar ? ' · ' + commentaar : ''}`;
+    if (punten && wie.startsWith('r:')) await rpc('hert_geef_punten_renner', { p_code: S.code, p_rider: wie.slice(2), p_punten: punten, p_reden: reden });
+    if (punten && wie.startsWith('t:')) await geefPloegPuntenDirect(wie.slice(2), punten, reden);
+    toast('✒️ Maatwerk toegekend'); vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
 }
-function vraagAntwoord(cb) {
-  openModal(`<h3>Reactie van de jury</h3>
-    <label>Boodschap (zichtbaar voor het team)</label><textarea id="m-resp" maxlength="400"></textarea>
-    <button class="verzend" onclick="__respOk()">Bevestig</button><p class="fout"></p>`);
-  window.__respOk = async () => { try { await cb(document.getElementById('m-resp').value.trim() || null); sluitModal(); vernieuw(true); } catch (e) { modalFout(e.message); } };
-}
-function antwoordBribe(id, status) { vraagAntwoord(resp => rpc('hert_respond_bribe', { p_code: S.code, p_id: id, p_status: status, p_response: resp })); }
-function antwoordSnitch(id, status) { vraagAntwoord(resp => rpc('hert_respond_snitch', { p_code: S.code, p_id: id, p_status: status, p_response: resp })); }
 
 function puntenRennerKaart() {
   const recent = S.pub.riderPoints.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 12);
@@ -582,6 +669,42 @@ async function geefRennerPunten() {
       p_reden: document.getElementById('ip-reden').value.trim() || null });
     toast('🏅 Toegekend'); vernieuw(true);
   } catch (e) { toast('⚠️ ' + e.message); }
+}
+function ploegPuntenKaart() {
+  return `<div class="kaart dossier"><h2>⚖️ Ploegenpunten</h2>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <select id="pp-team" style="background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;max-width:12rem">
+        ${S.pub.teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}
+      </select>
+      <input id="pp-punten" type="number" value="1" style="width:4rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;text-align:center">
+      <input id="pp-reden" type="text" placeholder="reden (komt op alle borden)"
+        style="flex:1;min-width:9rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em">
+      <button class="mini geel" onclick="geefPloegPunten()">ken toe</button>
+    </div>
+    <p class="klein" style="margin-top:.5rem">negatief mag. telt meteen mee in de stand en verschijnt bij de jury spreekt.</p></div>`;
+}
+async function geefPloegPuntenDirect(teamId, punten, titel) {
+  await rpc('hert_upsert_deliberation', { p_code: S.code, p_id: null, p_sort: 50,
+    p_title: titel.slice(0, 120), p_body: null, p_team: teamId, p_delta: punten, p_sealed: false });
+  S.juryData = await rpc('hert_jury_view', { p_code: S.code });
+  const d = (S.juryData.deliberations || []).filter(x => x.team_id === teamId && !x.revealed && x.title === titel.slice(0, 120)).pop();
+  if (d) await rpc('hert_reveal_deliberation', { p_code: S.code, p_id: d.id, p_revealed: true });
+}
+async function geefPloegPunten() {
+  const punten = parseInt(document.getElementById('pp-punten').value, 10);
+  if (!punten) return toast('⚠️ Punten mogen niet 0 zijn');
+  const reden = document.getElementById('pp-reden').value.trim() || 'De jury heeft gesproken.';
+  try {
+    await geefPloegPuntenDirect(document.getElementById('pp-team').value, punten, reden);
+    toast('⚖️ Toegekend'); vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+function ploegenBeheerKaart() {
+  return `<div class="kaart dossier"><h2>🎽 De ploegen <span class="r">naam & slogan via de kapitein</span></h2>
+    ${S.pub.teams.map(t => `<div class="bericht">
+      <div class="inhoud"><span class="teamstip" style="background:${esc(t.color)}"></span><b>${esc(t.name)}</b>${t.motto ? ': „' + esc(t.motto) + '"' : ' <span class="stil">nog geen slogan (De Ploegdoop wacht: naam +2, motto +5)</span>'}</div>
+      ${S.rol === 'opper' ? `<div style="margin-top:.4rem"><button class="mini" onclick="bewerkTeam('${t.id}')">✏️ naam / slogan</button></div>` : ''}
+    </div>`).join('')}</div>`;
 }
 function regelsJuryKaart(opper) {
   const regels = (S.juryData && S.juryData.rules) || [];
@@ -701,7 +824,7 @@ async function reikUit(id) {
 function beheerKaart() {
   const codes = (S.juryData && S.juryData.team_codes) || [];
   return `<div class="kaart dossier"><h2>👑 Opper-beheer</h2>
-    <details><summary>Ploegen & codes</summary>
+    <details><summary>Ploegen verwijderen of toevoegen</summary>
       ${S.pub.teams.map(t => { const c = codes.find(x => x.team_id === t.id); return `<div class="bericht">
         <div class="van">${DIV[t.division]} <span class="status">code: ${esc(c ? c.code : '—')}</span></div>
         <div class="inhoud"><span class="teamstip" style="background:${esc(t.color)}"></span><b>${esc(t.name)}</b> — ${esc(t.motto || '')}</div>

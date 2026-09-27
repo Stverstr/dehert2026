@@ -284,10 +284,14 @@ function juryFeed() {
     items.push({ t: d.created_at, soort: tm ? '⚖️ ploeg' : '📢 mededeling', delta: d.delta || 0,
       html: `<b>${esc(d.title)}</b>${tm ? ' — ' + esc(tm.name) : ''}${d.body ? '<br><i>' + esc(d.body) + '</i>' : ''}` });
   });
-  S.pub.scores.filter(s => s.bonus || s.penalty).forEach(s => {
+  S.pub.scores.filter(s => s.base_points || s.bonus || s.penalty).forEach(s => {
     const tm = team(s.team_id), ro = S.pub.rounds.find(r => r.id === s.round_id);
-    items.push({ t: s.updated_at, soort: '⚖️ ploeg', delta: (s.bonus || 0) - (s.penalty || 0),
-      html: `<b>${esc(tm ? tm.name : '?')}</b> — ${esc(ro && ro.status !== 'hidden' ? ro.title : 'een ronde')}${s.bonus ? ': +' + s.bonus + ' bonus' : ''}${s.penalty ? (s.bonus ? ',' : ':') + ' −' + s.penalty + ' straf' : ''}${s.reason ? '<br><i>' + esc(s.reason) + '</i>' : ''}` });
+    const stukken = [];
+    if (s.base_points) stukken.push(`${s.finish_pos ? s.finish_pos + 'e, ' : ''}+${s.base_points}`);
+    if (s.bonus) stukken.push(`+${s.bonus} bonus`);
+    if (s.penalty) stukken.push(`−${s.penalty} straf`);
+    items.push({ t: s.updated_at, soort: s.base_points ? '🏁 uitslag' : '⚖️ ploeg', delta: (s.base_points || 0) + (s.bonus || 0) - (s.penalty || 0),
+      html: `<b>${esc(tm ? tm.name : '?')}</b> — ${esc(ro && ro.status !== 'hidden' ? ro.title : 'een ronde')}: ${stukken.join(', ')}${s.reason ? '<br><i>' + esc(s.reason) + '</i>' : ''}` });
   });
   return items.sort((a, b) => new Date(b.t) - new Date(a.t)).slice(0, 30);
 }
@@ -462,7 +466,6 @@ function klachtKaart() {
   const renners = S.pub.riders.slice().sort((a, b) => toon(a.name).localeCompare(toon(b.name)));
   const naamMet = r => toon(r.name) !== r.name ? `${toon(r.name)} (${r.name})` : r.name;
   return `<div class="kaart dossier"><h2>📸 Klacht indienen <span class="r">de kliklijn</span></h2>
-    <p class="stil" style="margin-bottom:.4rem">Zag u iets wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker. De jury antwoordt via de micro, of helemaal niet.</p>
     <div class="veld"><label>Van wie komt de klacht? (uw eigen naam)</label>
       <select id="kl-van" onchange="if(this.value)localStorage.setItem('hert_klacht_van', this.value)">
         <option value="">— kies uw naam —</option>

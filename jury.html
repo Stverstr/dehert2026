@@ -363,8 +363,17 @@ function klassement(divisie) {
 function render() {
   renderKop();
   const el = document.getElementById('inhoud');
+  // formulierwaarden en open uitklappers overleven de herteken
+  const velden = {};
+  el.querySelectorAll('input[id], select[id], textarea[id]').forEach(v => {
+    if (v.value !== '' && v.value !== v.defaultValue) velden[v.id] = v.value;
+    else if (v.tagName === 'SELECT' && v.selectedIndex !== 0) velden[v.id] = v.value;
+  });
+  const open = [...el.querySelectorAll('details[open]')].map(d => (d.querySelector('summary') || {}).textContent);
   if (S.rol === 'jury' || S.rol === 'opper') el.innerHTML = zichtJury();
   else el.innerHTML = zichtScherm();
+  Object.entries(velden).forEach(([id, w]) => { const v = document.getElementById(id); if (v) v.value = w; });
+  el.querySelectorAll('details').forEach(d => { const s = d.querySelector('summary'); if (s && open.includes(s.textContent)) d.open = true; });
 }
 function renderKop() {
   const e = S.pub.event || {};
@@ -460,8 +469,9 @@ function rondesSimpel() {
       let knoppen = '';
       if (r.status === 'hidden') knoppen = `<button class="mini groen" onclick="rondeOpen('${r.id}')">🔓 Open de ronde</button>`;
       else if (open) knoppen = `<button class="mini geel" onclick="rondeDicht('${r.id}')">🏆 Sluit de ronde</button>
-        <button class="mini" onclick="zetRonde('${r.id}','hidden')">🔒 toch terug dicht</button>`;
-      else knoppen = `<button class="mini" onclick="zetRonde('${r.id}','racing')">↩︎ heropen</button>`;
+        <button class="mini rood" onclick="rondeReset('${r.id}')">↺ reset: terug dicht</button>`;
+      else knoppen = `<button class="mini" onclick="zetRonde('${r.id}','racing')">↩︎ heropen</button>
+        <button class="mini rood" onclick="rondeReset('${r.id}')">↺ reset: dicht &amp; punten weg</button>`;
       return `<div class="ronde gemengd-r">
         <div class="kop"><span class="nr">${rondeNr(r)}</span><span class="naam">${esc(r.title)}</span>
           <span class="chip ${r.status}">${{hidden:'dicht',revealed:'open',racing:'open — bezig',finished:'gereden'}[r.status]}</span></div>
@@ -475,6 +485,16 @@ async function rondeOpen(id) {
   try {
     await rpc('hert_set_round_status', { p_code: S.code, p_round: id, p_status: 'racing' });
     toast('🔓 Ronde open — de briefing staat bij iedereen op het scherm');
+    vernieuw(true);
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+async function rondeReset(id) {
+  const r = S.pub.rounds.find(x => x.id === id);
+  const n = S.pub.scores.filter(x => x.round_id === id && (x.base_points || x.bonus || x.penalty)).length;
+  if (!confirm(`${r.title} resetten? De ronde gaat terug dicht${n ? ` en de punten van ${n} ploeg${n > 1 ? 'en' : ''} worden gewist` : ''}. Dit kan niet ongedaan gemaakt worden.`)) return;
+  try {
+    await rpc('hert_reset_round', { p_code: S.code, p_round: id });
+    toast('↺ Ronde gereset: dicht, punten gewist');
     vernieuw(true);
   } catch (e) { toast('⚠️ ' + e.message); }
 }

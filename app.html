@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>De Hert — Koerscentrale</title>
+<meta property="og:title" content="🦌 De Koerscentrale — alles van de koersavond, live">
+<meta property="og:description" content="Volg de ploegen, de rondes en de stand, lees wat de jury beslist, en dien klacht in. Geen code nodig: klik en u bent binnen.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://stverstr.github.io/dehert2026/app.html">
+<meta property="og:image" content="https://stverstr.github.io/dehert2026/og-koerscentrale.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦌</text></svg>">
 <script>history.scrollRestoration = 'manual';</script>
@@ -117,6 +125,11 @@ table.stand tr.klik{cursor:pointer}
 #toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(200%);background:#141a12;border:1px solid var(--groen-diep);color:#d6ffe8;font-family:'Special Elite',monospace;font-size:.8rem;padding:.8em 1.4em;z-index:60;transition:transform .4s ease;max-width:90vw;text-align:center}
 #toast.zien{transform:translateX(-50%) translateY(0)}
 .graan{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* een eenzame renner van een andere club, ook hier te snel voor deze koers */
+.cyclone-baan{position:fixed;left:0;bottom:1.2rem;width:110px;z-index:-1;pointer-events:none;opacity:.5;will-change:transform;transform:translateX(-45vw)}
+.cyclone-baan svg{width:100%;height:auto;display:block;overflow:visible}
+.cyclone-baan.rijdt{animation:cycloneflits 1.9s linear}
+@keyframes cycloneflits{from{transform:translateX(-45vw)}to{transform:translateX(115vw)}}
 </style>
 </head>
 <body>
@@ -133,6 +146,33 @@ table.stand tr.klik{cursor:pointer}
 </div>
 <div id="toast"></div>
 
+<div class="cyclone-baan" aria-hidden="true">
+  <!-- volledig zelfvoorzienend: iOS Safari kan geen <use> over SVG-grenzen heen -->
+  <svg viewBox="-150 -64 230 98">
+    <title>🌪 komt de koers keuren</title>
+    <defs>
+      <filter id="cy-zacht" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+      <filter id="cy-zachter" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="12"/></filter>
+      <g id="cy-renner">
+        <circle cx="0" cy="0" r="17" fill="none" stroke="currentColor" stroke-width="3.4"/>
+        <circle cx="62" cy="0" r="17" fill="none" stroke="currentColor" stroke-width="3.4"/>
+        <path d="M0 0 L24 2 L38 -14 L15 -16 Z" fill="currentColor"/>
+        <path d="M38 -14 L62 0 L52 -18 Z" fill="currentColor"/>
+        <path d="M24 2 L33 -2 L28 12 L20 10 Z" fill="currentColor"/>
+        <path d="M15 -16 C 20 -36 34 -42 46 -38 C 56 -35 60 -28 61 -22 L52 -18 C 44 -26 30 -26 24 -18 Z" fill="currentColor"/>
+        <circle cx="49" cy="-46" r="8.5" fill="currentColor"/>
+        <path d="M46 -38 L58 -26 L63 -30 L54 -40 Z" fill="currentColor"/>
+        <path d="M28 -20 L36 -4 L30 10 L24 8 L29 -4 L22 -14 Z" fill="currentColor"/>
+      </g>
+    </defs>
+    <line x1="-140" y1="6" x2="-14" y2="6" stroke="#f5c542" stroke-width="6" opacity=".9"/>
+    <line x1="-105" y1="-22" x2="-8" y2="-22" stroke="#4a63e0" stroke-width="6" opacity=".8"/>
+    <use href="#cy-renner" filter="url(#cy-zachter)" style="color:#f5c542"/>
+    <use href="#cy-renner" filter="url(#cy-zacht)" style="color:#4a63e0" opacity=".9"/>
+    <use href="#cy-renner" style="color:#3450c8"/>
+  </svg>
+</div>
+
 <script>
 const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
 const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
@@ -141,14 +181,6 @@ const FASEN = {
   lobby: 'De verzameling', round_intro: 'De onthulling', round_active: 'Koers!',
   round_done: 'Tussenstand', deliberation: 'De Beraadslaging', ceremony: 'De Slotceremonie', finished: 'Het is volbracht'
 };
-const QUIPS = [
-  '† de jury is omkoopbaar. betaling bij voorkeur in bitterballen, aan de toog.',
-  '† dit platform meet geen hoogtemeters. er zijn er geen.',
-  '† systeemcheck door een onafhankelijke blauw-gele waarnemer: ‘werkt, maar traag. net als de renners.’',
-  '† klachten over het niveau kunnen terecht op het tabblad Klacht.'
-];
-const QUIP = QUIPS[Math.floor(Math.random() * QUIPS.length)];
-
 const S = {
   tab: 'ploegen', standTab: 'ploegen', openPloeg: null, openRenner: null,
   pub: { event: null, teams: [], riders: [], rounds: [], scores: [], secrets: [], delibs: [], riderPoints: [], rules: [], personen: [], alias: {} },
@@ -272,12 +304,7 @@ function heroBlok() {
       ${d.length ? '' : '<p class="wacht">De eerste beslissingen komen er zo aan. Beef.</p>'}</div>`
       + d.map(x => delibKaart(x)).join('') + prijzenBlok();
   }
-  if ((e.phase === 'lobby') || !ar) {
-    return `<div class="kaart nu"><div class="fase">${FASEN[e.phase] || ''}</div>
-      <div class="grootst">De jury observeert</div>
-      <p class="wacht">Nog geen actieve ronde. Verzamel aan het café, gedraag u onopvallend,<br>en spreek uw complotten alvast af.</p>
-      <p class="klein" style="margin-top:1.2rem;color:#49545c">${esc(QUIP)}</p></div>`;
-  }
+  if ((e.phase === 'lobby') || !ar) return '';
   const brief = briefVan(ar.id);
   return `<div class="kaart nu gemengd"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)}</div>
     <div class="grootst onthuld">${ar.status !== 'hidden' ? esc(ar.title) : 'De volgende ronde'}</div>
@@ -483,6 +510,15 @@ function reglementBlok() {
 }
 
 /* ---------- start ---------- */
+// de waarnemer rijdt af en toe. niet teveel. maar toch.
+const cyc = document.querySelector('.cyclone-baan');
+function waarnemerRijdt() {
+  cyc.classList.add('rijdt');
+  setTimeout(() => cyc.classList.remove('rijdt'), 2200);
+  setTimeout(waarnemerRijdt, 60000 + Math.random() * 90000);
+}
+setTimeout(waarnemerRijdt, 25000 + Math.random() * 40000);
+
 (async () => {
   await vernieuw();
   S.timer = setInterval(() => vernieuw(true), 5000);

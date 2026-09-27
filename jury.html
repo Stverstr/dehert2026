@@ -720,11 +720,19 @@ async function geefPloegPunten() {
   } catch (e) { toast('⚠️ ' + e.message); }
 }
 function ploegenBeheerKaart() {
+  const lobby = !S.pub.event || S.pub.event.phase === 'lobby';
   return `<div class="kaart dossier"><h2>🎽 De ploegen <span class="r">naam & slogan via de kapitein</span></h2>
-    ${S.pub.teams.map(t => `<div class="bericht">
+    ${S.pub.teams.map(t => {
+      const leden = S.pub.riders.filter(r => r.team_id === t.id);
+      return `<div class="bericht">
       <div class="inhoud"><span class="teamstip" style="background:${esc(t.color)}"></span><b>${esc(t.name)}</b>${t.motto ? ': „' + esc(t.motto) + '"' : ' <span class="stil">nog geen slogan (De Ploegdoop wacht: naam +2, motto +5)</span>'}</div>
-      ${S.rol === 'opper' ? `<div style="margin-top:.4rem"><button class="mini" onclick="bewerkTeam('${t.id}')">✏️ naam / slogan</button></div>` : ''}
-    </div>`).join('')}</div>`;
+      ${leden.length ? `<div class="klein" style="margin-top:.3rem;color:var(--grijs)">${leden.map(r => esc(r.name)).join(' · ')}</div>` : ''}
+      <div style="margin-top:.4rem"><button class="mini" onclick="bewerkTeam('${t.id}')">✏️ naam / slogan</button></div>
+    </div>`; }).join('')}
+    <div style="margin-top:.8rem;border-top:1px dashed var(--kader);padding-top:.8rem">
+      <button class="mini groen" onclick="verdeelTeams()">⚖️ Herverdeel de ploegen automatisch</button>
+      <p class="klein" style="margin-top:.4rem">${lobby ? 'slangendraft op de sterretjes: gemengde ploegen, gelijk verdeelde sterkte. de bestaande indeling wordt overschreven.' : 'kan enkel tijdens De Verzameling: daarna liggen de ploegen vast, bijsturen kan enkel per renner.'}</p>
+    </div></div>`;
 }
 function regelsJuryKaart(opper) {
   const regels = (S.juryData && S.juryData.rules) || [];
@@ -859,8 +867,19 @@ function beheerKaart() {
 }
 
 /* ---------- generieke bewerk-modals (opper) ---------- */
+function openModal(html) { document.getElementById('modal').innerHTML = '<button class="sluit" onclick="sluitModal()">\u2715</button>' + html; document.getElementById('modal-achter').style.display = 'block'; }
+function sluitModal() { document.getElementById('modal-achter').style.display = 'none'; }
+function modalFout(t) { const f = document.querySelector('#modal .fout'); f.textContent = t; f.style.display = 'block'; }
 function bewerkTeam(id) {
   const t = id ? team(id) : {};
+  if (S.rol !== 'opper' && id) {
+    // jurylid: enkel naam en slogan
+    openModal(`<h3>Ploeg bewerken</h3>
+      <label>Naam</label><input type="text" id="f-naam" value="${esc(t.name || '')}">
+      <label>Slogan</label><input type="text" id="f-motto" value="${esc(t.motto || '')}">
+      <button class="verzend" onclick="bewaarTeam('${id}')">Bewaar</button><p class="fout"></p>`);
+    return;
+  }
   const codes = (S.juryData && S.juryData.team_codes) || [];
   const c = id ? (codes.find(x => x.team_id === id) || {}) : {};
   openModal(`<h3>${id ? 'Ploeg bewerken' : 'Nieuwe ploeg'}</h3>
@@ -876,14 +895,16 @@ function bewerkTeam(id) {
     <button class="verzend" onclick="bewaarTeam('${id || ''}')">Bewaar</button><p class="fout"></p>`);
 }
 async function bewaarTeam(id) {
+  const t = id ? team(id) : {};
+  const veld = n => document.getElementById(n);
   try {
     await rpc('hert_upsert_team', { p_code: S.code, p_id: id || null,
-      p_name: document.getElementById('f-naam').value.trim(),
-      p_division: document.getElementById('f-div').value,
-      p_color: document.getElementById('f-kleur').value.trim(),
-      p_motto: document.getElementById('f-motto').value.trim() || null,
-      p_sort: parseInt(document.getElementById('f-sort').value, 10) || 0,
-      p_team_code: document.getElementById('f-code').value.trim() || null });
+      p_name: veld('f-naam').value.trim(),
+      p_division: veld('f-div') ? veld('f-div').value : (t.division || 'gemengd'),
+      p_color: veld('f-kleur') ? veld('f-kleur').value.trim() : (t.color || null),
+      p_motto: veld('f-motto').value.trim() || null,
+      p_sort: veld('f-sort') ? (parseInt(veld('f-sort').value, 10) || 0) : (t.sort ?? 0),
+      p_team_code: veld('f-code') ? (veld('f-code').value.trim() || null) : null });
     sluitModal(); toast('✓ Bewaard'); vernieuw(true);
   } catch (e) { modalFout(e.message); }
 }

@@ -929,6 +929,25 @@ function toonDank() {
   const boodschap = localStorage.getItem('hert2026_dankboodschap');
   if (boodschap) document.getElementById('dank-locatie').textContent = '📍 ' + boodschap;
 }
+/* bezoekstatistiek: anonieme hartslag voor de jury */
+(function () {
+  try {
+    let did; try { did = localStorage.hert_did || (localStorage.hert_did = Math.random().toString(36).slice(2, 10)); } catch (e) { did = 'x' + Math.random().toString(36).slice(2, 9); }
+    const sid = Math.random().toString(36).slice(2, 12);
+    const ping = () => {
+      if (document.hidden) return;
+      let wie = null; try { wie = null; } catch (e) {}
+      fetch(SUPA_URL + '/rest/v1/rpc/hert_bezoek_ping', {
+        method: 'POST',
+        headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_pagina: 'teaser', p_device: did, p_sessie: sid, p_rider: wie })
+      }).catch(() => {});
+    };
+    ping();
+    setInterval(ping, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ping(); });
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>

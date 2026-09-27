@@ -447,7 +447,7 @@ function zichtJury() {
   if (S.juryTab === 'klachten') blad = klachtenJury();
   else if (S.juryTab === 'punten') blad = puntenRennerKaart() + ploegPuntenKaart();
   else if (S.juryTab === 'ploegen') blad = (opper ? deelnemersKaart() : '') + ploegenBeheerKaart();
-  else if (S.juryTab === 'meer') blad = faseKaart(opper) + klassementKaart()
+  else if (S.juryTab === 'meer') blad = statsKaart() + faseKaart(opper) + klassementKaart()
     + (opper ? beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst())
     + regelsJuryKaart(opper) + missiesJuryKaart() + notitiesKaart();
   else blad = rondesSimpel();
@@ -718,6 +718,41 @@ async function geefPloegPunten() {
     await geefPloegPuntenDirect(document.getElementById('pp-team').value, punten, reden);
     toast('⚖️ Toegekend'); vernieuw(true);
   } catch (e) { toast('⚠️ ' + e.message); }
+}
+/* ========== BEZOEKSTATISTIEKEN ========== */
+async function laadStats() {
+  if (Date.now() - (S.statsT || 0) < 60000) return;
+  S.statsT = Date.now();
+  try { S.stats = await rpc('hert_bezoek_stats', { p_code: S.code }); render(); } catch (e) {}
+}
+function duurTekst(sec) {
+  sec = Math.max(0, Math.round(sec || 0));
+  if (sec < 90) return sec + ' s';
+  return Math.round(sec / 60) + ' min';
+}
+function statsKaart() {
+  laadStats();
+  if (!S.stats) return `<div class="kaart dossier"><h2>📊 De kijkcijfers</h2><p class="stil">De cijfers worden opgehaald…</p></div>`;
+  const st = S.stats;
+  const nu = st.nu || [];
+  const maxUur = Math.max(1, ...(st.uren || []).map(u => u.n));
+  const balken = (st.uren || []).map(u =>
+    `<div title="${esc(u.uur)}: ${u.n}" style="flex:1;background:var(--amber);opacity:.85;height:${Math.max(6, Math.round(u.n / maxUur * 56))}px"></div>`).join('');
+  const uurLabels = (st.uren || []);
+  return `<div class="kaart dossier"><h2>📊 De kijkcijfers <span class="r">ververst elke minuut</span></h2>
+    <p style="margin-bottom:.6rem"><b style="color:var(--groen)">👁 Nu live: ${nu.length}</b>
+      ${nu.length ? `<span class="klein" style="margin-left:.5rem">${nu.map(x => `${esc(x.wie)} (${esc(x.pagina)}, sinds ${esc(x.sinds)})`).join(' · ')}</span>` : '<span class="stil">niemand aan het kijken</span>'}</p>
+    <table class="stand" style="margin-bottom:.9rem"><tr><th>Pagina</th><th style="text-align:right">24 u</th><th style="text-align:right">toestellen</th><th style="text-align:right">gem. blijft</th><th style="text-align:right">7 dagen</th></tr>
+      ${(st.per_pagina || []).map(p => `<tr><td>${esc(p.pagina)}</td>
+        <td class="pt">${p.dag_sessies}</td><td class="pt">${p.dag_toestellen}</td>
+        <td class="pt">${p.dag_sessies ? duurTekst(p.dag_gem_sec) : '—'}</td><td class="pt">${p.week_sessies}</td></tr>`).join('')
+      || '<tr><td colspan="5" class="stil">nog geen bezoek geregistreerd</td></tr>'}</table>
+    ${(st.uren || []).length ? `<p class="klein" style="margin-bottom:.3rem">bezoekpieken, laatste 48 uur (per uur gestart)</p>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:60px;margin-bottom:.2rem">${balken}</div>
+      <p class="klein" style="display:flex;justify-content:space-between;margin-bottom:.9rem"><span>${esc(uurLabels[0].uur)}</span><span>${esc(uurLabels[uurLabels.length - 1].uur)}</span></p>` : ''}
+    ${(st.laatste || []).length ? `<details><summary class="klein">laatste bezoeken</summary>
+      ${st.laatste.map(x => `<div class="klein" style="margin-top:.3rem">${esc(x.start)} · <b>${esc(x.wie)}</b> · ${esc(x.pagina)} · ${duurTekst(x.duur_sec)}</div>`).join('')}</details>` : ''}
+  </div>`;
 }
 function ploegenBeheerKaart() {
   const lobby = !S.pub.event || S.pub.event.phase === 'lobby';

@@ -29,6 +29,12 @@ header .ronde-nu{font-style:italic;color:var(--inkt);font-size:1.05rem}
 header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.3rem;color:var(--grijs)}
 
 .mededeling{background:linear-gradient(90deg,#2a1f0d,#1a1409);border:1px solid var(--amber-diep);color:#ffd9a0;font-family:'Special Elite',monospace;font-size:1rem;padding:.75em 1em;margin:.8rem 0 0;line-height:1.5}
+.koers-nu{background:linear-gradient(175deg,#10151b,#0b1015);border:2px solid var(--amber-diep);box-shadow:0 0 40px rgba(255,179,71,.08);text-align:center;padding:1.1rem 1.4rem 1.3rem;margin:.9rem 0 0;animation:onthul 1.2s ease}
+.koers-nu .kn-fase{font-family:'Special Elite',monospace;font-size:.75rem;letter-spacing:.25em;text-transform:uppercase;color:var(--grijs)}
+.koers-nu .kn-titel{font-family:'Abril Fatface',serif;font-size:clamp(1.6rem,3.2vw,2.6rem);color:#e9e2d0;margin:.1em 0}
+.koers-nu .kn-status{font-family:'Special Elite',monospace;font-size:.85rem;letter-spacing:.2em;text-transform:uppercase;color:var(--groen)}
+.koers-nu .kn-brief{font-size:clamp(1rem,1.5vw,1.25rem);font-style:italic;line-height:1.6;margin-top:.7rem;text-align:left;white-space:pre-wrap;color:#d9d2c0}
+@keyframes onthul{from{opacity:0;transform:scale(.97);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
 .mededeling::before{content:"📢 "}
 
 .bord{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:1rem;margin-top:1rem}
@@ -90,6 +96,7 @@ footer{text-align:center;margin-top:.9rem;font-family:'Special Elite',monospace;
   <span class="klok" id="h-klok"></span>
 </header>
 <div id="h-notice"></div>
+<div id="h-koers"></div>
 
 <div class="bord">
   <div class="paneel">
@@ -171,11 +178,13 @@ function tijd(ts) {
 }
 
 async function laad() {
-  const [event, teams, riders, rounds, scores, delibs, riderPoints, voork] = await Promise.all([
+  const [event, teams, riders, rounds, scores, delibs, riderPoints, voork, secrets] = await Promise.all([
     q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
     q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_deliberations?order=sort'),
-    q('hert_rider_points?select=*'), rpc('hert_scorebord').catch(() => null)
+    q('hert_rider_points?select=*'), rpc('hert_scorebord').catch(() => null),
+    q('hert_round_secrets?select=round_id,brief').catch(() => [])
   ]);
+  D.secrets = secrets || [];
   const prefeed = await rpc('hert_prekoers_feed').catch(() => []);
   const prekoers = {}, aliassen = {};
   const personen = (voork && voork.personen) || [];
@@ -249,6 +258,20 @@ function render() {
   const ar = D.rounds.find(r => r.id === e.active_round_id);
   document.getElementById('h-ronde').textContent = ar ? (ar.status !== 'hidden' ? '· ' + ar.title : '· de volgende ronde is nog geheim') : '';
   document.getElementById('h-notice').innerHTML = e.notice ? `<div class="mededeling">${esc(e.notice)}</div>` : '';
+
+  let koersNu = '';
+  if (ar && (e.phase === 'round_intro' || e.phase === 'round_active')) {
+    const geheim = D.secrets.find(x => x.round_id === ar.id);
+    const brief = geheim ? geheim.brief : null;
+    const nr = D.rounds.filter(r => r.sort < 90 && r.status !== 'skipped').findIndex(r => r.id === ar.id) + 1;
+    koersNu = `<div class="koers-nu">
+      <div class="kn-fase">${esc(FASEN[e.phase])}${nr ? ' — ronde ' + nr : ''}</div>
+      <div class="kn-titel">${ar.status !== 'hidden' ? esc(ar.title) : 'De volgende ronde'}</div>
+      ${e.phase === 'round_active' ? '<div class="kn-status">▶ De koers is bezig — rijden!</div>' : ''}
+      ${brief ? `<div class="kn-brief">${esc(brief)}</div>` : `<div class="kn-brief">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</div>`}
+    </div>`;
+  }
+  document.getElementById('h-koers').innerHTML = koersNu;
 
   const DIVSTIP = { baroudeur: 'var(--groen)', baroudelle: 'var(--paars)', supporter: 'var(--amber)', seingever: 'var(--mist)' };
   document.getElementById('p-ind').innerHTML = individueel().map((r, i) => {

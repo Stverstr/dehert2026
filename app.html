@@ -213,12 +213,13 @@ async function laad() {
     q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
     q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_round_secrets?select=round_id,brief'),
     q('hert_deliberations?order=sort'), q('hert_rider_points?select=*'), q('hert_rules?order=sort'),
-    q('hert_prizes?order=sort'), rpc('hert_scorebord_detail').catch(() => null)
+    q('hert_prizes?order=sort'), rpc('hert_scorebord_detail').catch(() => null),
   ]);
+  const prefeed = await rpc('hert_prekoers_feed').catch(() => []);
   const personen = (bord && bord.personen) || [];
   const alias = {};
   personen.forEach(p => { if (p.alias) alias[(p.naam || '').trim().toLowerCase()] = p.alias; });
-  S.pub = { event: event[0], teams, riders, rounds, scores, secrets, delibs, riderPoints, rules, prizes, personen, alias };
+  S.pub = { event: event[0], teams, riders, rounds, scores, secrets, delibs, riderPoints, rules, prizes, personen, alias, prefeed: prefeed || [] };
 }
 async function vernieuw(stil) {
   try { await laad(); render(); }
@@ -256,6 +257,10 @@ function individueel() {
 }
 function juryFeed() {
   const items = [];
+  (S.pub.prefeed || []).forEach(p => {
+    items.push({ t: p.tijd, soort: '🏅 renner', delta: p.punten,
+      html: `<b>${esc(p.alias || p.naam)}</b>${p.reden ? ' — <i>' + esc(p.reden) + '</i>' : ' — <i>de jury zwijgt over de reden</i>'}` });
+  });
   S.pub.riderPoints.forEach(p => {
     const r = S.pub.riders.find(x => x.id === p.rider_id);
     items.push({ t: p.created_at, soort: '🏅 renner', delta: p.punten,

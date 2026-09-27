@@ -170,6 +170,7 @@ async function laad() {
     q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_deliberations?order=sort'),
     q('hert_rider_points?select=*'), rpc('hert_scorebord').catch(() => null)
   ]);
+  const prefeed = await rpc('hert_prekoers_feed').catch(() => []);
   const prekoers = {}, aliassen = {};
   const personen = (voork && voork.personen) || [];
   personen.forEach(p => {
@@ -177,7 +178,7 @@ async function laad() {
     prekoers[k] = p.punten;
     if (p.alias) aliassen[k] = p.alias;
   });
-  Object.assign(D, { event: event[0], teams, riders, rounds, scores, delibs, riderPoints, prekoers, aliassen, personen });
+  Object.assign(D, { event: event[0], teams, riders, rounds, scores, delibs, riderPoints, prekoers, aliassen, personen, prefeed: prefeed || [] });
 }
 
 function team(id) { return D.teams.find(t => t.id === id); }
@@ -208,6 +209,10 @@ function individueel() {
 }
 function juryFeed() {
   const items = [];
+  (D.prefeed || []).forEach(p => {
+    items.push({ t: p.tijd, soort: '🏅 renner', delta: p.punten,
+      tekst: `<b>${esc(p.alias || p.naam)}</b>${p.reden ? ' — <i>' + esc(p.reden) + '</i>' : ' — <i>de jury zwijgt</i>'}` });
+  });
   D.riderPoints.forEach(p => {
     const r = D.riders.find(x => x.id === p.rider_id);
     items.push({ t: p.created_at, soort: '🏅 renner', delta: p.punten,

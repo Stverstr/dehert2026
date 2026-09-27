@@ -210,8 +210,8 @@ function individueel() {
 function juryFeed() {
   const items = [];
   (D.prefeed || []).forEach(p => {
-    items.push({ t: p.tijd, soort: '🏅 renner', delta: p.punten,
-      tekst: `<b>${esc(p.alias || p.naam)}</b>${p.reden ? ' — <i>' + esc(p.reden) + '</i>' : ' — <i>de jury zwijgt</i>'}` });
+    items.push({ t: p.tijd, soort: p.klacht ? '📢 klacht' : '🏅 renner', delta: p.punten,
+      tekst: `<b>${esc(p.alias || p.naam)}</b>${p.klacht ? `: "${esc(p.klacht.length >= 110 ? p.klacht.slice(0, 70) + '…' : p.klacht)}"<br>↳ ` : ' — '}<i>${esc(p.reden || 'de jury zwijgt')}</i>` });
   });
   D.riderPoints.forEach(p => {
     const r = D.riders.find(x => x.id === p.rider_id);

@@ -162,7 +162,12 @@ async function rpc(fn, args) {
   return t ? JSON.parse(t) : null;
 }
 function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function tijd(ts) { return new Date(ts).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }); }
+function tijd(ts) {
+  const d = new Date(ts), nu = new Date();
+  const klok = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === nu.toDateString()) return klok;
+  return d.toLocaleDateString('nl-BE', { day: 'numeric', month: 'numeric' }) + ' · ' + klok;
+}
 
 async function laad() {
   const [event, teams, riders, rounds, scores, delibs, riderPoints, voork] = await Promise.all([

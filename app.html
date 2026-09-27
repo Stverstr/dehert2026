@@ -20,38 +20,19 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{background:var(--nacht);color:var(--papier);font-family:'Cormorant',serif;font-size:1.1rem;min-height:100vh;overflow-x:clip}
-.kaart{scroll-margin-top:4.2rem}
-.snelnav{position:sticky;top:0;z-index:30;background:rgba(6,9,13,.94);display:flex;gap:.35rem;flex-wrap:wrap;padding:.5rem .1rem;border-bottom:1px solid var(--kader);margin-bottom:.9rem}
-.snelnav a{font-family:'Special Elite',monospace;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--inkt);border:1px solid var(--kader);padding:.45em .7em;text-decoration:none;background:#0d1319}
 ::selection{background:var(--paars-diep);color:#fff}
 button{font-family:'Special Elite',monospace;cursor:pointer}
 h1,h2,h3{font-weight:400}
 a{color:var(--amber)}
 
-/* ===== login ===== */
-#login{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center}
-#login .gewei{font-size:3.4rem}
-#login h1{font-family:'Abril Fatface',serif;font-size:clamp(1.7rem,6vw,2.6rem);color:#e9e2d0;margin:.4em 0 .1em}
-#login .sub{font-family:'Special Elite',monospace;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:var(--grijs);margin-bottom:2.2rem}
-#login .doos{width:100%;max-width:22rem}
-#login input{width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;font-size:1.15rem;letter-spacing:.25em;text-align:center;text-transform:uppercase;padding:.9em;outline:none;margin-bottom:.9rem}
-#login input:focus{border-color:#456}
-#login button{width:100%;padding:1em;background:linear-gradient(135deg,var(--groen-diep),#0f3d29);border:1px solid var(--groen-diep);color:#eafff3;font-size:.95rem;letter-spacing:.15em;text-transform:uppercase}
-#login .fout{color:var(--rood);font-family:'Special Elite',monospace;font-size:.85rem;margin-top:1rem;display:none}
-#login .scherm-link{margin-top:2.5rem;font-style:italic;color:var(--grijs);background:none;border:none;text-decoration:underline;font-size:.85rem}
-#login .quip{margin-top:1.6rem;font-size:.76rem;color:#49545c;font-style:italic;max-width:24rem;line-height:1.6}
-
-/* ===== app-kader ===== */
-#app{display:none;max-width:52rem;margin:0 auto;padding:0 .9rem 5rem}
+#app{max-width:52rem;margin:0 auto;padding:0 .9rem 5rem}
 header.top{display:flex;align-items:center;gap:.8rem;padding:1rem .2rem;border-bottom:1px dashed var(--kader2);margin-bottom:1rem;flex-wrap:wrap}
 header.top .logo{font-size:1.7rem}
 header.top .titel{font-family:'Abril Fatface',serif;font-size:1.15rem;color:#e9e2d0;line-height:1.1}
 header.top .rolbadge{margin-left:auto;font-family:'Special Elite',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;padding:.4em .8em;border:1px solid var(--kader2);color:var(--inkt)}
-header.top .uitlog{background:none;border:none;color:var(--grijs);font-size:.65rem;letter-spacing:.1em;text-decoration:underline}
 .mededeling{background:linear-gradient(90deg,#2a1f0d,#1a1409);border:1px solid var(--amber-diep);color:#ffd9a0;font-family:'Special Elite',monospace;font-size:.85rem;padding:.8em 1em;margin-bottom:1.1rem;line-height:1.6}
-.mededeling::before{content:"📢 ";}
+.mededeling::before{content:"📢 "}
 
-/* ===== kaarten ===== */
 .kaart{position:relative;background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid var(--kader);padding:1.3rem 1.1rem;margin-bottom:1.1rem}
 .kaart.dossier::before{content:"";position:absolute;inset:7px;border:1px dashed var(--kader2);pointer-events:none}
 .kaart h2{font-family:'Special Elite',monospace;font-size:.95rem;letter-spacing:.14em;text-transform:uppercase;color:var(--papier);margin-bottom:1rem}
@@ -59,33 +40,36 @@ header.top .uitlog{background:none;border:none;color:var(--grijs);font-size:.65r
 .stil{color:var(--grijs);font-style:italic}
 .klein{font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grijs)}
 
-/* ===== nu-paneel ===== */
 .nu{border-width:2px;text-align:center;padding:1.8rem 1.2rem}
 .nu .fase{font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;color:var(--grijs);margin-bottom:.8rem}
 .nu .grootst{font-family:'Abril Fatface',serif;font-size:clamp(1.5rem,6vw,2.4rem);color:#e9e2d0;margin:.2em 0}
 .nu .brief{font-size:1.15rem;font-style:italic;line-height:1.6;margin-top:1rem;text-align:left;white-space:pre-wrap}
-.nu.groen{border-color:var(--groen-diep);box-shadow:0 0 40px rgba(61,220,132,.08)}
-.nu.paars{border-color:var(--paars-diep);box-shadow:0 0 40px rgba(217,123,178,.09)}
 .nu.gemengd{border-color:var(--amber-diep);box-shadow:0 0 40px rgba(255,179,71,.08)}
 .nu .wacht{font-style:italic;color:var(--inkt);line-height:1.7}
 @keyframes onthul{from{opacity:0;transform:scale(.94);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
 .nu .onthuld{animation:onthul 1.2s ease}
 
-/* ===== klassement ===== */
 .tabs{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
 .tabs button{background:#0d1319;border:1px solid var(--kader);color:var(--inkt);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.55em .95em}
 .tabs button.aan{border-color:var(--amber-diep);color:var(--amber)}
 .tabs.hoofdtabs{position:sticky;top:0;z-index:30;background:rgba(6,9,13,.94);padding:.55rem 0;margin:0 0 1rem;border-bottom:1px solid var(--kader)}
 .tabs.hoofdtabs button{font-size:.78rem;padding:.7em 1em;flex:1 1 auto}
+
 table.stand{width:100%;border-collapse:collapse;font-size:1rem}
 table.stand td,table.stand th{padding:.5em .4em;text-align:left;border-bottom:1px solid #131c23}
 table.stand th{font-family:'Special Elite',monospace;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grijs)}
-table.stand td.pt{text-align:right;font-family:'Special Elite',monospace;color:var(--amber)}
+table.stand td.pt{text-align:right;font-family:'Special Elite',monospace;color:var(--amber);white-space:nowrap}
 table.stand td.pos{width:2em;font-family:'Special Elite',monospace;color:var(--grijs)}
+table.stand tr.klik{cursor:pointer}
 .teamstip{display:inline-block;width:.65em;height:.65em;border-radius:50%;margin-right:.5em;vertical-align:baseline}
 .divlabel{font-size:.72em;color:var(--grijs);margin-left:.4em;font-style:italic}
+.detail{background:#0a0f14;border-left:2px solid var(--amber-diep);padding:.7rem .9rem;font-size:.95rem}
+.detail .lijn{padding:.25em 0;border-bottom:1px solid #10171d;display:flex;gap:.6em;align-items:baseline}
+.detail .lijn:last-child{border-bottom:none}
+.detail .lijn .w{flex:1;font-style:italic;color:#cfc8b8}
+.detail .lijn .p{font-family:'Special Elite',monospace;color:var(--amber);white-space:nowrap}
+.detail .lijn .p.min{color:var(--rood)}
 
-/* ===== rondelijst ===== */
 .ronde{border:1px solid var(--kader);padding:.9rem 1rem;margin-bottom:.7rem;background:#0d1319}
 .ronde .kop{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap}
 .ronde .nr{font-family:'Abril Fatface',serif;color:var(--grijs);font-size:1.1rem;min-width:1.4em}
@@ -97,71 +81,28 @@ table.stand td.pos{width:2em;font-family:'Special Elite',monospace;color:var(--g
 @keyframes pols{50%{opacity:.45}}
 .ronde .teaser{font-style:italic;color:var(--inkt);margin-top:.4rem}
 .ronde .brief{margin-top:.6rem;font-size:1.02rem;line-height:1.55;white-space:pre-wrap}
-.ronde.paars-r{border-left:3px solid var(--paars-diep)}
-.ronde.groen-r{border-left:3px solid var(--groen-diep)}
 .ronde.gemengd-r{border-left:3px solid var(--amber-diep)}
-.ronde .jury-info{margin-top:.7rem;padding:.7rem;background:#0a0f14;border:1px dashed var(--kader2);font-family:'Special Elite',monospace;font-size:.78rem;line-height:1.7;color:var(--inkt)}
 
-/* ===== missies ===== */
-.missie{border:1px solid var(--paars-diep);background:#120d13;padding:.9rem 1rem;margin-bottom:.7rem}
-.missie .titel{font-family:'Special Elite',monospace;color:var(--paars);font-size:.9rem;letter-spacing:.08em}
-.missie .uitleg{margin-top:.4rem;font-style:italic;line-height:1.55}
-.missie .meta{margin-top:.4rem;font-family:'Special Elite',monospace;font-size:.68rem;color:var(--grijs);text-transform:uppercase;letter-spacing:.1em}
+.ploegkaart{border:1px solid var(--kader);border-left:4px solid var(--pk,#455965);background:#0d1319;padding:.8rem 1rem;margin-bottom:.8rem}
+.ploegkaart .pnaam{font-family:'Special Elite',monospace;font-size:1rem;color:#ece5d3}
+.ploegkaart .motto{font-style:italic;color:var(--inkt);margin:.2rem 0 .5rem}
+.ploegkaart .lid{padding:.28em 0;border-bottom:1px solid #10171d;font-size:1rem}
+.ploegkaart .lid:last-child{border-bottom:none}
+.ploegkaart .lid .echt{font-size:.78em;color:var(--grijs);font-style:italic;margin-left:.45em}
 
-/* ===== knoppen ===== */
-.acties{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
-.grote-knop{padding:1.1em .8em;background:#0d1319;border:1px solid var(--kader);color:var(--papier);font-size:.85rem;letter-spacing:.08em;line-height:1.5}
-.grote-knop small{display:block;color:var(--grijs);font-size:.72em;text-transform:none;letter-spacing:0}
-.grote-knop.geel{border-color:var(--amber-diep)}
-.grote-knop.roze{border-color:var(--paars-diep)}
-.mini{background:#0d1319;border:1px solid var(--kader);color:var(--inkt);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.5em .8em;margin:.15rem .15rem .15rem 0}
-.mini.groen{border-color:var(--groen-diep);color:var(--groen)}
-.mini.geel{border-color:var(--amber-diep);color:var(--amber)}
-.mini.rood{border-color:#6e3333;color:var(--rood)}
-.mini:disabled{opacity:.4;cursor:default}
-
-/* ===== inbox ===== */
 .bericht{border:1px solid var(--kader);background:#0d1319;padding:.8rem .95rem;margin-bottom:.7rem;font-size:1rem}
 .bericht .van{font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grijs);margin-bottom:.3rem}
-.bericht .status{float:right;font-family:'Special Elite',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.bericht .van .delta{float:right;font-size:1.25em;letter-spacing:0}
+.bericht .van .delta.plus{color:var(--groen)} .bericht .van .delta.min{color:var(--rood)}
 .bericht .inhoud{font-style:italic;line-height:1.5}
 .bericht .antwoord{margin-top:.5rem;padding:.5rem .7rem;background:#141009;border-left:2px solid var(--amber-diep);font-size:.92rem;color:#ffd9a0}
-.bericht img{max-width:100%;margin-top:.5rem;border:1px solid var(--kader2)}
 
-/* ===== formulieren / modal ===== */
-#modal-achter{display:none;position:fixed;inset:0;background:rgba(2,4,6,.82);z-index:40;overflow-y:auto;padding:2rem 1rem}
-#modal{max-width:30rem;margin:0 auto;background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid var(--kader);padding:1.6rem 1.3rem;position:relative}
-#modal h3{font-family:'Special Elite',monospace;font-size:.95rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.1rem;color:var(--papier)}
-#modal .sluit{position:absolute;top:.6rem;right:.8rem;background:none;border:none;color:var(--grijs);font-size:1.1rem}
-#modal label{display:block;font-family:'Special Elite',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grijs);margin:.9rem 0 .35rem}
-#modal input[type=text],#modal input[type=number],#modal textarea,#modal select{width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;font-size:.95rem;padding:.7em;outline:none}
-#modal textarea{min-height:5.5em;resize:vertical}
-#modal .verzend{width:100%;margin-top:1.3rem;padding:1em;background:linear-gradient(135deg,var(--groen-diep),#0f3d29);border:1px solid var(--groen-diep);color:#eafff3;font-size:.9rem;letter-spacing:.14em;text-transform:uppercase}
-#modal .fout{color:var(--rood);font-family:'Special Elite',monospace;font-size:.8rem;margin-top:.8rem;display:none}
-#modal input[type=file]{color:var(--grijs);font-size:.85rem;margin-top:.3rem}
-#modal input[type=checkbox]{accent-color:var(--amber)}
+.veld label{display:block;font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grijs);margin:.9rem 0 .35rem}
+.veld input[type=text],.veld textarea,.veld select{width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;font-size:1rem;padding:.7em;outline:none}
+.veld textarea{min-height:5em;resize:vertical}
+.verzend{width:100%;margin-top:1.2rem;padding:1em;background:linear-gradient(135deg,var(--paars-diep),#3d1b30);border:1px solid var(--paars-diep);color:#ffe3f2;font-size:.9rem;letter-spacing:.12em;text-transform:uppercase}
+.fout{color:var(--rood);font-family:'Special Elite',monospace;font-size:.8rem;margin-top:.8rem;display:none}
 
-/* ===== toast ===== */
-#toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(200%);background:#141a12;border:1px solid var(--groen-diep);color:#d6ffe8;font-family:'Special Elite',monospace;font-size:.8rem;padding:.8em 1.4em;z-index:60;transition:transform .4s ease;max-width:90vw;text-align:center}
-#toast.zien{transform:translateX(-50%) translateY(0)}
-
-/* ===== jury-secties ===== */
-.fase-rij{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem}
-.score-blok{margin-top:.8rem;border-top:1px dashed var(--kader2);padding-top:.8rem}
-.score-rij{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.4rem 0;border-bottom:1px solid #10171d}
-.score-rij .tnaam{flex:1 1 8rem;font-size:.98rem}
-.score-rij input{width:3.2rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;text-align:center;padding:.4em .2em}
-.score-rij .lbl{font-family:'Special Elite',monospace;font-size:.6rem;color:var(--grijs);text-transform:uppercase}
-
-/* ===== groot scherm ===== */
-body.scherm-modus{font-size:1.3rem}
-body.scherm-modus #app{max-width:72rem}
-.scherm-kop{text-align:center;padding:2.2rem 1rem .5rem}
-.scherm-kop .t1{font-family:'Abril Fatface',serif;font-size:clamp(1.8rem,4.5vw,3.4rem);color:#e9e2d0}
-.scherm-kop .t2{font-family:'Special Elite',monospace;font-size:.85rem;letter-spacing:.3em;text-transform:uppercase;color:var(--grijs);margin-top:.7rem}
-.scherm-kop .t3{font-style:italic;font-size:1.05rem;color:var(--inkt);margin-top:.5rem}
-.scherm-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
-@media(max-width:52rem){.scherm-grid{grid-template-columns:1fr}}
 .delib{border:1px solid var(--amber-diep);background:#141009;padding:1.4rem;margin-bottom:1rem;animation:onthul .9s ease}
 .delib .dt{font-family:'Special Elite',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);font-size:1rem}
 .delib .db{margin-top:.6rem;font-style:italic;line-height:1.6}
@@ -172,50 +113,27 @@ body.scherm-modus #app{max-width:72rem}
 .prijs .pn{font-family:'Abril Fatface',serif;font-size:1.5rem;color:#e9e2d0}
 .prijs .pw{margin-top:.6rem;font-family:'Special Elite',monospace;color:var(--amber);font-size:1.05rem;animation:onthul 1.2s ease}
 .prijs .pd{font-style:italic;color:var(--inkt);margin-top:.3rem;font-size:.95rem}
+
+#toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(200%);background:#141a12;border:1px solid var(--groen-diep);color:#d6ffe8;font-family:'Special Elite',monospace;font-size:.8rem;padding:.8em 1.4em;z-index:60;transition:transform .4s ease;max-width:90vw;text-align:center}
+#toast.zien{transform:translateX(-50%) translateY(0)}
 .graan{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
-details{margin-top:.6rem} summary{cursor:pointer;font-family:'Special Elite',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grijs)}
 </style>
 </head>
 <body>
-<!-- 🌪 Deze koerscentrale werd gekeurd door een onafhankelijke blauw-gele instantie
-     en "net niet" goed bevonden. Te weinig hoogtemeters in de dataset, aldus het rapport. -->
+<!-- 🌪 Vrij toegankelijk verklaard door een onafhankelijke blauw-gele instantie. "Eindelijk transparantie", aldus hun perscommuniqué. -->
 <div class="graan"></div>
 
-<!-- ============ LOGIN ============ -->
-<div id="login">
-  <div class="gewei">🦌</div>
-  <h1>De Koerscentrale</h1>
-  <p class="sub">Grote Sluitingsprijs Café De Hert — MMXXVI</p>
-  <div class="doos">
-    <input id="code-invoer" type="text" placeholder="GEHEIME CODE" autocomplete="off"
-      onkeydown="if(event.key==='Enter')inloggen()">
-    <button onclick="inloggen()">Betreed de koers</button>
-    <p class="fout" id="login-fout"></p>
-  </div>
-  <button class="scherm-link" onclick="location.href='koersbord.html'">📺 Het Koersbord — live tv-overzicht (geen code)</button>
-  <button class="scherm-link" style="margin-top:.9rem" onclick="startScherm()">🎭 Groot scherm — onthullingen & ceremonie</button>
-  <p class="quip" id="login-quip"></p>
-</div>
-
-<!-- ============ APP ============ -->
 <div id="app">
-  <header class="top" id="kop"></header>
-  <div id="inhoud"></div>
+  <header class="top">
+    <span class="logo">🦌</span>
+    <div class="titel">Grote Sluitingsprijs<br>Café De Hert</div>
+    <span class="rolbadge">De Koerscentrale</span>
+  </header>
+  <div id="inhoud"><p class="stil" style="text-align:center;padding:3rem 0">De koerscentrale ontwaakt…</p></div>
 </div>
-
-<div id="modal-achter" onclick="if(event.target===this)sluitModal()"><div id="modal"></div></div>
 <div id="toast"></div>
 
 <script>
-const QUIPS = [
-  "\u2020 systeemcheck door een onafhankelijke blauw-gele waarnemer: \u2018werkt, maar traag. net als de renners.\u2019",
-  "\u2020 dit platform meet geen hoogtemeters. er zijn er geen.",
-  "\u2020 renners die elders \u2018echte koersen\u2019 rijden, worden verzocht zich in te houden. voor de spanning.",
-  "\u2020 de jury is omkoopbaar. de servers niet. die draaien op wattages van een andere club.",
-  "\u2020 klachten over het niveau kunnen terecht bij een club met meer hoogtemeters."
-];
-const QUIP = QUIPS[Math.floor(Math.random() * QUIPS.length)];
-
 const SUPA_URL = 'https://uvodxrrxsxnjlinqrjlw.supabase.co';
 const SUPA_KEY = 'sb_publishable_is9JHVr3f7hRfZh31WtLvA_sz5ymhQW';
 
@@ -223,32 +141,17 @@ const FASEN = {
   lobby: 'De verzameling', round_intro: 'De onthulling', round_active: 'Koers!',
   round_done: 'Tussenstand', deliberation: 'De Beraadslaging', ceremony: 'De Slotceremonie', finished: 'Het is volbracht'
 };
-const FASEN_SUB = {
-  lobby: 'zes kleuren \u00b7 \u00e9\u00e9n gewei \u00b7 nul objectiviteit',
-  round_intro: 'de opdracht is onthuld \u2014 te laat om nog te oefenen',
-  round_active: 'er wordt gereden \u2014 de jury ziet alles. ook d\u00e1t.',
-  round_done: 'tussenstand \u2014 voorlopig, betwistbaar en omkoopbaar',
-  deliberation: 'de jury beraadslaagt \u2014 protest is zinloos maar welkom',
-  ceremony: 'de slotceremonie \u2014 er kan nog \u00e1lles gebeuren',
-  finished: 'het is volbracht \u2014 geen woord tegen de pers'
-};
-const TAGLINES = [
-  'E\u00e9n avond. E\u00e9n vaart. Nul genade.',
-  'Sportief verantwoord? Njet. Juridisch waterdicht? Ook niet.',
-  'Waar de sterkste wint, tenzij de jury anders beslist.',
-  'Officieel een fietswedstrijd. Officieus een rechtszaak.',
-  'De enige koers waar omkoping in het reglement staat.',
-  'Vlakker dan dit wordt koers niet. Sneller ook niet, aldus een blauw-gele bron.'
+const QUIPS = [
+  '† de jury is omkoopbaar. betaling bij voorkeur in bitterballen, aan de toog.',
+  '† dit platform meet geen hoogtemeters. er zijn er geen.',
+  '† systeemcheck door een onafhankelijke blauw-gele waarnemer: ‘werkt, maar traag. net als de renners.’',
+  '† klachten over het niveau kunnen terecht op het tabblad Klacht.'
 ];
-const DIV = { baroudeurs: 'Baroudeurs', baroudellen: 'Baroudellen', gemengd: 'Gemengd' };
-const DIVKLEUR = { baroudeurs: 'groen', baroudellen: 'paars', gemengd: 'gemengd' };
+const QUIP = QUIPS[Math.floor(Math.random() * QUIPS.length)];
 
 const S = {
-  rol: null, code: null, team: null, scherm: false, juryTab: 'koers', teamTab: 'ploeg',
-  pub: { event: null, teams: [], riders: [], jury: [], rounds: [], scores: [], secrets: [], delibs: [], prizes: [], prekoers: {} },
-  geheim: null,   // team secrets
-  juryData: null, // jury view
-  tab: 'ploegen',
+  tab: 'ploegen', standTab: 'ploegen', openPloeg: null, openRenner: null,
+  pub: { event: null, teams: [], riders: [], rounds: [], scores: [], secrets: [], delibs: [], riderPoints: [], rules: [], personen: [], alias: {} },
   timer: null
 };
 
@@ -270,54 +173,24 @@ async function q(pad) {
 }
 function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('zien'); setTimeout(() => el.classList.remove('zien'), 2600); }
+function tijd(ts) { return new Date(ts).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }); }
 
-/* ---------- data laden ---------- */
-async function laadPubliek() {
-  const [event, teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules, voork] = await Promise.all([
+/* ---------- data ---------- */
+async function laad() {
+  const [event, teams, riders, rounds, scores, secrets, delibs, riderPoints, rules, prizes, bord] = await Promise.all([
     q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
-    q('hert_jury_members?order=sort'), q('hert_rounds?order=sort'), q('hert_scores?select=*'),
-    q('hert_round_secrets?select=round_id,brief'), q('hert_deliberations?order=sort'), q('hert_prizes?order=sort'),
-    q('hert_rider_points?select=*'), q('hert_rules?order=sort'),
-    rpc('hert_scorebord').catch(() => null)
+    q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_round_secrets?select=round_id,brief'),
+    q('hert_deliberations?order=sort'), q('hert_rider_points?select=*'), q('hert_rules?order=sort'),
+    q('hert_prizes?order=sort'), rpc('hert_scorebord').catch(() => null)
   ]);
-  const prekoers = {};
-  if (voork && voork.personen) voork.personen.forEach(p => { prekoers[(p.naam || '').trim().toLowerCase()] = p.punten; });
-  S.pub = { event: event[0], teams, riders, jury, rounds, scores, secrets, delibs, prizes, riderPoints, rules, prekoers };
-}
-async function laadRol() {
-  if (S.rol === 'team') S.geheim = await rpc('hert_team_secrets', { p_code: S.code });
-  if (S.rol === 'jury' || S.rol === 'opper') S.juryData = await rpc('hert_jury_view', { p_code: S.code });
+  const personen = (bord && bord.personen) || [];
+  const alias = {};
+  personen.forEach(p => { if (p.alias) alias[(p.naam || '').trim().toLowerCase()] = p.alias; });
+  S.pub = { event: event[0], teams, riders, rounds, scores, secrets, delibs, riderPoints, rules, prizes, personen, alias };
 }
 async function vernieuw(stil) {
-  try { await laadPubliek(); await laadRol(); render(); }
+  try { await laad(); render(); }
   catch (e) { if (!stil) toast('⚠️ ' + e.message); }
-}
-
-/* ---------- login ---------- */
-async function inloggen() {
-  const code = document.getElementById('code-invoer').value.trim().toUpperCase();
-  const fout = document.getElementById('login-fout');
-  fout.style.display = 'none';
-  if (!code) return;
-  try {
-    const res = await rpc('hert_login', { p_code: code });
-    S.rol = res.rol; S.code = code; S.team = res.team;
-    sessionStorage.setItem('hert_code', code);
-    start();
-  } catch (e) {
-    fout.textContent = 'De jury kent deze code niet. Verdwijn, of probeer opnieuw.';
-    fout.style.display = 'block';
-  }
-}
-function startScherm() { S.rol = 'scherm'; S.scherm = true; document.body.classList.add('scherm-modus'); start(); }
-function uitloggen() { sessionStorage.removeItem('hert_code'); location.reload(); }
-
-async function start() {
-  document.getElementById('login').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  await vernieuw();
-  // realtime is leuk, maar pollen is onverwoestbaar op een koersweide met 4G
-  S.timer = setInterval(() => vernieuw(true), 5000);
 }
 
 /* ---------- hulpjes ---------- */
@@ -325,190 +198,233 @@ function team(id) { return S.pub.teams.find(t => t.id === id); }
 function actieveRonde() { return S.pub.rounds.find(r => r.id === (S.pub.event && S.pub.event.active_round_id)); }
 function briefVan(rondeId) { const s = S.pub.secrets.find(x => x.round_id === rondeId); return s ? s.brief : null; }
 function rondeNr(r) { return S.pub.rounds.filter(x => x.sort <= r.sort && x.sort < 90).length; }
-function totaal(teamId) {
+function toon(naam) { return S.pub.alias[(naam || '').trim().toLowerCase()] || naam; }
+function teamTotaal(teamId) {
   let t = 0;
   S.pub.scores.filter(s => s.team_id === teamId).forEach(s => t += s.base_points + s.bonus - s.penalty);
   S.pub.delibs.filter(d => d.revealed && !d.sealed && d.team_id === teamId).forEach(d => t += d.delta);
   return t;
 }
-function persoonlijkKlassement() {
-  // individueel = voorklassement (prekoers, via hert_scorebord) + koersdag (rider_points), gematcht op naam
+function individueel() {
   const per = {};
   S.pub.riderPoints.forEach(p => per[p.rider_id] = (per[p.rider_id] || 0) + p.punten);
-  return S.pub.riders
-    .map(r => {
-      const voork = S.pub.prekoers[(r.name || '').trim().toLowerCase()] || 0;
-      const koers = per[r.id] || 0;
-      return { ...r, voork, koers, punten: voork + koers };
-    })
-    .sort((a, b) => b.punten - a.punten || a.name.localeCompare(b.name));
+  const koersVan = {};
+  S.pub.riders.forEach(r => { koersVan[(r.name || '').trim().toLowerCase()] = { koers: per[r.id] || 0, rider_id: r.id, team_id: r.team_id }; });
+  const lijst = (S.pub.personen || []).map(p => {
+    const k = (p.naam || '').trim().toLowerCase();
+    const x = koersVan[k] || {};
+    return { key: k, naam: p.alias || p.naam, echt: p.naam, divisie: p.divisie, team_id: x.team_id || null,
+      rider_id: x.rider_id || null, voork: p.punten || 0, koers: x.koers || 0, punten: (p.punten || 0) + (x.koers || 0) };
+  });
+  const bekend = new Set(lijst.map(x => x.key));
+  S.pub.riders.filter(r => !bekend.has((r.name || '').trim().toLowerCase())).forEach(r => {
+    lijst.push({ key: r.id, naam: r.name, echt: r.name, divisie: null, team_id: r.team_id, rider_id: r.id, voork: 0, koers: per[r.id] || 0, punten: per[r.id] || 0 });
+  });
+  return lijst.sort((a, b) => b.punten - a.punten || a.naam.localeCompare(b.naam));
 }
-function klassement(divisie) {
-  let ts = S.pub.teams;
-  if (divisie !== 'algemeen') ts = ts.filter(t => t.division === divisie);
-  return ts.map(t => ({ ...t, punten: totaal(t.id) })).sort((a, b) => b.punten - a.punten || a.sort - b.sort);
+function juryFeed() {
+  const items = [];
+  S.pub.riderPoints.forEach(p => {
+    const r = S.pub.riders.find(x => x.id === p.rider_id);
+    items.push({ t: p.created_at, soort: '🏅 renner', delta: p.punten,
+      html: `<b>${esc(r ? toon(r.name) : '?')}</b>${p.reason ? ' — <i>' + esc(p.reason) + '</i>' : ''}` });
+  });
+  S.pub.delibs.filter(d => d.revealed && !d.sealed).forEach(d => {
+    const tm = d.team_id ? team(d.team_id) : null;
+    items.push({ t: d.created_at, soort: tm ? '⚖️ ploeg' : '📢 mededeling', delta: d.delta || 0,
+      html: `<b>${esc(d.title)}</b>${tm ? ' — ' + esc(tm.name) : ''}${d.body ? '<br><i>' + esc(d.body) + '</i>' : ''}` });
+  });
+  S.pub.scores.filter(s => s.bonus || s.penalty).forEach(s => {
+    const tm = team(s.team_id), ro = S.pub.rounds.find(r => r.id === s.round_id);
+    items.push({ t: s.updated_at, soort: '⚖️ ploeg', delta: (s.bonus || 0) - (s.penalty || 0),
+      html: `<b>${esc(tm ? tm.name : '?')}</b> — ${esc(ro && ro.status !== 'hidden' ? ro.title : 'een ronde')}${s.bonus ? ': +' + s.bonus + ' bonus' : ''}${s.penalty ? (s.bonus ? ',' : ':') + ' −' + s.penalty + ' straf' : ''}${s.reason ? '<br><i>' + esc(s.reason) + '</i>' : ''}` });
+  });
+  return items.sort((a, b) => new Date(b.t) - new Date(a.t)).slice(0, 30);
 }
 
 /* ---------- render ---------- */
 function render() {
-  renderKop();
-  const el = document.getElementById('inhoud');
-  if (S.rol === 'team') el.innerHTML = zichtTeam();
-  else if (S.rol === 'jury' || S.rol === 'opper') el.innerHTML = zichtJury();
-  else el.innerHTML = zichtScherm();
-}
-function renderKop() {
-  const e = S.pub.event || {};
-  const badge = S.rol === 'team' ? esc(S.team.name)
-    : S.rol === 'jury' ? 'Jurylid' : S.rol === 'opper' ? '👑 Opperjury' : 'Groot scherm';
-  document.getElementById('kop').innerHTML = `
-    <span class="logo">🦌</span>
-    <div class="titel">Grote Sluitingsprijs<br>Café De Hert</div>
-    <span class="rolbadge" style="${S.rol==='team' ? 'border-color:'+esc(S.team.color)+';color:'+esc(S.team.color) : ''}">${badge}</span>
-    ${S.rol !== 'scherm' ? '<button class="uitlog" onclick="uitloggen()">uitloggen</button>' : ''}`;
+  const e = S.pub.event;
+  if (!e) return;
+  const tabs = [['ploegen', '🚴 Ploegen'], ['rondes', '🏁 Rondes'], ['stand', '🏆 Stand'], ['klacht', '📸 Klacht'], ['regels', '📜 Regels']];
+  const tabbalk = `<div class="tabs hoofdtabs">${tabs.map(([id, l]) =>
+    `<button class="${S.tab === id ? 'aan' : ''}" onclick="S.tab='${id}';render();scrollTo(0,0)">${l}</button>`).join('')}</div>`;
+  let blad = '';
+  if (S.tab === 'rondes') blad = rondesBlok();
+  else if (S.tab === 'stand') blad = standBlok();
+  else if (S.tab === 'klacht') blad = klachtKaart();
+  else if (S.tab === 'regels') blad = reglementBlok();
+  else blad = ploegenBlok();
+  document.getElementById('inhoud').innerHTML = mededeling() + heroBlok() + tabbalk + blad;
+  const van = document.getElementById('kl-van');
+  if (van) { const bewaard = localStorage.getItem('hert_klacht_van'); if (bewaard && [...van.options].some(o => o.value === bewaard)) van.value = bewaard; }
 }
 function mededeling() {
   const e = S.pub.event;
   return (e && e.notice) ? `<div class="mededeling">${esc(e.notice)}</div>` : '';
 }
-function standTabel() {
-  const k = klassement('algemeen');
-  return `<table class="stand"><tr><th></th><th>Ploeg</th><th style="text-align:right">Punten</th></tr>
-  ${k.map((t, i) => `<tr>
-    <td class="pos">${i + 1}</td>
-    <td><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}</td>
-    <td class="pt">${t.punten}</td></tr>`).join('')}</table>`;
-}
-function persoonlijkTabel(limiet) {
-  let k = persoonlijkKlassement();
-  if (!k.length) return '<p class="stil">Nog geen renners in het klassement. Verdacht stil.</p>';
-  if (limiet) k = k.slice(0, limiet);
-  return `<p class="klein" style="margin-bottom:.5rem">voorklassement + koersdag</p>
-  <table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>
-  ${k.map((r, i) => { const t = r.team_id ? team(r.team_id) : null; return `<tr>
-    <td class="pos">${i + 1}</td>
-    <td>${t ? `<span class="teamstip" style="background:${esc(t.color)}"></span>` : ''}${esc(r.name)}<span class="divlabel">${r.division ? DIV[r.division] : r.role === 'supporter' ? '📣' : r.role === 'seingever' ? '🚩' : ''}</span></td>
-    <td class="pt">${r.punten}${r.koers ? ` <span class="divlabel">(${r.koers > 0 ? '+' : ''}${r.koers} vandaag)</span>` : ''}</td></tr>`; }).join('')}</table>`;
-}
-function klassementKaart() {
-  return `<div class="kaart dossier" id="k-klassement"><h2>Het Klassement</h2>
-    <div class="tabs">
-      ${['ploegen', 'individueel'].map(d =>
-        `<button class="${S.tab === d ? 'aan' : ''}" onclick="S.tab='${d}';render()">${d === 'ploegen' ? 'Ploegen' : '🏅 Individueel'}</button>`).join('')}
-    </div>${S.tab === 'individueel' ? persoonlijkTabel() : standTabel()}</div>`;
-}
-
-/* ========== TEAMZICHT ========== */
-function zichtTeam() {
+function heroBlok() {
   const e = S.pub.event, ar = actieveRonde();
-  let nu = '';
-  if (e.phase === 'lobby' || !ar) {
-    nu = `<div class="kaart nu"><div class="fase">${FASEN[e.phase] || ''}</div>
+  if (e.phase === 'deliberation' || e.phase === 'ceremony' || e.phase === 'finished') {
+    const d = S.pub.delibs.filter(x => x.revealed && !x.sealed);
+    return `<div class="kaart nu"><div class="fase">${FASEN[e.phase]}</div>
+      <div class="grootst">${e.phase === 'deliberation' ? 'De jury beraadslaagt' : 'De Slotceremonie'}</div>
+      ${d.length ? '' : '<p class="wacht">De eerste beslissingen komen er zo aan. Beef.</p>'}</div>`
+      + d.map(x => delibKaart(x)).join('') + prijzenBlok();
+  }
+  if ((e.phase === 'lobby') || !ar) {
+    return `<div class="kaart nu"><div class="fase">${FASEN[e.phase] || ''}</div>
       <div class="grootst">De jury observeert</div>
       <p class="wacht">Nog geen actieve ronde. Verzamel aan het café, gedraag u onopvallend,<br>en spreek uw complotten alvast af.</p>
       <p class="klein" style="margin-top:1.2rem;color:#49545c">${esc(QUIP)}</p></div>`;
-  } else if (e.phase === 'deliberation' || e.phase === 'ceremony' || e.phase === 'finished') {
-    nu = beraadslagingBlok() + prijzenBlok();
-  } else {
-    const brief = briefVan(ar.id);
-    nu = `<div class="kaart nu gemengd"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)}</div>
-      <div class="grootst onthuld">${esc(ar.title)}</div>
-      ${e.phase === 'round_active' ? '<p class="klein" style="color:var(--groen)">▶ DE KOERS IS BEZIG — RIJDEN!</p>' : ''}
-      ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}
-      ${e.phase === 'round_done' ? '<p class="wacht" style="margin-top:1rem">Ronde afgelopen. De jury telt. Of doet alsof.</p>' : ''}</div>`;
   }
-  // aparte pagina's per tab: geen ellenlange scroll meer
-  const tabs = [['ploeg', '🚴 Ploeg'], ['rondes', '🏁 Rondes'], ['stand', '🏆 Stand'], ['klacht', '📸 Klacht'], ['regels', '📜 Regels']];
-  const tabbalk = `<div class="tabs hoofdtabs">${tabs.map(([id, l]) =>
-    `<button class="${S.teamTab === id ? 'aan' : ''}" onclick="S.teamTab='${id}';render();scrollTo(0,0)">${l}</button>`).join('')}</div>`;
-  let blad = '';
-  if (S.teamTab === 'rondes') blad = rondesBlok('alle');
-  else if (S.teamTab === 'stand') blad = klassementKaart();
-  else if (S.teamTab === 'klacht') blad = klachtKaart();
-  else if (S.teamTab === 'regels') blad = reglementBlok();
-  else blad = ploegKaart() + missiesBlok();
-  return mededeling() + nu + tabbalk + blad;
+  const brief = briefVan(ar.id);
+  return `<div class="kaart nu gemengd"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)}</div>
+    <div class="grootst onthuld">${ar.status !== 'hidden' ? esc(ar.title) : 'De volgende ronde'}</div>
+    ${e.phase === 'round_active' ? '<p class="klein" style="color:var(--groen)">▶ DE KOERS IS BEZIG — RIJDEN!</p>' : ''}
+    ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}
+    ${e.phase === 'round_done' ? '<p class="wacht" style="margin-top:1rem">Ronde afgelopen. De jury telt. Of doet alsof.</p>' : ''}</div>`;
 }
-function ploegKaart() {
-  const leden = S.pub.riders.filter(r => r.team_id === S.team.id);
-  return `<div class="kaart dossier" id="k-ploeg"><h2><span class="teamstip" style="background:${esc(S.team.color)}"></span>${esc(S.team.name)}
-      <span class="r"><button class="mini" onclick="hernoemPloeg()">✏️ naam & motto</button></span></h2>
-    ${S.team.motto ? `<p class="stil" style="margin-bottom:.8rem">"${esc(S.team.motto)}"</p>` : ''}
-    ${leden.length ? leden.map(r => `<div class="score-rij"><span class="tnaam">${r.is_captain ? '👑 ' : '🚴 '}${esc(r.name)}</span></div>`).join('')
-      : '<p class="stil">De opperjury heeft jullie nog niet samengesteld. Spannend.</p>'}</div>`;
+function delibKaart(x) {
+  const t = x.team_id ? team(x.team_id) : null;
+  return `<div class="delib"><div class="dt">${esc(x.title)}</div>
+    ${x.body ? `<div class="db">${esc(x.body)}</div>` : ''}
+    ${t ? `<div class="db"><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}</div>` : ''}
+    ${x.delta ? `<div class="delta ${x.delta > 0 ? 'plus' : 'min'}">${x.delta > 0 ? '+' : ''}${x.delta} punt${Math.abs(x.delta) > 1 ? 'en' : ''}</div>` : ''}</div>`;
 }
-function hernoemPloeg() {
-  openModal(`<h3>✏️ Ploegnaam & motto</h3>
-    <p class="stil">Kies wijs. De jury ziet elke naamswijziging en trekt er conclusies uit.</p>
-    <label>Ploegnaam</label><input type="text" id="f-naam" maxlength="40" value="${esc(S.team.name)}">
-    <label>Motto (optioneel)</label><input type="text" id="f-motto" maxlength="120" value="${esc(S.team.motto || '')}">
-    <button class="verzend" onclick="bewaarPloegnaam()">Bewaar</button><p class="fout"></p>`);
+function prijzenBlok() {
+  const p = (S.pub.prizes || []).filter(x => x.revealed);
+  if (!p.length) return '';
+  return p.map(x => `<div class="prijs ${x.is_grand_prize ? 'groot' : ''}">
+    <div class="pn">${esc(x.name)}</div>
+    <div class="pd">${esc(x.description || '')}</div>
+    ${x.winner_text ? `<div class="pw">🏆 ${esc(x.winner_text)}</div>` : ''}</div>`).join('');
 }
-async function bewaarPloegnaam() {
-  const naam = document.getElementById('f-naam').value.trim();
-  const motto = document.getElementById('f-motto').value.trim() || null;
-  if (!naam) return modalFout('Een ploeg zonder naam bestaat niet.');
-  try {
-    await rpc('hert_team_rename', { p_code: S.code, p_name: naam, p_motto: motto });
-    S.team.name = naam; S.team.motto = motto;
-    sluitModal(); toast('✓ De jury is op de hoogte gebracht van uw nieuwe identiteit.'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
+
+/* ========== PLOEGEN ========== */
+function ploegenBlok() {
+  const zonder = S.pub.riders.filter(r => (r.division === 'baroudeurs' || r.division === 'baroudellen') && !r.team_id);
+  return `<div class="kaart dossier"><h2>De Ploegen <span class="r">zes kleuren, één gewei</span></h2>
+    <p class="stil" style="margin-bottom:1rem">✏️ Een ploegnaam of slogan kiezen? <b style="color:#d8d2c4;font-weight:400">De kapitein geeft ze door aan de jury.</b> Mondeling, met de nodige eerbied. De jury tikt ze in, of weigert.</p>
+    ${S.pub.teams.map(t => {
+      const leden = S.pub.riders.filter(r => r.team_id === t.id);
+      return `<div class="ploegkaart" style="--pk:${esc(t.color)}">
+        <div class="pnaam"><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)} <span class="klein" style="float:right">${teamTotaal(t.id)} pt</span></div>
+        ${t.motto ? `<div class="motto">"${esc(t.motto)}"</div>` : '<div class="motto stil">nog geen slogan. de kapitein weet wat hem te doen staat.</div>'}
+        ${leden.map(r => `<div class="lid">🚴 ${esc(toon(r.name))}<span class="echt">${toon(r.name) !== r.name ? esc(r.name) : ''}</span></div>`).join('')
+          || '<p class="stil">nog geen renners toegewezen</p>'}
+      </div>`;
+    }).join('')}
+    ${zonder.length ? `<p class="klein" style="margin-top:.6rem">nog zonder ploeg: ${zonder.map(r => esc(toon(r.name))).join(', ')}</p>` : ''}</div>`;
 }
-function missiesBlok() {
-  const m = (S.geheim && S.geheim.missions) || [];
-  if (!m.length) return '';
-  return `<div class="kaart dossier"><h2>🤫 Geheime opdrachten <span class="r">vertrouwelijk</span></h2>
-    ${m.map(x => `<div class="missie">
-      <div class="titel">${esc(x.title)}${x.rider_name ? ' — ' + esc(x.rider_name) : ''}</div>
-      <div class="uitleg">${esc(x.brief)}</div>
-      <div class="meta">waard: +${x.reward} punt${x.reward > 1 ? 'en' : ''} · status: ${esc(x.status)}</div>
-    </div>`).join('')}</div>`;
-}
-function rondesBlok(divisie, juryModus) {
+
+/* ========== RONDES ========== */
+function rondesBlok() {
   const rondes = S.pub.rounds.filter(r => r.status !== 'skipped');
-  return `<div class="kaart dossier" id="k-rondes"><h2>De Rondes</h2>
+  return `<div class="kaart dossier"><h2>De Rondes</h2>
     ${rondes.map(r => {
       const brief = briefVan(r.id);
       const zichtbaar = r.status !== 'hidden';
-      const ji = juryModus ? juryInfoVan(r.id) : null;
-      return `<div class="ronde ${DIVKLEUR[r.division] || 'gemengd'}-r">
+      return `<div class="ronde gemengd-r">
         <div class="kop"><span class="nr">${r.sort >= 90 ? 'R' : rondeNr(r)}</span>
-          <span class="naam">${zichtbaar || juryModus ? esc(r.title) : '█████████'}</span>
+          <span class="naam">${zichtbaar ? esc(r.title) : '█████████'}</span>
           <span class="chip ${r.status}">${{hidden:'geheim',revealed:'onthuld',racing:'bezig',finished:'gereden'}[r.status]}</span></div>
         <div class="teaser">${esc(r.teaser || '')}</div>
-        ${(zichtbaar && brief) || (juryModus && brief) ? `<div class="brief">${esc(brief)}</div>` : ''}
-        ${ji ? `<div class="jury-info"><b>JURY:</b> ${esc(ji.jury_instructions || '—')}${ji.materials ? `<br><b>MATERIAAL:</b> ${esc(ji.materials)}` : ''}</div>` : ''}
-        ${juryModus ? rondeKnoppen(r) + scoreBlok(r) : ''}
+        ${zichtbaar && brief ? `<div class="brief">${esc(brief)}</div>` : ''}
       </div>`;
     }).join('')}</div>`;
 }
+
+/* ========== STAND ========== */
+function standBlok() {
+  const sub = `<div class="tabs">
+    ${[['ploegen', 'Ploegen'], ['individueel', '🏅 Individueel']].map(([id, l]) =>
+      `<button class="${S.standTab === id ? 'aan' : ''}" onclick="S.standTab='${id}';render()">${l}</button>`).join('')}</div>`;
+  const stand = S.standTab === 'individueel' ? persoonlijkTabel() : ploegenTabel();
+  return `<div class="kaart dossier"><h2>De Stand <span class="r">tik een rij aan voor het detail</span></h2>${sub}${stand}</div>` + jurySpreekt();
+}
+function ploegenTabel() {
+  const k = S.pub.teams.map(t => ({ ...t, punten: teamTotaal(t.id) })).sort((a, b) => b.punten - a.punten || a.sort - b.sort);
+  return `<table class="stand"><tr><th></th><th>Ploeg</th><th style="text-align:right">Punten</th></tr>
+  ${k.map((t, i) => `<tr class="klik" onclick="S.openPloeg=S.openPloeg==='${t.id}'?null:'${t.id}';render()">
+      <td class="pos">${i + 1}</td>
+      <td><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)} <span class="divlabel">${S.openPloeg === t.id ? '▾' : '▸'}</span></td>
+      <td class="pt">${t.punten}</td></tr>
+    ${S.openPloeg === t.id ? `<tr><td colspan="3"><div class="detail">${ploegDetail(t)}</div></td></tr>` : ''}`).join('')}</table>`;
+}
+function ploegDetail(t) {
+  const lijnen = [];
+  S.pub.scores.filter(s => s.team_id === t.id).forEach(s => {
+    const ro = S.pub.rounds.find(r => r.id === s.round_id);
+    const naam = ro && ro.status !== 'hidden' ? ro.title : 'een geheime ronde';
+    const tot = s.base_points + s.bonus - s.penalty;
+    lijnen.push({ w: `${naam}${s.reason ? ' — ' + s.reason : ''}`, p: tot });
+  });
+  S.pub.delibs.filter(d => d.revealed && !d.sealed && d.team_id === t.id).forEach(d => {
+    lijnen.push({ w: `⚖️ ${d.title}`, p: d.delta });
+  });
+  if (!lijnen.length) return '<span class="stil">nog geen punten. dat komt nog, of net niet.</span>';
+  return lijnen.map(l => `<div class="lijn"><span class="w">${esc(l.w)}</span><span class="p ${l.p < 0 ? 'min' : ''}">${l.p > 0 ? '+' : ''}${l.p}</span></div>`).join('');
+}
+function persoonlijkTabel() {
+  const k = individueel();
+  return `<p class="klein" style="margin:.2rem 0 .5rem">voorklassement + koersdag · iedereen telt mee</p>
+  <table class="stand"><tr><th></th><th>Renner</th><th style="text-align:right">Punten</th></tr>
+  ${k.map((r, i) => {
+    const tm = r.team_id ? team(r.team_id) : null;
+    const stip = tm ? tm.color : (r.divisie === 'baroudelle' ? 'var(--paars)' : r.divisie === 'supporter' ? 'var(--amber)' : r.divisie === 'seingever' ? 'var(--mist)' : 'var(--groen)');
+    return `<tr class="klik" onclick="S.openRenner=S.openRenner==='${r.key}'?null:'${r.key}';render()">
+      <td class="pos">${i + 1}</td>
+      <td><span class="teamstip" style="background:${esc(stip)}"></span>${esc(r.naam)} <span class="divlabel">${S.openRenner === r.key ? '▾' : '▸'}</span></td>
+      <td class="pt">${r.punten}</td></tr>
+    ${S.openRenner === r.key ? `<tr><td colspan="3"><div class="detail">${rennerDetail(r)}</div></td></tr>` : ''}`;
+  }).join('')}</table>`;
+}
+function rennerDetail(r) {
+  const lijnen = [{ w: `voorklassement (${esc(r.echt)})`, p: r.voork }];
+  if (r.rider_id) {
+    S.pub.riderPoints.filter(p => p.rider_id === r.rider_id)
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .forEach(p => lijnen.push({ w: `${tijd(p.created_at)}${p.reason ? ' — ' + p.reason : ' — de jury zwijgt over de reden'}`, p: p.punten }));
+  }
+  return lijnen.map(l => `<div class="lijn"><span class="w">${esc(l.w)}</span><span class="p ${l.p < 0 ? 'min' : ''}">${l.p > 0 ? '+' : ''}${l.p}</span></div>`).join('');
+}
+function jurySpreekt() {
+  const feed = juryFeed();
+  return `<div class="kaart dossier"><h2>⚖️ De jury spreekt <span class="r">laatste beslissingen eerst</span></h2>
+    ${feed.length ? feed.map(x => `<div class="bericht">
+      <div class="van">${x.soort} · ${tijd(x.t)}${x.delta ? `<span class="delta ${x.delta > 0 ? 'plus' : 'min'}">${x.delta > 0 ? '+' : ''}${x.delta}</span>` : ''}</div>
+      <div class="inhoud">${x.html}</div></div>`).join('')
+    : '<p class="stil">De jury heeft nog niets beslist. Dat duurt nooit lang.</p>'}</div>`;
+}
+
+/* ========== KLACHT ========== */
 function klachtKaart() {
-  const andere = S.pub.teams.filter(t => t.id !== S.team.id);
-  const s = (S.geheim && S.geheim.snitches) || [];
-  const veld = 'width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:\'Special Elite\',monospace;font-size:1rem;padding:.7em';
+  const renners = S.pub.riders.slice().sort((a, b) => toon(a.name).localeCompare(toon(b.name)));
   return `<div class="kaart dossier"><h2>📸 Klacht indienen <span class="r">de kliklijn</span></h2>
-    <p class="stil" style="margin-bottom:.4rem">Zag u iets wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker.</p>
-    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Tegen wie? (mag ook zomaar)</label>
-    <select id="kl-over" style="${veld}">
-      <option value="">— gewoon een klacht, tegen niemand in het bijzonder —</option>
-      <optgroup label="tegen een ploeg">${andere.map(t => `<option value="t:${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>
-      <optgroup label="tegen één iemand">${S.pub.riders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(r => `<option value="r:${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
-    </select>
-    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Wat is er gebeurd?</label>
-    <textarea id="kl-tekst" maxlength="500" style="${veld};min-height:5em;resize:vertical"></textarea>
-    <label class="klein" style="display:block;margin:.8rem 0 .3rem">Bewijsfoto (mag, hoeft niet) — trek er ter plekke een of kies uit uw galerij</label>
-    <input type="file" id="kl-foto" accept="image/*" style="color:var(--grijs);font-size:.85rem">
-    <button class="grote-knop roze" style="width:100%;margin-top:1.1rem" onclick="verstuurKlacht(this)">📸 Verstuur naar de jury</button>
-    <p id="kl-fout" style="color:var(--rood);font-family:'Special Elite',monospace;font-size:.8rem;margin-top:.6rem;display:none"></p>
-    ${s.length ? `<div class="score-blok"><p class="klein" style="margin-bottom:.5rem">uw eerdere meldingen</p>` +
-      s.map(x => `<div class="bericht"><div class="van">📸 klikmelding <span class="status">${esc(x.status)}</span></div>
-        <div class="inhoud">${esc(x.complaint)}</div>
-        ${x.jury_response ? `<div class="antwoord">Jury: ${esc(x.jury_response)}</div>` : ''}</div>`).join('') + '</div>' : ''}
+    <p class="stil" style="margin-bottom:.4rem">Zag u iets wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker. De jury antwoordt via de micro, of helemaal niet.</p>
+    <div class="veld"><label>Van welke ploeg komt de klacht?</label>
+      <select id="kl-van" onchange="localStorage.setItem('hert_klacht_van', this.value)">
+        ${S.pub.teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}
+      </select></div>
+    <div class="veld"><label>Tegen wie? (mag ook zomaar)</label>
+      <select id="kl-over">
+        <option value="">— gewoon een klacht, tegen niemand in het bijzonder —</option>
+        <optgroup label="tegen een ploeg">${S.pub.teams.map(t => `<option value="t:${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>
+        <optgroup label="tegen één iemand">${renners.map(r => `<option value="r:${r.id}">${esc(toon(r.name))}</option>`).join('')}</optgroup>
+      </select></div>
+    <div class="veld"><label>Wat is er gebeurd?</label>
+      <textarea id="kl-tekst" maxlength="500"></textarea></div>
+    <div class="veld"><label>Bewijsfoto (mag, hoeft niet) — trek er ter plekke een of kies uit uw galerij</label>
+      <input type="file" id="kl-foto" accept="image/*" style="color:var(--grijs);font-size:.85rem"></div>
+    <button class="verzend" onclick="verstuurKlacht(this)">📸 Verstuur naar de jury</button>
+    <p class="fout" id="kl-fout"></p>
   </div>`;
 }
 async function verstuurKlacht(knop) {
   const fout = document.getElementById('kl-fout');
   fout.style.display = 'none';
+  const van = document.getElementById('kl-van').value;
   const tekst = document.getElementById('kl-tekst').value.trim();
   if (!tekst) { fout.textContent = 'Een klacht zonder woorden is geen klacht.'; fout.style.display = 'block'; return; }
   try {
@@ -524,43 +440,25 @@ async function verstuurKlacht(knop) {
       foto = `${SUPA_URL}/storage/v1/object/public/hert-bewijs/${pad}`;
     }
     const doel = document.getElementById('kl-over').value;
-    let about = null, klacht = tekst;
-    if (doel.startsWith('t:')) about = doel.slice(2);
+    let over = null, klacht = tekst;
+    if (doel.startsWith('t:')) over = doel.slice(2);
     else if (doel.startsWith('r:')) {
       const r = S.pub.riders.find(x => x.id === doel.slice(2));
-      if (r) { klacht = `🎯 Over ${r.name}: ${tekst}`; about = r.team_id || null; }
+      if (r) { klacht = `🎯 Over ${toon(r.name)}: ${tekst}`; over = r.team_id || null; }
     }
-    await rpc('hert_submit_snitch', { p_code: S.code, p_about: about, p_complaint: klacht, p_photo: foto });
+    localStorage.setItem('hert_klacht_van', van);
+    await rpc('hert_koers_klacht', { p_van: van, p_over: over, p_tekst: klacht, p_foto: foto });
     toast('📸 Genoteerd. De jury apprecieert uw gebrek aan loyaliteit.');
-    vernieuw(true);
+    document.getElementById('kl-tekst').value = '';
+    document.getElementById('kl-foto').value = '';
+    knop.disabled = false; knop.textContent = '📸 Verstuur naar de jury';
   } catch (e) {
     knop.disabled = false; knop.textContent = '📸 Verstuur naar de jury';
     fout.textContent = e.message; fout.style.display = 'block';
   }
 }
-function beraadslagingBlok() {
-  const d = S.pub.delibs.filter(x => x.revealed && !x.sealed);
-  return `<div class="kaart nu"><div class="fase">${FASEN[S.pub.event.phase]}</div>
-    <div class="grootst">${S.pub.event.phase === 'deliberation' ? 'De jury beraadslaagt' : 'De Slotceremonie'}</div>
-    ${d.length ? '' : '<p class="wacht">De eerste beslissingen komen er zo aan. Beef.</p>'}</div>
-    ${d.map(x => delibKaart(x)).join('')}`;
-}
-function delibKaart(x) {
-  const t = x.team_id ? team(x.team_id) : null;
-  return `<div class="delib"><div class="dt">${esc(x.title)}</div>
-    ${x.body ? `<div class="db">${esc(x.body)}</div>` : ''}
-    ${t ? `<div class="db"><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}</div>` : ''}
-    ${x.delta ? `<div class="delta ${x.delta > 0 ? 'plus' : 'min'}">${x.delta > 0 ? '+' : ''}${x.delta} punt${Math.abs(x.delta) > 1 ? 'en' : ''}</div>` : ''}</div>`;
-}
-function prijzenBlok() {
-  const p = S.pub.prizes.filter(x => x.revealed);
-  if (!p.length) return '';
-  return p.map(x => `<div class="prijs ${x.is_grand_prize ? 'groot' : ''}">
-    <div class="pn">${esc(x.name)}</div>
-    <div class="pd">${esc(x.description || '')}</div>
-    ${x.winner_text ? `<div class="pw">🏆 ${esc(x.winner_text)}</div>` : ''}</div>`).join('');
-}
 
+/* ========== REGELS ========== */
 function reglementBlok() {
   const regels = S.pub.rules || [];
   if (!regels.length) return '<div class="kaart dossier"><h2>📜 Het Reglement</h2><p class="stil">De jury houdt het reglement nog even voor zichzelf. Dat voorspelt zelden iets goeds.</p></div>';
@@ -570,570 +468,11 @@ function reglementBlok() {
       <div class="inhoud"><b>${esc(g.title)}</b><br>${esc(g.body || '')}</div></div>`).join('')}</div>`;
 }
 
-/* ========== MODALS: team-acties ========== */
-function openModal(html) { document.getElementById('modal').innerHTML = '<button class="sluit" onclick="sluitModal()">✕</button>' + html; document.getElementById('modal-achter').style.display = 'block'; }
-function sluitModal() { document.getElementById('modal-achter').style.display = 'none'; }
-function modalFout(t) { const f = document.querySelector('#modal .fout'); f.textContent = t; f.style.display = 'block'; }
-
-// omkopen gebeurt aan de toog, in bitterballen — daar heeft de jury geen formulier voor nodig
-
-/* ========== JURYZICHT ========== */
-function juryInfoVan(rondeId) {
-  return S.juryData && S.juryData.secrets.find(s => s.round_id === rondeId);
-}
-function zichtJury() {
-  const opper = S.rol === 'opper';
-  const tabbalk = `<div class="tabs" style="margin-bottom:1.1rem">
-    <button class="${S.juryTab === 'koers' ? 'aan' : ''}" onclick="S.juryTab='koers';render();scrollTo(0,0)">🏁 De Koers</button>
-    <button class="${S.juryTab === 'beheer' ? 'aan' : ''}" onclick="S.juryTab='beheer';render();scrollTo(0,0)">⚙️ Beheer & draaiboek</button>
-  </div>`;
-  if (S.juryTab === 'beheer') {
-    return tabbalk
-      + (opper ? deelnemersKaart() : '')
-      + regelsJuryKaart(opper)
-      + (opper ? beraadKaart() + prijzenKaart() + beheerKaart() : delibJuryLijst());
-  }
-  const nav = [['k-regie', '🎬 Regie'], ['k-klassement', '🏆 Stand'], ['k-rondes', '🏁 Rondes'], ['k-inbox', '📬 Inbox'], ['k-punten', '🏅 Punten'], ['k-logboek', '📓 Logboek']]
-    .map(([id, l]) => `<a href="#${id}">${l}</a>`).join('');
-  return tabbalk + `<nav class="snelnav">${nav}</nav>` + mededeling()
-    + faseKaart(opper)
-    + klassementKaart()
-    + rondesBlok('alle', true)
-    + inboxKaart()
-    + puntenRennerKaart()
-    + missiesJuryKaart()
-    + notitiesKaart();
-}
-function faseKaart(opper) {
-  const e = S.pub.event;
-  const fasen = opper ? Object.keys(FASEN) : ['lobby', 'round_intro', 'round_active', 'round_done'];
-  return `<div class="kaart dossier" id="k-regie"><h2>Regie <span class="r">fase: ${FASEN[e.phase]}</span></h2>
-    <div class="fase-rij">${fasen.map(f =>
-      `<button class="mini ${e.phase === f ? 'geel' : ''}" onclick="zetFase('${f}')">${FASEN[f]}</button>`).join('')}</div>
-    <details><summary>📢 Mededeling aan iedereen</summary>
-      <div style="display:flex;gap:.5rem;margin-top:.5rem">
-        <input id="notice-in" type="text" placeholder="bv. Plot twist: ronde 4 telt dubbel…" value="${esc(e.notice || '')}"
-          style="flex:1;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.6em">
-        <button class="mini geel" onclick="zetNotice()">Zend</button>
-        <button class="mini" onclick="wisNotice()">Wis</button>
-      </div></details></div>`;
-}
-async function zetFase(f) { try { await rpc('hert_set_phase', { p_code: S.code, p_phase: f, p_notice: S.pub.event.notice }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-async function zetNotice() { try { await rpc('hert_set_phase', { p_code: S.code, p_phase: S.pub.event.phase, p_notice: document.getElementById('notice-in').value.trim() || null }); toast('📢 Verzonden'); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-async function wisNotice() { try { await rpc('hert_set_phase', { p_code: S.code, p_phase: S.pub.event.phase, p_notice: null }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-
-function rondeKnoppen(r) {
-  const acties = [];
-  if (r.status === 'hidden') acties.push(['revealed', '🔓 Onthul', 'geel']);
-  if (r.status === 'revealed') acties.push(['racing', '🏁 Start koers', 'groen'], ['hidden', '🔒 Verberg', '']);
-  if (r.status === 'racing') acties.push(['finished', '🏆 Finish', 'geel']);
-  if (r.status === 'finished') acties.push(['racing', '↩︎ Heropen', '']);
-  return `<div style="margin-top:.6rem">${acties.map(([s, l, k]) =>
-    `<button class="mini ${k}" onclick="zetRonde('${r.id}','${s}')">${l}</button>`).join('')}
-    ${S.rol === 'opper' ? `<button class="mini" onclick="bewerkRonde('${r.id}')">✏️ Bewerk</button>` : ''}</div>`;
-}
-async function zetRonde(id, status) { try { await rpc('hert_set_round_status', { p_code: S.code, p_round: id, p_status: status }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-
-function scoreBlok(r) {
-  if (r.status === 'hidden') return '';
-  const teams = S.pub.teams;
-  return `<details class="score-blok"><summary>🧮 Punten ronde</summary>
-    ${teams.map(t => {
-      const sc = S.pub.scores.find(s => s.round_id === r.id && s.team_id === t.id) || {};
-      return `<div class="score-rij" id="sr-${r.id}-${t.id}">
-        <span class="tnaam"><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)}</span>
-        <span class="lbl">pos</span><input type="number" data-v="finish" value="${sc.finish_pos ?? ''}">
-        <span class="lbl">pnt</span><input type="number" data-v="base" value="${sc.base_points ?? ''}">
-        <span class="lbl">bonus</span><input type="number" data-v="bonus" value="${sc.bonus ?? ''}">
-        <span class="lbl">straf</span><input type="number" data-v="penalty" value="${sc.penalty ?? ''}">
-        <button class="mini groen" onclick="bewaarScore('${r.id}','${t.id}')">ok</button>
-      </div>`;
-    }).join('')}
-    <p class="klein" style="margin-top:.5rem">tip: rang 1-6 = 10·8·6·5·4·3 punten (De Afvalling: 5·4·3·2, de rest 1). bonus voor jurymagie, straf voor gebroken contracten.</p>
-  </details>`;
-}
-async function bewaarScore(rid, tid) {
-  const rij = document.getElementById(`sr-${rid}-${tid}`);
-  const v = n => { const x = rij.querySelector(`input[data-v=${n}]`).value; return x === '' ? null : parseInt(x, 10); };
-  try {
-    await rpc('hert_set_score', { p_code: S.code, p_round: rid, p_team: tid, p_finish: v('finish'), p_base: v('base') ?? 0, p_bonus: v('bonus') ?? 0, p_penalty: v('penalty') ?? 0, p_reason: null });
-    toast('🧮 Score bewaard'); vernieuw(true);
-  } catch (e) { toast('⚠️ ' + e.message); }
-}
-
-function inboxKaart() {
-  const j = S.juryData || { bribes: [], snitches: [] };
-  const open = [...j.bribes.filter(b => b.status === 'pending'), ...j.snitches.filter(s => s.status === 'nieuw')].length;
-  return `<div class="kaart dossier" id="k-inbox"><h2>📬 Inbox der duistere kanalen <span class="r">${open} onbehandeld</span></h2>
-    ${j.bribes.map(b => { const t = team(b.team_id); return `<div class="bericht">
-      <div class="van">💰 ${esc(t ? t.name : '?')} <span class="status">${esc(b.status)}</span></div>
-      <div class="inhoud">${esc(b.offer)}</div>
-      ${b.jury_response ? `<div class="antwoord">${esc(b.jury_response)}</div>` : ''}
-      ${b.status === 'pending' ? `<div style="margin-top:.5rem">
-        <button class="mini groen" onclick="antwoordBribe('${b.id}','aanvaard')">aanvaard 😈</button>
-        <button class="mini" onclick="antwoordBribe('${b.id}','verworpen')">verwerp</button>
-        <button class="mini rood" onclick="antwoordBribe('${b.id}','teruggeslagen')">sla terug</button></div>` : ''}
-    </div>`; }).join('')}
-    ${j.snitches.map(s => { const van = team(s.from_team_id), over = s.about_team_id ? team(s.about_team_id) : null; return `<div class="bericht">
-      <div class="van">📸 ${esc(van ? van.name : '?')} verklikt ${over ? esc(over.name) : 'niemand in het bijzonder'} <span class="status">${esc(s.status)}</span></div>
-      <div class="inhoud">${esc(s.complaint)}</div>
-      ${s.photo_url ? `<img src="${esc(s.photo_url)}" alt="bewijs">` : ''}
-      ${s.jury_response ? `<div class="antwoord">${esc(s.jury_response)}</div>` : ''}
-      ${s.status === 'nieuw' ? `<div style="margin-top:.5rem">
-        <button class="mini groen" onclick="antwoordSnitch('${s.id}','ontvankelijk')">ontvankelijk</button>
-        <button class="mini" onclick="antwoordSnitch('${s.id}','geseponeerd')">seponeer</button>
-        <button class="mini rood" onclick="antwoordSnitch('${s.id}','teruggeslagen')">tegen verklikker</button></div>` : ''}
-    </div>`; }).join('')}
-    ${!j.bribes.length && !j.snitches.length ? '<p class="stil">Nog geen omkoping, nog geen verraad. Teleurstellend.</p>' : ''}</div>`;
-}
-function vraagAntwoord(cb) {
-  openModal(`<h3>Reactie van de jury</h3>
-    <label>Boodschap (zichtbaar voor het team)</label><textarea id="m-resp" maxlength="400"></textarea>
-    <button class="verzend" onclick="__respOk()">Bevestig</button><p class="fout"></p>`);
-  window.__respOk = async () => { try { await cb(document.getElementById('m-resp').value.trim() || null); sluitModal(); vernieuw(true); } catch (e) { modalFout(e.message); } };
-}
-function antwoordBribe(id, status) { vraagAntwoord(resp => rpc('hert_respond_bribe', { p_code: S.code, p_id: id, p_status: status, p_response: resp })); }
-function antwoordSnitch(id, status) { vraagAntwoord(resp => rpc('hert_respond_snitch', { p_code: S.code, p_id: id, p_status: status, p_response: resp })); }
-
-function puntenRennerKaart() {
-  const recent = S.pub.riderPoints.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 12);
-  return `<div class="kaart dossier" id="k-punten"><h2>🏅 Individuele punten</h2>
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">
-      <select id="ip-renner" style="background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;max-width:12rem">
-        ${S.pub.teams.map(t => `<optgroup label="${esc(t.name)}">` +
-          S.pub.riders.filter(r => r.team_id === t.id).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('') + '</optgroup>').join('')}
-        <optgroup label="— aanhang & zonder ploeg —">${S.pub.riders.filter(r => !r.team_id).map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
-      </select>
-      <input id="ip-punten" type="number" value="1" style="width:4rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em;text-align:center">
-      <input id="ip-reden" type="text" placeholder="reden (bv. legendarische trash talk)"
-        style="flex:1;min-width:9rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em">
-      <button class="mini geel" onclick="geefRennerPunten()">ken toe</button>
-    </div>
-    ${recent.map(x => { const r = S.pub.riders.find(y => y.id === x.rider_id); return `<div class="bericht">
-      <div class="van">${new Date(x.created_at).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' })}
-        ${S.rol === 'opper' ? `<span class="status"><button class="mini rood" onclick="verwijder('hert_rider_points','${x.id}')">🗑</button></span>` : ''}</div>
-      <div class="inhoud"><b>${r ? esc(r.name) : '?'}</b>: ${x.punten > 0 ? '+' : ''}${x.punten}${x.reason ? ' — ' + esc(x.reason) : ''}</div></div>`; }).join('') || '<p class="stil">Nog niets uitgedeeld.</p>'}</div>`;
-}
-async function geefRennerPunten() {
-  const punten = parseInt(document.getElementById('ip-punten').value, 10);
-  if (!punten) return toast('⚠️ Punten mogen niet 0 zijn');
-  try {
-    await rpc('hert_geef_punten_renner', { p_code: S.code,
-      p_rider: document.getElementById('ip-renner').value, p_punten: punten,
-      p_reden: document.getElementById('ip-reden').value.trim() || null });
-    toast('🏅 Toegekend'); vernieuw(true);
-  } catch (e) { toast('⚠️ ' + e.message); }
-}
-function regelsJuryKaart(opper) {
-  const regels = (S.juryData && S.juryData.rules) || [];
-  const MOMENT = { vooraf: 'vooraf', tijdens: 'tijdens de koers', ceremonie: '🔒 slotceremonie' };
-  return `<div class="kaart dossier"><h2>📜 Het Reglement <span class="r">incl. verborgen regels</span></h2>
-    ${regels.map(g => `<div class="bericht">
-      <div class="van">#${g.sort} · ${MOMENT[g.moment]} <span class="status">${g.revealed ? 'ONTHULD' : 'verborgen'}</span></div>
-      <div class="inhoud"><b>${esc(g.title)}</b><br>${esc(g.body || '')}</div>
-      ${opper ? `<div style="margin-top:.5rem">
-        ${!g.revealed ? `<button class="mini geel" onclick="onthulRegel('${g.id}',true)">📢 maak bekend</button>`
-                      : `<button class="mini" onclick="onthulRegel('${g.id}',false)">verberg terug</button>`}
-        <button class="mini" onclick="bewerkRegel('${g.id}')">✏️</button>
-        <button class="mini rood" onclick="verwijder('hert_rules','${g.id}')">🗑</button></div>` : ''}
-    </div>`).join('') || '<p class="stil">Nog geen regels. Onwaarschijnlijk maar goed.</p>'}
-    ${opper ? '<button class="mini geel" onclick="bewerkRegel(null)">+ nieuwe regel</button>' : ''}</div>`;
-}
-async function onthulRegel(id, aan) { try { await rpc('hert_reveal_rule', { p_code: S.code, p_id: id, p_revealed: aan }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-function bewerkRegel(id) {
-  const g = id ? (S.juryData.rules.find(x => x.id === id) || {}) : {};
-  openModal(`<h3>${id ? 'Regel bewerken' : 'Nieuwe regel'}</h3>
-    <label>Titel</label><input type="text" id="f-titel" value="${esc(g.title || '')}">
-    <label>Regel</label><textarea id="f-body">${esc(g.body || '')}</textarea>
-    <label>Moment van toepassing</label><select id="f-moment">
-      <option value="vooraf" ${g.moment === 'vooraf' ? 'selected' : ''}>Vooraf bekend te maken</option>
-      <option value="tijdens" ${g.moment === 'tijdens' ? 'selected' : ''}>Tijdens de koers</option>
-      <option value="ceremonie" ${(g.moment || 'ceremonie') === 'ceremonie' ? 'selected' : ''}>🔒 Pas op de slotceremonie</option></select>
-    <label>Volgorde in het draaiboek (laag = eerst aan bod)</label><input type="number" id="f-sort" value="${g.sort ?? 0}">
-    <button class="verzend" onclick="bewaarRegel('${id || ''}')">Bewaar</button><p class="fout"></p>`);
-}
-async function bewaarRegel(id) {
-  try {
-    await rpc('hert_upsert_rule', { p_code: S.code, p_id: id || null,
-      p_sort: parseInt(document.getElementById('f-sort').value, 10) || 0,
-      p_title: document.getElementById('f-titel').value.trim(),
-      p_body: document.getElementById('f-body').value.trim() || null,
-      p_moment: document.getElementById('f-moment').value });
-    sluitModal(); toast('📜 Genoteerd in het reglement'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-function missiesJuryKaart() {
-  const m = (S.juryData && S.juryData.missions) || [];
-  return `<div class="kaart dossier"><h2>🤫 Geheime missies</h2>
-    ${m.map(x => { const t = team(x.team_id); return `<div class="missie">
-      <div class="titel">${esc(x.title)} — ${esc(t ? t.name : '?')}${x.rider_name ? ' (' + esc(x.rider_name) + ')' : ''}</div>
-      <div class="uitleg">${esc(x.brief)}</div>
-      <div class="meta">+${x.reward} · ${esc(x.status)}</div>
-      <div style="margin-top:.4rem">
-        ${x.status === 'sealed' ? `<button class="mini geel" onclick="zetMissie('${x.id}','revealed')">🔓 onthul aan team</button>` : ''}
-        ${x.status === 'revealed' ? `<button class="mini groen" onclick="zetMissie('${x.id}','geslaagd')">✓ geslaagd</button>
-          <button class="mini rood" onclick="zetMissie('${x.id}','mislukt')">✗ mislukt</button>` : ''}
-        ${S.rol === 'opper' ? `<button class="mini" onclick="bewerkMissie('${x.id}')">✏️</button>
-          <button class="mini rood" onclick="verwijder('hert_missions','${x.id}')">🗑</button>` : ''}
-      </div></div>`; }).join('') || '<p class="stil">Geen missies.</p>'}
-    ${S.rol === 'opper' ? `<button class="mini geel" onclick="bewerkMissie(null)">+ nieuwe missie</button>` : ''}</div>`;
-}
-async function zetMissie(id, status) { try { await rpc('hert_set_mission_status', { p_code: S.code, p_id: id, p_status: status }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-
-function notitiesKaart() {
-  const n = (S.juryData && S.juryData.notes) || [];
-  return `<div class="kaart dossier" id="k-logboek"><h2>📓 Het jury-logboek</h2>
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">
-      <select id="note-team" style="background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em">
-        <option value="">— algemeen —</option>
-        ${S.pub.teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
-      <input id="note-in" type="text" placeholder="incident, gezeur, heldendaad…"
-        style="flex:1;min-width:10rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.5em">
-      <button class="mini geel" onclick="voegNoteToe()">noteer</button>
-    </div>
-    ${n.slice(0, 20).map(x => { const t = team(x.team_id); return `<div class="bericht">
-      <div class="van">${t ? esc(t.name) : 'algemeen'} · ${new Date(x.created_at).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' })}</div>
-      <div class="inhoud">${esc(x.note)}</div></div>`; }).join('')}</div>`;
-}
-async function voegNoteToe() {
-  const note = document.getElementById('note-in').value.trim();
-  if (!note) return;
-  try { await rpc('hert_add_note', { p_code: S.code, p_team: document.getElementById('note-team').value || null, p_subject: null, p_author: S.rol, p_note: note }); toast('📓 Genoteerd'); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); }
-}
-function delibJuryLijst() {
-  const d = (S.juryData && S.juryData.deliberations) || [];
-  return `<div class="kaart dossier"><h2>⚖️ De Beraadslaging <span class="r">jury-voorstel; opper beslist</span></h2>
-    ${d.map(x => `<div class="bericht"><div class="van">${x.sealed ? '🔒 verzegeld' : x.revealed ? '👁 onthuld' : 'klaargezet'}</div>
-      <div class="inhoud"><b>${esc(x.title)}</b>${x.delta ? ` (${x.delta > 0 ? '+' : ''}${x.delta})` : ''}<br>${esc(x.body || '')}</div></div>`).join('') || '<p class="stil">Nog leeg.</p>'}
-    <button class="mini geel" onclick="bewerkDelib(null)">+ voorstel toevoegen</button></div>`;
-}
-
-/* ========== OPPER: beraadslaging-regie & beheer ========== */
-function beraadKaart() {
-  const d = (S.juryData && S.juryData.deliberations) || [];
-  return `<div class="kaart dossier"><h2>⚖️ Beraadslaging — regie <span class="r">één voor één onthullen</span></h2>
-    ${d.map(x => { const t = team(x.team_id); return `<div class="bericht">
-      <div class="van">#${x.sort} ${x.sealed ? '🔒 verzegeld tot ceremonie' : ''} <span class="status">${x.revealed ? 'ONTHULD' : 'wacht'}</span></div>
-      <div class="inhoud"><b>${esc(x.title)}</b>${t ? ' — ' + esc(t.name) : ''}${x.delta ? ` (${x.delta > 0 ? '+' : ''}${x.delta})` : ''}<br>${esc(x.body || '')}</div>
-      <div style="margin-top:.5rem">
-        ${!x.revealed ? `<button class="mini groen" onclick="onthulDelib('${x.id}',true)">🎭 Onthul nu</button>` : `<button class="mini" onclick="onthulDelib('${x.id}',false)">verberg terug</button>`}
-        ${x.sealed && x.revealed ? '<span class="klein">(verzegeld: pas zichtbaar als je het zegel breekt via bewerken)</span>' : ''}
-        <button class="mini" onclick="bewerkDelib('${x.id}')">✏️</button>
-        <button class="mini rood" onclick="verwijder('hert_deliberations','${x.id}')">🗑</button>
-      </div></div>`; }).join('') || '<p class="stil">Nog geen beslissingen klaargezet.</p>'}
-    <button class="mini geel" onclick="bewerkDelib(null)">+ beslissing klaarzetten</button></div>`;
-}
-async function onthulDelib(id, aan) { try { await rpc('hert_reveal_deliberation', { p_code: S.code, p_id: id, p_revealed: aan }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
-
-function prijzenKaart() {
-  const p = (S.juryData && S.juryData.prizes) || [];
-  return `<div class="kaart dossier"><h2>🏆 De Prijzenkast</h2>
-    ${p.map(x => `<div class="bericht">
-      <div class="van">${x.is_grand_prize ? '👑 HOOFDPRIJS' : '#' + x.sort} <span class="status">${x.revealed ? 'UITGEREIKT' : 'wacht'}</span></div>
-      <div class="inhoud"><b>${esc(x.name)}</b> — ${esc(x.description || '')}<br>${x.winner_text ? '🏆 ' + esc(x.winner_text) : '<i>nog geen winnaar</i>'}</div>
-      <div style="margin-top:.5rem">
-        <button class="mini" onclick="bewerkPrijs('${x.id}')">✏️ winnaar/tekst</button>
-        ${!x.revealed ? `<button class="mini geel" onclick="reikUit('${x.id}')">🎉 Reik uit</button>` : ''}
-      </div></div>`).join('')}</div>`;
-}
-async function reikUit(id) {
-  const p = S.juryData.prizes.find(x => x.id === id);
-  if (p && !p.winner_text) { toast('⚠️ Vul eerst de winnaar in'); return; }
-  try { await rpc('hert_upsert_prize', { p_code: S.code, p_id: id, p_sort: null, p_name: p.name, p_description: p.description, p_winner: p.winner_text, p_grand: null, p_revealed: true }); toast('🎉 Uitgereikt!'); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); }
-}
-
-function beheerKaart() {
-  const codes = (S.juryData && S.juryData.team_codes) || [];
-  return `<div class="kaart dossier"><h2>👑 Opper-beheer</h2>
-    <details><summary>Ploegen & codes</summary>
-      ${S.pub.teams.map(t => { const c = codes.find(x => x.team_id === t.id); return `<div class="bericht">
-        <div class="van">${DIV[t.division]} <span class="status">code: ${esc(c ? c.code : '—')}</span></div>
-        <div class="inhoud"><span class="teamstip" style="background:${esc(t.color)}"></span><b>${esc(t.name)}</b> — ${esc(t.motto || '')}</div>
-        <div style="margin-top:.4rem"><button class="mini" onclick="bewerkTeam('${t.id}')">✏️</button>
-        <button class="mini rood" onclick="verwijder('hert_teams','${t.id}')">🗑</button></div></div>`; }).join('')}
-      <button class="mini geel" onclick="bewerkTeam(null)">+ nieuwe ploeg</button>
-    </details>
-    <details><summary>Nieuwe ronde toevoegen</summary>
-      <button class="mini geel" onclick="bewerkRonde(null)">+ ronde</button>
-      <p class="klein" style="margin-top:.4rem">bestaande rondes bewerk je via ✏️ in de rondelijst</p>
-    </details></div>`;
-}
-
-/* ---------- generieke bewerk-modals (opper) ---------- */
-function bewerkTeam(id) {
-  const t = id ? team(id) : {};
-  const codes = (S.juryData && S.juryData.team_codes) || [];
-  const c = id ? (codes.find(x => x.team_id === id) || {}) : {};
-  openModal(`<h3>${id ? 'Ploeg bewerken' : 'Nieuwe ploeg'}</h3>
-    <label>Naam</label><input type="text" id="f-naam" value="${esc(t.name || '')}">
-    <label>Afdeling</label><select id="f-div">
-      <option value="gemengd" ${(t.division || 'gemengd') === 'gemengd' ? 'selected' : ''}>Gemengde ploeg</option>
-      <option value="baroudeurs" ${t.division === 'baroudeurs' ? 'selected' : ''}>Baroudeurs</option>
-      <option value="baroudellen" ${t.division === 'baroudellen' ? 'selected' : ''}>Baroudellen</option></select>
-    <label>Kleur (hesjeskleur)</label><input type="text" id="f-kleur" value="${esc(t.color || '#3ddc84')}">
-    <label>Motto</label><input type="text" id="f-motto" value="${esc(t.motto || '')}">
-    <label>Volgorde</label><input type="number" id="f-sort" value="${t.sort ?? 0}">
-    <label>Geheime teamcode</label><input type="text" id="f-code" value="${esc(c.code || '')}" placeholder="bv. KOPMAN">
-    <button class="verzend" onclick="bewaarTeam('${id || ''}')">Bewaar</button><p class="fout"></p>`);
-}
-async function bewaarTeam(id) {
-  try {
-    await rpc('hert_upsert_team', { p_code: S.code, p_id: id || null,
-      p_name: document.getElementById('f-naam').value.trim(),
-      p_division: document.getElementById('f-div').value,
-      p_color: document.getElementById('f-kleur').value.trim(),
-      p_motto: document.getElementById('f-motto').value.trim() || null,
-      p_sort: parseInt(document.getElementById('f-sort').value, 10) || 0,
-      p_team_code: document.getElementById('f-code').value.trim() || null });
-    sluitModal(); toast('✓ Bewaard'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-function deelnemersKaart() {
-  const sterren = r => [1, 2, 3, 4, 5].map(n =>
-    `<span onclick="zetNiveau('${r.id}',${n})" style="cursor:pointer;padding:.15em .05em;opacity:${n <= (r.niveau || 3) ? 1 : .25}" title="niveau ${n}">★</span>`).join('');
-  const rolLabel = r => r.division ? DIV[r.division] : r.role === 'supporter' ? '📣 supporter' : r.role === 'seingever' ? '🚩 seingever' : '⚠️ geen rol';
-  const rolKleur = r => r.division === 'baroudellen' ? 'var(--paars)' : r.division === 'baroudeurs' ? 'var(--groen)' : 'var(--amber)';
-  const rij = r => `<div class="score-rij">
-      <span class="tnaam">${r.is_captain ? '👑 ' : ''}${esc(r.name)}</span>
-      <span class="klein" style="min-width:6.5em;color:${rolKleur(r)}">${rolLabel(r)}</span>
-      <span style="letter-spacing:.1em;color:var(--amber);min-width:5.5em;user-select:none">${sterren(r)}</span>
-      <button class="mini" onclick="bewerkDeelnemer('${r.id}')">✏️</button>
-    </div>`;
-  const sorteer = leden => leden.slice().sort((a, b) => (b.niveau || 3) - (a.niveau || 3) || a.name.localeCompare(b.name));
-  const groep = (titel, kleur, leden, extra) => leden.length ? `
-    <div style="border:1px solid var(--kader);border-left:4px solid ${kleur};background:#0d1319;padding:.55rem .8rem .35rem;margin-bottom:.8rem">
-      <p class="klein" style="margin-bottom:.25rem;color:var(--inkt)"><span class="teamstip" style="background:${kleur}"></span>${titel} — ${leden.length} man${extra}</p>
-      ${sorteer(leden).map(rij).join('')}
-    </div>` : '';
-  const perPloeg = S.pub.teams.map(t => {
-    const leden = S.pub.riders.filter(r => r.team_id === t.id);
-    const totaal = leden.reduce((s, r) => s + (r.niveau || 3), 0);
-    return groep(esc(t.name), esc(t.color), leden, ` · ${totaal}★ samen`);
-  }).join('');
-  const isRenner = r => r.division === 'baroudeurs' || r.division === 'baroudellen';
-  const zonder = S.pub.riders.filter(r => isRenner(r) && (!r.team_id || !team(r.team_id)));
-  const aanhang = S.pub.riders.filter(r => !isRenner(r));
-  const nB = S.pub.riders.filter(r => r.division === 'baroudeurs').length;
-  const nBl = S.pub.riders.filter(r => r.division === 'baroudellen').length;
-  return `<div class="kaart dossier"><h2>🚴 Deelnemers <span class="r">${S.pub.riders.length} ingeschreven · ${nB} baroudeurs · ${nBl} baroudellen · ${aanhang.length} aanhang</span></h2>
-    ${perPloeg}
-    ${groep('Nog geen ploeg', 'var(--grijs)', zonder, ' — de draft of het potloodje wijst ze een kleur toe')}
-    ${groep('De aanhang — supporters & seingevers', 'var(--amber-diep)', aanhang, ' — rijden niet mee in de draft, tellen wél mee in het individueel klassement')}
-    <div style="margin-top:1rem">
-      <button class="mini geel" onclick="bewerkDeelnemer(null)">+ deelnemer</button>
-      <button class="mini groen" onclick="verdeelTeams()">⚖️ Slangendraft: verdeel in gemengde ploegen</button>
-    </div>
-    <p class="klein" style="margin-top:.6rem">verdeling: gemengde ploegen van 5 à 6 (zes hesjeskleuren), slangendraft met de sterretjes als draftvolgorde (★★★★★ = ijzersterk). eenmalig tijdens De Verzameling: daarna liggen de ploegen vast, bijsturen kan enkel per renner.</p></div>`;
-}
-async function zetNiveau(id, niveau) {
-  const r = S.pub.riders.find(x => x.id === id);
-  if (!r) return;
-  try {
-    await rpc('hert_upsert_deelnemer', { p_code: S.code, p_id: id, p_team: r.team_id,
-      p_name: r.name, p_division: r.division, p_niveau: niveau, p_captain: r.is_captain });
-    r.niveau = niveau; render();
-  } catch (e) { toast('⚠️ ' + e.message); }
-}
-function bewerkDeelnemer(id) {
-  const r = id ? S.pub.riders.find(x => x.id === id) : {};
-  openModal(`<h3>${id ? 'Deelnemer bewerken' : 'Nieuwe deelnemer'}</h3>
-    <label>Naam</label><input type="text" id="f-naam" value="${esc(r.name || '')}">
-    <label>Afdeling</label><select id="f-div">
-      <option value="baroudeurs" ${r.division === 'baroudeurs' ? 'selected' : ''}>Baroudeurs</option>
-      <option value="baroudellen" ${r.division === 'baroudellen' ? 'selected' : ''}>Baroudellen</option></select>
-    <label>Niveau (1 = recreant, 5 = ijzersterk)</label><select id="f-niveau">
-      ${[1,2,3,4,5].map(n => `<option value="${n}" ${(r.niveau || 3) === n ? 'selected' : ''}>${'★'.repeat(n)}</option>`).join('')}</select>
-    <label>Team (of laat leeg voor de automatische verdeling)</label>
-    <select id="f-team"><option value="">— nog geen team —</option>
-      ${S.pub.teams.map(t => `<option value="${t.id}" ${r.team_id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
-    <label><input type="checkbox" id="f-kap" ${r.is_captain ? 'checked' : ''}> kapitein</label>
-    <button class="verzend" onclick="bewaarDeelnemer('${id || ''}')">Bewaar</button>
-    ${id ? `<button class="mini rood" style="margin-top:.6rem" onclick="verwijder('hert_riders','${id}');sluitModal()">🗑 verwijder</button>` : ''}
-    <p class="fout"></p>`);
-}
-async function bewaarDeelnemer(id) {
-  try {
-    await rpc('hert_upsert_deelnemer', { p_code: S.code, p_id: id || null,
-      p_team: document.getElementById('f-team').value || null,
-      p_name: document.getElementById('f-naam').value.trim(),
-      p_division: document.getElementById('f-div').value,
-      p_niveau: parseInt(document.getElementById('f-niveau').value, 10),
-      p_captain: document.getElementById('f-kap').checked });
-    sluitModal(); toast('✓ Bewaard'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-async function verdeelTeams() {
-  // vaste ploegen: de draft kan alleen tijdens De Verzameling; daarna liggen de ploegen vast
-  if (S.pub.event && S.pub.event.phase !== 'lobby') return toast('⚠️ De ploegen liggen vast: de koers is al begonnen. Bijsturen kan enkel per renner via ✏️.');
-  const ds = S.pub.riders.filter(r => r.division === 'baroudeurs' || r.division === 'baroudellen');
-  if (ds.length < 8) return toast('⚠️ Minstens 8 renners nodig voor een draft');
-  // aantal ploegen: mikken op ±5 renners per ploeg, begrensd door de hesjeskleuren
-  const aantal = Math.max(2, Math.min(S.pub.teams.length, Math.round(ds.length / 5)));
-  const doelTeams = S.pub.teams.slice().sort((a, b) => a.sort - b.sort).slice(0, aantal);
-  if (!confirm(`${ds.length} renners via slangendraft verdelen over ${aantal} gemengde ploegen (${doelTeams.map(t => t.name).join(', ')})? De bestaande indeling wordt overschreven.`)) return;
-  // slangendraft op de sterretjes (sterksten eerst, richting keert per draftronde)
-  const volgorde = ds.slice().sort((a, b) => (b.niveau || 3) - (a.niveau || 3) || Math.random() - .5);
-  const toewijzing = [];
-  volgorde.forEach((r, i) => {
-    const ronde = Math.floor(i / aantal);
-    const plek = i % aantal;
-    const teamIdx = ronde % 2 === 0 ? plek : aantal - 1 - plek;
-    toewijzing.push({ rider_id: r.id, team_id: doelTeams[teamIdx].id });
-  });
-  try {
-    await rpc('hert_verdeel', { p_code: S.code, p_items: toewijzing });
-    await vernieuw(true);
-    const samenvatting = doelTeams.map(t => {
-      const leden = S.pub.riders.filter(r => r.team_id === t.id);
-      return `${t.name}: ${leden.length} renners, ${leden.reduce((s, r) => s + (r.niveau || 3), 0)}★`;
-    }).join(' · ');
-    toast('⚖️ Verdeeld — ' + samenvatting);
-  } catch (e) { toast('⚠️ ' + e.message); }
-}
-function bewerkRonde(id) {
-  const r = id ? S.pub.rounds.find(x => x.id === id) : {};
-  const s = id ? (juryInfoVan(id) || {}) : {};
-  const brief = id ? (briefVan(id) || s.brief || '') : '';
-  openModal(`<h3>${id ? 'Ronde bewerken' : 'Nieuwe ronde'}</h3>
-    <label>Titel</label><input type="text" id="f-titel" value="${esc(r.title || '')}">
-    <label>Afdeling</label><select id="f-div">
-      <option value="gemengd" ${(r.division || 'gemengd') === 'gemengd' ? 'selected' : ''}>Gemengd (iedereen samen)</option>
-      <option value="baroudeurs" ${r.division === 'baroudeurs' ? 'selected' : ''}>Baroudeurs</option>
-      <option value="baroudellen" ${r.division === 'baroudellen' ? 'selected' : ''}>Baroudellen</option></select>
-    <label>Volgorde</label><input type="number" id="f-sort" value="${r.sort ?? 0}">
-    <label>Publieke teaser (vooraf zichtbaar)</label><input type="text" id="f-teaser" value="${esc(r.teaser || '')}">
-    <label>Geheime uitleg (bij onthulling)</label><textarea id="f-brief">${esc(brief)}</textarea>
-    <label>Jury-instructies (enkel jury)</label><textarea id="f-jury">${esc(s.jury_instructions || '')}</textarea>
-    <label>Materiaal</label><input type="text" id="f-mat" value="${esc(s.materials || '')}">
-    <button class="verzend" onclick="bewaarRonde('${id || ''}')">Bewaar</button>
-    ${id ? `<button class="mini rood" style="margin-top:.6rem" onclick="verwijder('hert_rounds','${id}');sluitModal()">🗑 verwijder ronde</button>` : ''}
-    <p class="fout"></p>`);
-}
-async function bewaarRonde(id) {
-  try {
-    await rpc('hert_upsert_round', { p_code: S.code, p_id: id || null,
-      p_sort: parseInt(document.getElementById('f-sort').value, 10) || 0,
-      p_division: document.getElementById('f-div').value,
-      p_title: document.getElementById('f-titel').value.trim(),
-      p_teaser: document.getElementById('f-teaser').value.trim() || null,
-      p_race_type: null,
-      p_brief: document.getElementById('f-brief').value.trim(),
-      p_jury_instructions: document.getElementById('f-jury').value.trim() || null,
-      p_materials: document.getElementById('f-mat').value.trim() || null });
-    sluitModal(); toast('✓ Bewaard'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-function bewerkMissie(id) {
-  const m = id ? (S.juryData.missions.find(x => x.id === id) || {}) : {};
-  openModal(`<h3>${id ? 'Missie bewerken' : 'Nieuwe geheime missie'}</h3>
-    <label>Team</label><select id="f-team">${S.pub.teams.map(t => `<option value="${t.id}" ${m.team_id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
-    <label>Renner (optioneel, voor individuele missie)</label><input type="text" id="f-renner" value="${esc(m.rider_name || '')}">
-    <label>Titel</label><input type="text" id="f-titel" value="${esc(m.title || '')}">
-    <label>Opdracht</label><textarea id="f-brief">${esc(m.brief || '')}</textarea>
-    <label>Beloning (punten)</label><input type="number" id="f-reward" value="${m.reward ?? 1}">
-    <button class="verzend" onclick="bewaarMissie('${id || ''}')">Bewaar</button><p class="fout"></p>`);
-}
-async function bewaarMissie(id) {
-  try {
-    await rpc('hert_upsert_mission', { p_code: S.code, p_id: id || null, p_round: null,
-      p_team: document.getElementById('f-team').value,
-      p_rider: document.getElementById('f-renner').value.trim() || null,
-      p_title: document.getElementById('f-titel').value.trim(),
-      p_brief: document.getElementById('f-brief').value.trim(),
-      p_reward: parseInt(document.getElementById('f-reward').value, 10) || 1 });
-    sluitModal(); toast('✓ Bewaard'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-function bewerkDelib(id) {
-  const d = id ? (S.juryData.deliberations.find(x => x.id === id) || {}) : {};
-  openModal(`<h3>${id ? 'Beslissing bewerken' : 'Beslissing klaarzetten'}</h3>
-    <label>Titel (bv. "Klacht ontvankelijk: de eieren van punt 2")</label><input type="text" id="f-titel" value="${esc(d.title || '')}">
-    <label>Tekst / motivering</label><textarea id="f-body">${esc(d.body || '')}</textarea>
-    <label>Team (optioneel)</label><select id="f-team"><option value="">— geen —</option>
-      ${S.pub.teams.map(t => `<option value="${t.id}" ${d.team_id === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
-    <label>Puntencorrectie (+/-)</label><input type="number" id="f-delta" value="${d.delta ?? 0}">
-    <label>Volgorde in het draaiboek (laag = eerst aan bod)</label><input type="number" id="f-sort" value="${d.sort ?? 0}">
-    <label><input type="checkbox" id="f-sealed" ${d.sealed ? 'checked' : ''}> 🔒 verzegeld tot de slotceremonie</label>
-    <button class="verzend" onclick="bewaarDelib('${id || ''}')">Bewaar</button><p class="fout"></p>`);
-}
-async function bewaarDelib(id) {
-  try {
-    await rpc('hert_upsert_deliberation', { p_code: S.code, p_id: id || null,
-      p_sort: parseInt(document.getElementById('f-sort').value, 10) || 0,
-      p_title: document.getElementById('f-titel').value.trim(),
-      p_body: document.getElementById('f-body').value.trim() || null,
-      p_team: document.getElementById('f-team').value || null,
-      p_delta: parseInt(document.getElementById('f-delta').value, 10) || 0,
-      p_sealed: document.getElementById('f-sealed').checked });
-    sluitModal(); toast('✓ Klaar voor de show'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-function bewerkPrijs(id) {
-  const p = S.juryData.prizes.find(x => x.id === id) || {};
-  openModal(`<h3>🏆 ${esc(p.name || 'Prijs')}</h3>
-    <label>Naam</label><input type="text" id="f-naam" value="${esc(p.name || '')}">
-    <label>Omschrijving</label><textarea id="f-desc">${esc(p.description || '')}</textarea>
-    <label>Winnaar (tekst, bv. "Cyclones — met 1 punt voorsprong")</label><input type="text" id="f-win" value="${esc(p.winner_text || '')}">
-    <button class="verzend" onclick="bewaarPrijs('${id}')">Bewaar</button><p class="fout"></p>`);
-}
-async function bewaarPrijs(id) {
-  try {
-    await rpc('hert_upsert_prize', { p_code: S.code, p_id: id, p_sort: null,
-      p_name: document.getElementById('f-naam').value.trim(),
-      p_description: document.getElementById('f-desc').value.trim() || null,
-      p_winner: document.getElementById('f-win').value.trim() || null,
-      p_grand: null, p_revealed: null });
-    sluitModal(); toast('✓ Bewaard'); vernieuw(true);
-  } catch (e) { modalFout(e.message); }
-}
-async function verwijder(tabel, id) {
-  if (!confirm('Zeker verwijderen? Dit kan niet ongedaan gemaakt worden.')) return;
-  try { await rpc('hert_delete_row', { p_code: S.code, p_table: tabel, p_id: id }); toast('🗑 Verwijderd'); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); }
-}
-
-/* ========== GROOT SCHERM ========== */
-function zichtScherm() {
-  const e = S.pub.event, ar = actieveRonde();
-  let midden = '';
-  if (e.phase === 'deliberation') {
-    const d = S.pub.delibs.filter(x => x.revealed && !x.sealed);
-    midden = d.slice().reverse().map(x => delibKaart(x)).join('')
-      || '<div class="kaart nu"><p class="wacht">De jury is binnen. De deur is dicht. De eerste beslissing valt zo\u2026</p></div>';
-  } else if (e.phase === 'ceremony' || e.phase === 'finished') {
-    midden = prijzenBlok() || '<div class="kaart nu"><p class="wacht">De prijzenkast is nog op slot. De spanning is opzettelijk.</p></div>';
-  } else if (ar && e.phase !== 'lobby') {
-    const brief = briefVan(ar.id);
-    midden = `<div class="kaart nu gemengd"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)}</div>
-      <div class="grootst onthuld">${esc(ar.title)}</div>
-      ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || '')}</p>`}</div>`;
-  } else {
-    midden = `<div class="kaart nu"><div class="grootst">De Vaart wacht</div>
-      <p class="wacht">Ergens begin herfst. Twee bruggen. Een vaart. Eén café.</p></div>`;
-  }
-  const tagline = TAGLINES[Math.floor(Date.now() / 25000) % TAGLINES.length];
-  return `<div class="scherm-kop">
-      <div class="t1">🦌 Grote Sluitingsprijs Café De Hert</div>
-      <div class="t3">${esc(tagline)}</div>
-      <div class="t2">${esc(FASEN_SUB[e.phase] || FASEN[e.phase] || '')}</div></div>
-    ${mededeling()}${midden}
-    <div class="scherm-grid">
-      <div class="kaart dossier"><h2>Ploegenklassement</h2>${standTabel()}</div>
-      <div class="kaart dossier"><h2>🏅 Individueel</h2>${persoonlijkTabel(12)}</div>
-    </div>`;
-}
-
-/* ---------- herstel sessie ---------- */
+/* ---------- start ---------- */
 (async () => {
-  const bewaard = sessionStorage.getItem('hert_code');
-  if (bewaard) {
-    try {
-      const res = await rpc('hert_login', { p_code: bewaard });
-      S.rol = res.rol; S.code = bewaard; S.team = res.team;
-      start();
-    } catch (e) { sessionStorage.removeItem('hert_code'); }
-  }
+  await vernieuw();
+  S.timer = setInterval(() => vernieuw(true), 5000);
 })();
-document.getElementById('login-quip').textContent = QUIP;
 </script>
 </body>
 </html>

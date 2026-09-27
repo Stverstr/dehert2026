@@ -586,19 +586,16 @@ async function geefRennerPunten() {
 function regelsJuryKaart(opper) {
   const regels = (S.juryData && S.juryData.rules) || [];
   const MOMENT = { vooraf: 'vooraf', tijdens: 'tijdens de koers', ceremonie: '🔒 slotceremonie' };
-  return `<div class="kaart dossier"><h2>📜 Het Reglement <span class="r">incl. verborgen regels</span></h2>
+  return `<div class="kaart dossier"><h2>📜 Het Reglement <span class="r">alles is publiek, zo hoort het</span></h2>
     ${regels.map(g => `<div class="bericht">
-      <div class="van">#${g.sort} · ${MOMENT[g.moment]} <span class="status">${g.revealed ? 'ONTHULD' : 'verborgen'}</span></div>
+      <div class="van">#${g.sort} · ${MOMENT[g.moment]}</div>
       <div class="inhoud"><b>${esc(g.title)}</b><br>${esc(g.body || '')}</div>
       ${opper ? `<div style="margin-top:.5rem">
-        ${!g.revealed ? `<button class="mini geel" onclick="onthulRegel('${g.id}',true)">📢 maak bekend</button>`
-                      : `<button class="mini" onclick="onthulRegel('${g.id}',false)">verberg terug</button>`}
         <button class="mini" onclick="bewerkRegel('${g.id}')">✏️</button>
         <button class="mini rood" onclick="verwijder('hert_rules','${g.id}')">🗑</button></div>` : ''}
     </div>`).join('') || '<p class="stil">Nog geen regels. Onwaarschijnlijk maar goed.</p>'}
     ${opper ? '<button class="mini geel" onclick="bewerkRegel(null)">+ nieuwe regel</button>' : ''}</div>`;
 }
-async function onthulRegel(id, aan) { try { await rpc('hert_reveal_rule', { p_code: S.code, p_id: id, p_revealed: aan }); vernieuw(true); } catch (e) { toast('⚠️ ' + e.message); } }
 function bewerkRegel(id) {
   const g = id ? (S.juryData.rules.find(x => x.id === id) || {}) : {};
   openModal(`<h3>${id ? 'Regel bewerken' : 'Nieuwe regel'}</h3>

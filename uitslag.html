@@ -312,8 +312,6 @@ async function openDossier(bewaardeCode) {
           }
           (sc.correcties || []).forEach(c => lijnen.push(
             `<div class="prij"><span class="pl">jurycorrectie${c.reden ? ' — „' + esc(c.reden) + '"' : ''} ` +
-            `<span onclick="zetCorrectiePubliek('${c.id}',${!c.publiek})" style="cursor:pointer" title="${c.publiek ? 'zichtbaar voor de renner — klik om te verbergen' : 'geheim — klik om zichtbaar te maken voor de renner'}">${c.publiek ? '👁' : '🙈'}</span>` +
-            `${c.publiek ? ' <span style="color:var(--groen);font-size:.72rem">zichtbaar voor de renner</span>' : ''} ` +
             `<span onclick="verwijderCorrectie('${c.id}')" style="cursor:pointer" title="verwijder deze correctie">🗑</span></span>` +
             `<span class="pp">${c.punten > 0 ? '+' : ''}${c.punten}</span></div>`));
           let plaats = '';
@@ -340,8 +338,7 @@ async function openDossier(bewaardeCode) {
             `<input class="mini-in" id="corr-p-${i.id}" type="number" placeholder="±pt">` +
             `<input class="mini-in breed" id="corr-r-${i.id}" type="text" maxlength="120" placeholder="reden">` +
             `<button class="mini-knop" onclick="geefCorrectie('${i.id}')">ken toe</button><br>` +
-            `<label class="meta" style="cursor:pointer"><input type="checkbox" id="corr-z-${i.id}" style="width:auto;margin:0 .4em 0 0;vertical-align:middle">reden zichtbaar voor de renner op het scorebord (anders geheim)</label>` +
-            `</div></div></div>`;
+                        `</div></div></div>`;
         }).join('');
       // eerder opengeklapte puntenlijsten open houden na een verversing
       openPanelen.forEach(id => {
@@ -366,25 +363,13 @@ async function openDossier(bewaardeCode) {
           `<textarea class="mini-in" id="rg-b-${s}" rows="4" placeholder="de regel zelf — in jurytoon">${r ? esc(r.body || '') : ''}</textarea>` +
           `<button class="mini-knop" onclick="bewaarRegel('${r ? r.id : ''}')">bewaar</button></div>`;
       };
-      // de schakelaar: staan de punten al op het publieke scorebord?
-      const schakel = `<div class="schakel">
-          <span>🏅 Punten op het publieke scorebord:
-            <b class="${puntenPubliek ? 'status-aan' : 'status-uit'}">${puntenPubliek ? 'ZICHTBAAR' : 'VERBORGEN'}</b><br>
-            <span class="meta">${puntenPubliek
-              ? 'iedereen ziet het klassement met punten en uitsplitsing (geheime regels blijven dichtgeplakt)'
-              : 'het publiek ziet enkel namen — geen punten, geen uitsplitsing; u ziet hier alles gewoon'}</span></span>
-          <button class="mini-knop aanuit" onclick="zetPuntenZichtbaar(${!puntenPubliek})">${puntenPubliek ? '🔒 verberg' : '🔓 geef vrij'}</button>
-        </div>`;
-      el.innerHTML = schakel + `<div class="kaartje"><span class="kop2">${regels.length} regel(s)</span> — ` +
-        `<span style="color:var(--groen)">${regels.filter(x => !x.geheim).length} onthuld</span> · ` +
-        `<span style="color:var(--amber)">${regels.filter(x => x.geheim).length} verborgen</span><br>` +
-        `<span class="meta">🙈 verborgen = het publiek ziet enkel "Regel №X — ████" (de punten tellen wél); 🔓 onthuld = titel en tekst leesbaar op het scorebord.<br>` +
-        `⚠️ №10–№50 sturen de automatische puntentelling — hernummer of verwijder die niet, verberg ze hoogstens.</span></div>` +
+      el.innerHTML = `<div class="kaartje"><span class="kop2">${regels.length} regel(s)</span> — allemaal publiek, zo hoort het<br>
+        <span class="meta">sinds 27/9 is álles openbaar: elke regel, elke reden, elke correctie. Er valt niets meer te verbergen.<br>
+        ⚠️ №10–№50 sturen de automatische puntentelling — hernummer of verwijder die niet.</span></div>` +
         regels.map(r => `<div class="insch">
           <div class="rij-kop"><span class="wie">№${r.nr} ${esc(r.titel)}</span>
             <span style="white-space:nowrap;font-size:.78rem">
-              <span onclick="zetRegelOnthuld('${r.id}',${r.geheim})" style="cursor:pointer;color:${r.geheim ? 'var(--amber)' : 'var(--groen)'}" title="${r.geheim ? 'verborgen — klik om te onthullen op het scorebord' : 'onthuld — klik om weer te verbergen'}">${r.geheim ? '🙈 verborgen' : '🔓 onthuld'}</span>
-              <span onclick="verwijderRegel('${r.id}','№${r.nr} ${esc(r.titel).replace(/'/g, '')}')" style="cursor:pointer;margin-left:.5em" title="verwijder deze regel">🗑</span></span></div>
+              <span onclick="verwijderRegel('${r.id}','№${r.nr} ${esc(r.titel).replace(/'/g, '')}')" style="cursor:pointer" title="verwijder deze regel">🗑</span></span></div>
           <span class="meta">${MOMENTEN[r.moment] || esc(r.moment || '')}</span><br>
           <span style="color:#cfc8b8">${esc(r.body || '')}</span><br>
           <span class="corr-link" onclick="this.style.display='none';document.getElementById('rg-v-${r.id}').style.display='block'">✎ bewerk</span>
@@ -429,7 +414,6 @@ async function openDossier(bewaardeCode) {
               <input class="mini-in" id="kl-p-${k.id}" type="number" placeholder="±pt">
               <input class="mini-in breed" id="kl-r-${k.id}" type="text" maxlength="120" placeholder="reden">
               <button class="mini-knop" onclick="klachtOverschrijf('${k.id}')">ken toe</button><br>
-              <label class="meta" style="cursor:pointer"><input type="checkbox" id="kl-z-${k.id}" style="width:auto;margin:0 .4em 0 0;vertical-align:middle">reden zichtbaar voor de renner op het scorebord</label>
             </div>` : '') +
           `</div>`;
         }).join('');
@@ -621,18 +605,6 @@ function toonTab(naam) {
   document.querySelectorAll('.tabblad').forEach(t => t.classList.toggle('aan', t.id === 'tab-' + naam));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('aan', b.id === 'tabknop-' + naam));
 }
-// schakelaar: punten wel/niet publiek op het scorebord
-async function zetPuntenZichtbaar(zichtbaar) {
-  try {
-    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_punten_zichtbaar_zet', {
-      method: 'POST',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_code: dossierCode, p_zichtbaar: zichtbaar })
-    });
-    if (!antw.ok) throw new Error();
-    openDossier(dossierCode);
-  } catch (e) { alert('De schakelaar klemt. Probeer nog eens.'); }
-}
 // uitklappen/inklappen van de puntenlijst per renner (blijft open na verversing)
 const openPanelen = new Set();
 function klapPunten(id, el) {
@@ -642,11 +614,11 @@ function klapPunten(id, el) {
   el.textContent = el.textContent.replace(open ? '▸' : '▾', open ? '▾' : '▸');
   if (open) openPanelen.add(id); else openPanelen.delete(id);
 }
-// manuele correctie op het pre-koers scorebord; reden geheim tenzij bewust publiek gezet
+// manuele correctie op het pre-koers scorebord; sinds 27/9 altijd publiek
 async function geefCorrectie(id) {
   const punten = parseInt(document.getElementById('corr-p-' + id).value, 10);
   const reden = document.getElementById('corr-r-' + id).value.trim();
-  const publiek = document.getElementById('corr-z-' + id).checked;
+  const publiek = true; // sinds 27/9 is alles publiek
   if (!punten) return alert('Punten mogen niet 0 zijn. De jury doet niet aan symboliek.');
   try {
     const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_prekoers_geef', {
@@ -696,7 +668,7 @@ async function klachtOverschrijf(klachtId) {
   const wie = document.getElementById('kl-w-' + klachtId).value;
   const punten = parseInt(document.getElementById('kl-p-' + klachtId).value, 10);
   const reden = document.getElementById('kl-r-' + klachtId).value.trim();
-  const publiek = document.getElementById('kl-z-' + klachtId).checked;
+  const publiek = true; // sinds 27/9 is alles publiek
   if (!punten) return alert('Punten mogen niet 0 zijn. De jury doet niet aan symboliek.');
   try {
     await klachtRpc('hert_klacht_overschrijf', { admin_code: dossierCode, p_klacht: klachtId, p_inschrijving: wie, p_punten: punten, p_reden: reden || null, p_publiek: publiek });
@@ -722,17 +694,6 @@ async function bewaarRegel(id) {
     openDossier(dossierCode);
   } catch (e) { alert('De regel is niet bewaard. Probeer nog eens.'); }
 }
-async function zetRegelOnthuld(id, onthullen) {
-  try {
-    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_reveal_rule', {
-      method: 'POST',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_code: dossierCode, p_id: id, p_revealed: onthullen })
-    });
-    if (!antw.ok) throw new Error();
-    openDossier(dossierCode);
-  } catch (e) { alert('Het omzetten mislukte. Probeer nog eens.'); }
-}
 async function verwijderRegel(id, label) {
   if (!confirm('Regel ' + label + ' definitief verwijderen?\n(Regels №10–№50 sturen de automatische punten — die verwijder je beter niet.)')) return;
   try {
@@ -744,18 +705,6 @@ async function verwijderRegel(id, label) {
     if (!antw.ok) throw new Error();
     openDossier(dossierCode);
   } catch (e) { alert('Verwijderen mislukte. Probeer nog eens.'); }
-}
-// een bestaande correctie zichtbaar/onzichtbaar maken voor de renner (publiek scorebord)
-async function zetCorrectiePubliek(id, publiek) {
-  try {
-    const antw = await fetch(SUPA_URL + '/rest/v1/rpc/hert_prekoers_zichtbaarheid', {
-      method: 'POST',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_code: dossierCode, p_id: id, p_publiek: publiek })
-    });
-    if (!antw.ok) throw new Error();
-    openDossier(dossierCode);
-  } catch (e) { alert('Het omzetten mislukte. Probeer nog eens.'); }
 }
 async function verwijderCorrectie(id) {
   try {

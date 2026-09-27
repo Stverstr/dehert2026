@@ -460,18 +460,19 @@ function jurySpreekt() {
 /* ========== KLACHT ========== */
 function klachtKaart() {
   const renners = S.pub.riders.slice().sort((a, b) => toon(a.name).localeCompare(toon(b.name)));
+  const naamMet = r => toon(r.name) !== r.name ? `${toon(r.name)} (${r.name})` : r.name;
   return `<div class="kaart dossier"><h2>📸 Klacht indienen <span class="r">de kliklijn</span></h2>
     <p class="stil" style="margin-bottom:.4rem">Zag u iets wat de jury moet weten? Meld het hier. Een foto maakt uw zaak sterker. De jury antwoordt via de micro, of helemaal niet.</p>
     <div class="veld"><label>Van wie komt de klacht? (uw eigen naam)</label>
       <select id="kl-van" onchange="if(this.value)localStorage.setItem('hert_klacht_van', this.value)">
         <option value="">— kies uw naam —</option>
-        ${renners.map(r => `<option value="${r.id}">${esc(toon(r.name))}</option>`).join('')}
+        ${renners.map(r => `<option value="${r.id}">${esc(naamMet(r))}</option>`).join('')}
       </select></div>
     <div class="veld"><label>Tegen wie? (mag ook zomaar)</label>
       <select id="kl-over">
         <option value="">— gewoon een klacht, tegen niemand in het bijzonder —</option>
         <optgroup label="tegen een ploeg">${S.pub.teams.map(t => `<option value="t:${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>
-        <optgroup label="tegen één iemand">${renners.map(r => `<option value="r:${r.id}">${esc(toon(r.name))}</option>`).join('')}</optgroup>
+        <optgroup label="tegen één iemand">${renners.map(r => `<option value="r:${r.id}">${esc(naamMet(r))}</option>`).join('')}</optgroup>
       </select></div>
     <div class="veld"><label>Wat is er gebeurd?</label>
       <textarea id="kl-tekst" maxlength="500"></textarea></div>

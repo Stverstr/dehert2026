@@ -280,6 +280,21 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
   opacity:0;transition:transform 1.1s ease, opacity .9s ease;
 }
 .meekijker svg{width:100%;height:auto;display:block;overflow:visible}
+/* de groepsknop: onmiskenbaar klikbaar */
+.wa-knop{
+  display:block;text-align:center;margin-top:1.6rem;padding:1.1em .8em;
+  background:linear-gradient(135deg,#134a2c,#0a2417);
+  border:2px solid #25d366;border-radius:4px;
+  box-shadow:0 0 26px rgba(37,211,102,.25);
+  color:#b8f5d1;font-family:'Special Elite',monospace;
+  font-size:.95rem;letter-spacing:.1em;text-transform:uppercase;
+  text-decoration:none;line-height:1.6;cursor:pointer;
+  animation:wa-pols 2.2s ease-in-out infinite;
+  transition:transform .15s;
+}
+.wa-knop:hover{transform:scale(1.02);background:linear-gradient(135deg,#1a5c38,#0d2f1d)}
+.wa-knop small{display:block;font-size:.72em;color:#7be0a8;text-transform:none;letter-spacing:.04em}
+@keyframes wa-pols{50%{box-shadow:0 0 44px rgba(37,211,102,.5);border-color:#5ce998}}
 </style>
 </head>
 <body>
@@ -299,12 +314,11 @@ footer .gewei{font-size:1.6rem;display:block;margin-bottom:.8rem;filter:grayscal
     <p class="dag" style="margin-top:.5em;color:var(--amber)">wie te laat is, verliest</p>
   </div>
   <p class="intro" style="margin-bottom:.9rem">🚩 Jury en seingevers: <b style="color:var(--amber);font-weight:400">17.45</b>.</p>
-  <p class="intro" style="margin-bottom:.9rem">✖️ Komt u niet? <b style="color:#d8d2c4;font-weight:400">Annuleer in de <a href="https://chat.whatsapp.com/IamNUNxTCc95ugFYHDwEtw" style="color:var(--amber)">WhatsApp-groep</a>.</b></p>
+  <p class="intro" style="margin-bottom:.9rem">✖️ Komt u niet? <b style="color:#d8d2c4;font-weight:400">Annuleer in de <a href="https://chat.whatsapp.com/IamNUNxTCc95ugFYHDwEtw" target="_blank" rel="noopener" style="color:var(--amber)">WhatsApp-groep</a>.</b></p>
   <p class="intro" style="margin-bottom:0">✔️ Komt u wél? <b style="color:#d8d2c4;font-weight:400">Inschrijven kan nog</b>: hieronder, of ter plekke.</p>
-  <a href="https://chat.whatsapp.com/IamNUNxTCc95ugFYHDwEtw"
-     style="display:block;text-align:center;margin-top:1.6rem;padding:1.05em .8em;background:linear-gradient(135deg,#0d3320,#0a2417);border:1px solid #25d366;box-shadow:0 0 26px rgba(37,211,102,.15);color:#7be0a8;font-family:'Special Elite',monospace;font-size:.95rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;line-height:1.6">
-    📢 Iedereen in de WhatsApp-groep: kom erbij
-    <small style="display:block;font-size:.72em;color:#5fae83;text-transform:none;letter-spacing:.04em">alle communiqués en mededelingen verlopen daar</small>
+  <a class="wa-knop" href="https://chat.whatsapp.com/IamNUNxTCc95ugFYHDwEtw" target="_blank" rel="noopener">
+    👉 Klik hier: kom in de WhatsApp-groep
+    <small>iedereen moet erin · alle communiqués en mededelingen verlopen daar</small>
   </a>
 </div>
 

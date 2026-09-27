@@ -271,7 +271,8 @@ function render() {
       ${brief ? `<div class="kn-brief">${esc(brief)}</div>` : `<div class="kn-brief">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</div>`}
     </div>`;
   }
-  document.getElementById('h-koers').innerHTML = koersNu;
+  // alleen hertekenen bij echte verandering, anders herstart de animatie elke 5 s
+  if (koersNu !== D.vorigeKoersNu) { D.vorigeKoersNu = koersNu; document.getElementById('h-koers').innerHTML = koersNu; }
 
   const DIVSTIP = { baroudeur: 'var(--groen)', baroudelle: 'var(--paars)', supporter: 'var(--amber)', seingever: 'var(--mist)' };
   document.getElementById('p-ind').innerHTML = individueel().map((r, i) => {

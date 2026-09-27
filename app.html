@@ -309,7 +309,11 @@ function render() {
   else if (S.tab === 'klacht') blad = klachtKaart();
   else if (S.tab === 'regels') blad = reglementBlok();
   else blad = ploegenBlok();
-  document.getElementById('inhoud').innerHTML = mededeling() + heroBlok() + tabbalk + blad;
+  const html = mededeling() + heroBlok() + tabbalk + blad;
+  // ongewijzigd = niet hertekenen: anders herstart de onthul-animatie elke 5 s
+  if (html === S.vorigeHtml) return;
+  S.vorigeHtml = html;
+  document.getElementById('inhoud').innerHTML = html;
   const van = document.getElementById('kl-van');
   if (van) { const bewaard = localStorage.getItem('hert_klacht_van'); if (bewaard && [...van.options].some(o => o.value === bewaard)) van.value = bewaard; }
 }
@@ -326,13 +330,12 @@ function heroBlok() {
       ${d.length ? '' : '<p class="wacht">De eerste beslissingen komen er zo aan. Beef.</p>'}</div>`
       + d.map(x => delibKaart(x)).join('') + prijzenBlok();
   }
-  if ((e.phase === 'lobby') || !ar) return '';
+  if ((e.phase === 'lobby') || (e.phase === 'round_done') || !ar) return '';
   const brief = briefVan(ar.id);
   return `<div class="kaart nu gemengd"><div class="fase">${FASEN[e.phase]} — ronde ${rondeNr(ar)}</div>
     <div class="grootst onthuld">${ar.status !== 'hidden' ? esc(ar.title) : 'De volgende ronde'}</div>
     ${e.phase === 'round_active' ? '<p class="klein" style="color:var(--groen)">▶ DE KOERS IS BEZIG — RIJDEN!</p>' : ''}
-    ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}
-    ${e.phase === 'round_done' ? '<p class="wacht" style="margin-top:1rem">Ronde afgelopen. De jury telt. Of doet alsof.</p>' : ''}</div>`;
+    ${brief ? `<p class="brief onthuld">${esc(brief)}</p>` : `<p class="wacht">${esc(ar.teaser || 'De opdracht wordt zo onthuld…')}</p>`}</div>`;
 }
 function delibKaart(x) {
   const t = x.team_id ? team(x.team_id) : null;

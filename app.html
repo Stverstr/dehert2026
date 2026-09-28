@@ -92,6 +92,7 @@ table.stand tr.klik{cursor:pointer}
 .ronde.gemengd-r{border-left:3px solid var(--amber-diep)}
 
 .ploegkaart{border:1px solid var(--kader);border-left:4px solid var(--pk,#455965);background:#0d1319;padding:.8rem 1rem;margin-bottom:.8rem}
+.ploegkaart .ploeglogo{float:right;width:clamp(4.5rem,22vw,7rem);height:auto;border:1px solid var(--kader);margin:.1rem 0 .5rem .7rem}
 .ploegkaart .pnaam{font-family:'Special Elite',monospace;font-size:1rem;color:#ece5d3}
 .ploegkaart .motto{font-style:italic;color:var(--inkt);margin:.2rem 0 .5rem}
 .ploegkaart .lid{padding:.28em 0;border-bottom:1px solid #10171d;font-size:1rem}
@@ -361,6 +362,7 @@ function ploegenBlok() {
     ${S.pub.teams.map(t => {
       const leden = S.pub.riders.filter(r => r.team_id === t.id);
       return `<div class="ploegkaart" style="--pk:${esc(t.color)}">
+        ${t.logo_url ? `<img class="ploeglogo" src="${esc(t.logo_url)}" alt="logo ${esc(t.name)}" loading="lazy">` : ''}
         <div class="pnaam"><span class="teamstip" style="background:${esc(t.color)}"></span>${esc(t.name)} <span class="klein" style="float:right">${teamTotaal(t.id)} pt</span></div>
         ${t.motto ? `<div class="motto">"${esc(t.motto)}"</div>` : '<div class="motto stil">nog geen slogan. de kapitein weet wat hem te doen staat.</div>'}
         ${leden.map(r => `<div class="lid">🚴 ${esc(toon(r.name))}<span class="echt">${toon(r.name) !== r.name ? esc(r.name) : ''}</span></div>`).join('')

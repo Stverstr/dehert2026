@@ -760,6 +760,7 @@ function ploegenBeheerKaart() {
     ${S.pub.teams.map(t => {
       const leden = S.pub.riders.filter(r => r.team_id === t.id);
       return `<div class="bericht">
+      ${t.logo_url ? `<img src="${esc(t.logo_url)}" alt="" style="float:right;width:4.5rem;height:4.5rem;object-fit:cover;border:1px solid var(--kader);margin-left:.6rem">` : ''}
       <div class="inhoud"><span class="teamstip" style="background:${esc(t.color)}"></span><b>${esc(t.name)}</b>${t.motto ? ': „' + esc(t.motto) + '"' : ' <span class="stil">nog geen slogan (De Ploegdoop wacht: naam +2, motto +5)</span>'}</div>
       ${leden.length ? `<div class="klein" style="margin-top:.3rem;color:var(--grijs)">${leden.map(r => esc(r.name)).join(' · ')}</div>` : ''}
       <div style="margin-top:.4rem"><button class="mini" onclick="bewerkTeam('${t.id}')">✏️ naam / slogan</button></div>

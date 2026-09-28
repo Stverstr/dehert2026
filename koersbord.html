@@ -59,6 +59,7 @@ header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.
 .ploeg-rij .pos{font-family:'Abril Fatface',serif;font-size:1.4rem;color:var(--grijs);min-width:1.2em}
 .ploeg-rij:first-of-type .pos{color:var(--amber)}
 .ploeg-rij .hesje{width:1.15em;height:1.15em;border-radius:.25em;flex:none;border:1px solid rgba(0,0,0,.4)}
+.ploeg-rij .ploeglogo{width:2.6rem;height:2.6rem;object-fit:cover;flex:none;border:1px solid #131c23}
 .ploeg-rij .naam{flex:1;font-size:1.35rem}
 .ploeg-rij .pt{font-family:'Abril Fatface',serif;font-size:1.7rem;color:var(--amber)}
 
@@ -287,6 +288,7 @@ function render() {
     .sort((a, b) => b.punten - a.punten || a.sort - b.sort)
     .map((t, i) => `<div class="ploeg-rij"><span class="pos">${i + 1}</span>
       <span class="hesje" style="background:${esc(t.color)}"></span>
+      ${t.logo_url ? `<img class="ploeglogo" src="${esc(t.logo_url)}" alt="">` : ''}
       <span class="naam">${esc(t.name)}</span><span class="pt">${t.punten}</span></div>`).join('');
 
   const feed = juryFeed();

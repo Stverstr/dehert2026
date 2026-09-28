@@ -245,7 +245,7 @@ const DIV = { baroudeurs: 'Baroudeurs', baroudellen: 'Baroudellen', gemengd: 'Ge
 const DIVKLEUR = { baroudeurs: 'groen', baroudellen: 'paars', gemengd: 'gemengd' };
 
 const S = {
-  rol: null, code: null, team: null, scherm: false, juryTab: 'rondes', teamTab: 'ploeg',
+  rol: null, code: null, team: null, scherm: false, juryTab: 'rondes', teamTab: 'ploeg', mwRijen: {},
   pub: { event: null, teams: [], riders: [], jury: [], rounds: [], scores: [], secrets: [], delibs: [], prizes: [], prekoers: {} },
   geheim: null,   // team secrets
   juryData: null, // jury view
@@ -583,10 +583,14 @@ function tijd(ts) {
   return d.toLocaleDateString('nl-BE', { day: 'numeric', month: 'numeric' }) + ' · ' + klok;
 }
 function klachtInzender(x) {
-  const m = (x.complaint || '').match(/^🖋 Van ([^:]+):/);
+  const m = (x.complaint || '').match(/^🖋 Van (.+?)(?: namens .+?)?: /);
   if (!m) return null;
   const naam = m[1].trim().toLowerCase();
   return S.pub.riders.find(r => r.name.trim().toLowerCase() === naam) || null;
+}
+function klachtNamens(x) {
+  const m = (x.complaint || '').match(/^🖋 Van .+? namens (.+?): /);
+  return m ? m[1] : null;
 }
 function klachtenJury() {
   const lijst = (S.juryData && S.juryData.snitches) || [];
@@ -594,11 +598,15 @@ function klachtenJury() {
   return `<div class="kaart dossier"><h2>📢 De Klachten <span class="r">${nieuw} onbehandeld</span></h2>
     ${lijst.map(x => {
       const inz = klachtInzender(x);
+      const namens = klachtNamens(x);
       const van = x.from_team_id ? team(x.from_team_id) : null;
       const over = x.about_team_id ? team(x.about_team_id) : null;
       const tekst = (x.complaint || '').replace(/^🖋 Van [^:]+: /, '');
+      const afzender = inz
+        ? (namens ? `${esc(inz.name)} <b style="color:var(--amber)">🎽 namens ${esc(namens)}</b>` : `${esc(inz.name)}${van ? ' (' + esc(van.name) + ' · persoonlijk)' : ' · persoonlijk'}`)
+        : van ? esc(van.name) : 'onbekend';
       return `<div class="bericht"${x.status !== 'nieuw' ? ' style="opacity:.65"' : ''}>
-        <div class="van">📢 ${inz ? esc(inz.name) : van ? esc(van.name) : 'onbekend'}${van && inz ? ' (' + esc(van.name) + ')' : ''}${over ? ' · over ' + esc(over.name) : ''} · ${tijd(x.created_at)} <span class="status">${esc(x.status)}</span></div>
+        <div class="van">📢 ${afzender}${over ? ' · over ' + esc(over.name) : ''} · ${tijd(x.created_at)} <span class="status">${esc(x.status)}</span></div>
         <div class="inhoud">${esc(tekst)}</div>
         ${x.photo_url ? `<img src="${esc(x.photo_url)}" alt="bewijs">` : ''}
         ${x.jury_response ? `<div class="antwoord">${esc(x.jury_response)}</div>` : ''}
@@ -611,15 +619,19 @@ function klachtenJury() {
           <div style="margin-top:.5rem">
             <input id="mw-c-${x.id}" type="text" maxlength="300" placeholder="commentaar aan de inzender (komt in de app)"
               style="width:100%;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.55em;margin-bottom:.4rem">
-            <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
-              <input id="mw-p-${x.id}" type="number" value="0" style="width:4rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.45em;text-align:center">
+            ${Array.from({ length: S.mwRijen[x.id] || 1 }, (zz, i) => `
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:.35rem">
+              <input id="mw-p-${x.id}-${i}" type="number" value="0" style="width:4rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.45em;text-align:center">
               <span class="klein">punten voor</span>
-              <select id="mw-w-${x.id}" style="flex:1;min-width:10rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.45em">
+              <select id="mw-w-${x.id}-${i}" style="flex:1;min-width:10rem;background:#0a0f14;border:1px solid var(--kader);color:#ece5d3;font-family:'Special Elite',monospace;padding:.45em">
                 ${inz ? `<option value="r:${inz.id}">✒️ de inzender (${esc(inz.name)})</option>` : ''}
                 <optgroup label="een ploeg">${S.pub.teams.map(t => `<option value="t:${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>
                 <optgroup label="iemand anders">${S.pub.riders.slice().sort((a, b) => a.name.localeCompare(b.name)).map(r => `<option value="r:${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>
               </select>
-              <button class="mini geel" onclick="maatwerkKlacht('${x.id}')">ken toe & antwoord</button>
+            </div>`).join('')}
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+              <button class="mini" onclick="S.mwRijen['${x.id}'] = (S.mwRijen['${x.id}'] || 1) + 1; render()">＋ nog een lijn</button>
+              <button class="mini geel" onclick="maatwerkKlacht('${x.id}')">ken alles toe & antwoord</button>
             </div></div>
         </details>
       </div>`;
@@ -647,17 +659,24 @@ async function maatwerkKlacht(id) {
   const x = S.juryData.snitches.find(y => y.id === id);
   const kort = (x.complaint || '').replace(/^🖋 Van [^:]+: /, '').slice(0, 60);
   const commentaar = document.getElementById('mw-c-' + id).value.trim();
-  const punten = parseInt(document.getElementById('mw-p-' + id).value, 10) || 0;
-  const wie = document.getElementById('mw-w-' + id).value;
-  if (!commentaar && !punten) return toast('⚠️ Geef commentaar of punten, anders valt er niets toe te kennen');
+  const lijnen = [];
+  for (let i = 0; i < (S.mwRijen[id] || 1); i++) {
+    const punten = parseInt(document.getElementById(`mw-p-${id}-${i}`).value, 10) || 0;
+    if (punten) lijnen.push({ punten, wie: document.getElementById(`mw-w-${id}-${i}`).value });
+  }
+  if (!commentaar && !lijnen.length) return toast('⚠️ Geef commentaar of punten, anders valt er niets toe te kennen');
   try {
     await rpc('hert_respond_snitch', { p_code: S.code, p_id: id,
       p_status: x.status === 'nieuw' ? 'ontvankelijk' : x.status,
       p_response: commentaar || x.jury_response });
     const reden = `Klachtgevolg: "${kort}"${commentaar ? ' · ' + commentaar : ''}`;
-    if (punten && wie.startsWith('r:')) await rpc('hert_geef_punten_renner', { p_code: S.code, p_rider: wie.slice(2), p_punten: punten, p_reden: reden });
-    if (punten && wie.startsWith('t:')) await geefPloegPuntenDirect(wie.slice(2), punten, reden);
-    toast('✒️ Maatwerk toegekend'); vernieuw(true);
+    for (const l of lijnen) {
+      if (l.wie.startsWith('r:')) await rpc('hert_geef_punten_renner', { p_code: S.code, p_rider: l.wie.slice(2), p_punten: l.punten, p_reden: reden });
+      if (l.wie.startsWith('t:')) await geefPloegPuntenDirect(l.wie.slice(2), l.punten, reden);
+    }
+    delete S.mwRijen[id];
+    toast(lijnen.length > 1 ? `✒️ ${lijnen.length} lijnen toegekend` : '✒️ Maatwerk toegekend');
+    vernieuw(true);
   } catch (e) { toast('⚠️ ' + e.message); }
 }
 

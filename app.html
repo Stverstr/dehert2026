@@ -475,7 +475,10 @@ function klachtKaart() {
       <select id="kl-van" onchange="if(this.value)localStorage.setItem('hert_klacht_van', this.value)">
         <option value="">— kies uw naam —</option>
         ${renners.map(r => `<option value="${r.id}">${esc(naamMet(r))}</option>`).join('')}
-      </select></div>
+      </select>
+      <label style="display:flex;align-items:center;gap:.5em;margin-top:.5rem;font-size:1rem;cursor:pointer;text-transform:none;letter-spacing:0">
+        <input type="checkbox" id="kl-namens" style="accent-color:var(--amber);width:1.1em;height:1.1em"> 🎽 ik spreek namens mijn hele ploeg
+      </label></div>
     <div class="veld"><label>Tegen wie? (mag ook zomaar)</label>
       <select id="kl-over">
         <option value="">— gewoon een klacht, tegen niemand in het bijzonder —</option>
@@ -517,10 +520,12 @@ async function verstuurKlacht(knop) {
       if (r) { klacht = `🎯 Over ${toon(r.name)}: ${tekst}`; over = r.team_id || null; }
     }
     localStorage.setItem('hert_klacht_van', van);
-    await rpc('hert_koers_klacht', { p_van: van, p_over: over, p_tekst: klacht, p_foto: foto });
+    const namens = document.getElementById('kl-namens').checked;
+    await rpc('hert_koers_klacht', { p_van: van, p_over: over, p_tekst: klacht, p_foto: foto, p_namens: namens });
     toast('📸 Genoteerd. De jury apprecieert uw gebrek aan loyaliteit.');
     document.getElementById('kl-tekst').value = '';
     document.getElementById('kl-foto').value = '';
+    document.getElementById('kl-namens').checked = false;
     knop.disabled = false; knop.textContent = '📸 Verstuur naar de jury';
   } catch (e) {
     knop.disabled = false; knop.textContent = '📸 Verstuur naar de jury';

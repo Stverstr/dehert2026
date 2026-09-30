@@ -76,7 +76,11 @@ header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.
 .ploeg-rij .naam{flex:1;font-size:1.35rem}
 .ploeg-rij .pt{font-family:'Abril Fatface',serif;font-size:1.7rem;color:var(--amber)}
 
-/* jury-feed */
+/* jury-feed: scrollbaar, de jury spreekt veel */
+.feed{max-height:34rem;overflow-y:auto;padding-right:.45rem;scrollbar-width:thin;scrollbar-color:var(--kader2) transparent}
+.feed::-webkit-scrollbar{width:6px}
+.feed::-webkit-scrollbar-thumb{background:var(--kader2)}
+.feed::-webkit-scrollbar-track{background:transparent}
 .feed .item{padding:.5rem 0;border-bottom:1px solid #10171d;animation:onthul .8s ease}
 @keyframes onthul{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .feed .kop{display:flex;gap:.6em;align-items:baseline;font-family:'Special Elite',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grijs)}
@@ -303,7 +307,7 @@ function juryFeed() {
     items.push({ t: s.updated_at, soort: s.base_points ? '🏁 uitslag' : '⚖️ ploeg', delta: (s.base_points || 0) + (s.bonus || 0) - (s.penalty || 0),
       tekst: `<b>${esc(tm ? tm.name : '?')}</b> — ${esc(ro && ro.status !== 'hidden' ? ro.title : 'een ronde')}: ${stukken.join(', ')}${s.reason ? '<br><i>' + esc(s.reason) + '</i>' : ''}` });
   });
-  return items.sort((a, b) => new Date(b.t) - new Date(a.t)).slice(0, 9);
+  return items.sort((a, b) => new Date(b.t) - new Date(a.t)).slice(0, 50);
 }
 
 function render() {
@@ -419,12 +423,20 @@ function render() {
       <span class="naam">${esc(t.name)}</span><span class="pt">${t.punten}</span></div>`).join('');
 
   const feed = juryFeed();
-  document.getElementById('p-feed').innerHTML = feed.length ? feed.map(x => `<div class="item">
+  const feedHtml = feed.length ? feed.map(x => `<div class="item">
       <div class="kop"><span>${x.soort}</span><span>${tijd(x.t)}</span>
         ${x.echt ? `<span style="margin-left:auto;color:#49545c;letter-spacing:.04em">${esc(x.echt)}</span>` : ''}
         ${x.delta ? `<span class="delta ${x.delta > 0 ? 'plus' : 'min'}"${x.echt ? ' style="margin-left:.8em"' : ''}>${x.delta > 0 ? '+' : ''}${x.delta}</span>` : ''}</div>
       <div class="tekst">${x.tekst}</div></div>`).join('')
     : '<p class="leeg">De jury heeft nog niets beslist. Dat duurt nooit lang.</p>';
+  // alleen hertekenen bij echte verandering, en de scrollpositie niet kwijtspelen
+  if (feedHtml !== D.vorigeFeedHtml) {
+    D.vorigeFeedHtml = feedHtml;
+    const el = document.getElementById('p-feed');
+    const scroll = el.scrollTop;
+    el.innerHTML = feedHtml;
+    el.scrollTop = scroll;
+  }
 }
 
 function klok() { document.getElementById('h-klok').textContent = new Date().toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }); }

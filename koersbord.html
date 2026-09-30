@@ -86,6 +86,20 @@ header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.
 .feed .tekst i{color:var(--inkt)}
 .feed .leeg{font-style:italic;color:var(--grijs);padding:.6rem 0}
 
+/* de prijzenkast */
+.prijzen-groot{display:none;max-width:72rem;margin:1rem auto 0}
+.prijs-spot{background:linear-gradient(175deg,#141007,#0b0d08);border:2px solid var(--amber);box-shadow:0 0 60px rgba(255,179,71,.14);text-align:center;padding:1.6rem 2rem 1.9rem;animation:onthul 1.2s ease}
+.prijs-spot.groot{border-width:3px;box-shadow:0 0 90px rgba(255,179,71,.28)}
+.prijs-spot .pr-label{font-family:'Special Elite',monospace;font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;color:var(--amber)}
+.prijs-spot .pr-naam{font-family:'Abril Fatface',serif;font-size:clamp(1.8rem,3.4vw,3rem);color:#e9e2d0;margin:.15em 0}
+.prijs-spot .pr-omschr{font-style:italic;color:var(--inkt);font-size:1.15rem;max-width:44rem;margin:0 auto;line-height:1.5}
+.prijs-spot .pr-winnaar{font-family:'Abril Fatface',serif;font-size:clamp(2rem,4.2vw,3.6rem);color:var(--amber);margin-top:.45em;text-shadow:0 0 30px rgba(255,179,71,.35)}
+.prijs-rest{display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:.9rem;margin-top:1rem}
+.prijs-kaart{background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid var(--kader);padding:.9rem 1rem}
+.prijs-kaart .pk-naam{font-family:'Special Elite',monospace;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grijs)}
+.prijs-kaart .pk-winnaar{font-family:'Abril Fatface',serif;font-size:1.3rem;color:#e9e2d0;margin-top:.2rem}
+.prijs-leeg{text-align:center;font-style:italic;color:var(--grijs);font-size:1.2rem;padding:3rem 1rem;border:1px dashed var(--kader2);margin-top:1rem}
+
 footer{text-align:center;margin-top:.9rem;font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.14em;color:#49545c}
 
 /* een eenzame renner van een andere club, ook hier te snel voor deze koers */
@@ -115,9 +129,11 @@ footer{text-align:center;margin-top:.9rem;font-family:'Special Elite',monospace;
 <div class="bordtabs">
   <button id="tab-bord" class="aan" onclick="D.tab='bord';render()">🏆 Klassement</button>
   <button id="tab-ploegen" onclick="D.tab='ploegen';render()">🎽 De Ploegen</button>
+  <button id="tab-prijzen" onclick="D.tab='prijzen';render()">🏆 De Prijzen</button>
 </div>
 
 <div id="ploegen-groot" class="ploegen-groot"></div>
+<div id="prijzen-groot" class="prijzen-groot"></div>
 
 <div class="bord">
   <div class="paneel">
@@ -199,12 +215,14 @@ function tijd(ts) {
 }
 
 async function laad() {
-  const [event, teams, riders, rounds, scores, delibs, riderPoints, voork, secrets] = await Promise.all([
+  const [event, teams, riders, rounds, scores, delibs, riderPoints, voork, secrets, prizes] = await Promise.all([
     q('hert_event_state?id=eq.1'), q('hert_teams?order=sort'), q('hert_riders?order=sort'),
     q('hert_rounds?order=sort'), q('hert_scores?select=*'), q('hert_deliberations?order=sort'),
     q('hert_rider_points?select=*'), rpc('hert_scorebord').catch(() => null),
-    q('hert_round_secrets?select=round_id,brief').catch(() => [])
+    q('hert_round_secrets?select=round_id,brief').catch(() => []),
+    q('hert_prizes?select=*&order=sort').catch(() => [])
   ]);
+  D.prizes = prizes || [];
   D.secrets = secrets || [];
   const prefeed = await rpc('hert_prekoers_feed').catch(() => []);
   const prekoers = {}, aliassen = {};
@@ -295,12 +313,46 @@ function render() {
   // alleen hertekenen bij echte verandering, anders herstart de animatie elke 5 s
   if (koersNu !== D.vorigeKoersNu) { D.vorigeKoersNu = koersNu; document.getElementById('h-koers').innerHTML = koersNu; }
 
-  // tabblad: klassement of de ploegen in het groot
-  const ploegenTab = D.tab === 'ploegen';
-  document.getElementById('tab-bord').className = ploegenTab ? '' : 'aan';
+  // net een prijs uitgereikt? het bord springt vanzelf naar de prijzenkast
+  const onthuldePrijzen = (D.prizes || []).filter(p => p.revealed);
+  const prijsIds = onthuldePrijzen.map(p => p.id).join(',');
+  if (D.vorigePrijsIds !== undefined && prijsIds !== D.vorigePrijsIds) {
+    const oud = new Set(D.vorigePrijsIds.split(',').filter(Boolean));
+    const vers = onthuldePrijzen.filter(p => !oud.has(p.id));
+    if (vers.length) { D.tab = 'prijzen'; D.spotId = vers[vers.length - 1].id; }
+  }
+  D.vorigePrijsIds = prijsIds;
+
+  // tabblad: klassement, de ploegen in het groot, of de prijzenkast
+  const ploegenTab = D.tab === 'ploegen', prijzenTab = D.tab === 'prijzen';
+  document.getElementById('tab-bord').className = (ploegenTab || prijzenTab) ? '' : 'aan';
   document.getElementById('tab-ploegen').className = ploegenTab ? 'aan' : '';
-  document.querySelector('.bord').style.display = ploegenTab ? 'none' : '';
+  document.getElementById('tab-prijzen').className = prijzenTab ? 'aan' : '';
+  document.querySelector('.bord').style.display = (ploegenTab || prijzenTab) ? 'none' : '';
   document.getElementById('ploegen-groot').style.display = ploegenTab ? 'grid' : 'none';
+  document.getElementById('prijzen-groot').style.display = prijzenTab ? 'block' : 'none';
+
+  let prijzenHtml = '';
+  if (prijzenTab) {
+    if (!onthuldePrijzen.length) {
+      prijzenHtml = '<div class="prijs-leeg">De prijzenkast is nog op slot. De spanning is opzettelijk.</div>';
+    } else {
+      const spot = onthuldePrijzen.find(p => p.id === D.spotId) || onthuldePrijzen[onthuldePrijzen.length - 1];
+      const rest = onthuldePrijzen.filter(p => p.id !== spot.id);
+      prijzenHtml = `<div class="prijs-spot${spot.is_grand_prize ? ' groot' : ''}">
+          <div class="pr-label">${spot.is_grand_prize ? '🦌 De Grote Sluitingsprijs' : '🏆 Uitgereikt'}</div>
+          <div class="pr-naam">${esc(spot.name)}</div>
+          ${spot.description ? `<div class="pr-omschr">${esc(spot.description)}</div>` : ''}
+          <div class="pr-winnaar">${esc(spot.winner_text || '…')}</div>
+        </div>
+        ${rest.length ? `<div class="prijs-rest">${rest.map(p => `<div class="prijs-kaart">
+          <div class="pk-naam">${p.is_grand_prize ? '🦌 ' : ''}${esc(p.name)}</div>
+          <div class="pk-winnaar">${esc(p.winner_text || '…')}</div>
+        </div>`).join('')}</div>` : ''}`;
+    }
+  }
+  // alleen hertekenen bij echte verandering, anders herstart de onthul-animatie elke 5 s
+  if (prijzenHtml !== D.vorigePrijzenHtml) { D.vorigePrijzenHtml = prijzenHtml; document.getElementById('prijzen-groot').innerHTML = prijzenHtml; }
   document.getElementById('ploegen-groot').innerHTML = !ploegenTab ? '' : D.teams
     .map(t => ({ ...t, punten: teamTotaal(t.id) }))
     .sort((a, b) => b.punten - a.punten || a.sort - b.sort)

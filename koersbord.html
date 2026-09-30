@@ -99,6 +99,8 @@ header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.
 .prijs-kaart .pk-naam{font-family:'Special Elite',monospace;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grijs)}
 .prijs-kaart .pk-winnaar{font-family:'Abril Fatface',serif;font-size:1.3rem;color:#e9e2d0;margin-top:.2rem}
 .prijs-leeg{text-align:center;font-style:italic;color:var(--grijs);font-size:1.2rem;padding:3rem 1rem;border:1px dashed var(--kader2);margin-top:1rem}
+.prijzen-groot{cursor:pointer;user-select:none}
+.prijs-hint{text-align:center;font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:#49545c;margin-top:.9rem}
 
 footer{text-align:center;margin-top:.9rem;font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.14em;color:#49545c}
 
@@ -133,7 +135,7 @@ footer{text-align:center;margin-top:.9rem;font-family:'Special Elite',monospace;
 </div>
 
 <div id="ploegen-groot" class="ploegen-groot"></div>
-<div id="prijzen-groot" class="prijzen-groot"></div>
+<div id="prijzen-groot" class="prijzen-groot" onclick="prijsKlik()"></div>
 
 <div class="bord">
   <div class="paneel">
@@ -224,6 +226,12 @@ async function laad() {
   ]);
   D.prizes = prizes || [];
   D.secrets = secrets || [];
+  // met een jurycode in de URL (?code=…) kent het bord de hele prijzenkast en werkt de klik-ceremonie
+  if (D.code === undefined) D.code = new URLSearchParams(location.search).get('code') || null;
+  if (D.code) {
+    try { const jv = await rpc('hert_jury_view', { p_code: D.code }); D.juryPrizes = (jv.prizes || []).slice().sort((a, b) => a.sort - b.sort); }
+    catch (e) { D.juryPrizes = null; D.code = null; }
+  }
   const prefeed = await rpc('hert_prekoers_feed').catch(() => []);
   const prekoers = {}, aliassen = {};
   const personen = (voork && voork.personen) || [];
@@ -334,7 +342,27 @@ function render() {
 
   let prijzenHtml = '';
   if (prijzenTab) {
-    if (!onthuldePrijzen.length) {
+    if (D.juryPrizes && D.juryPrizes.length) {
+      // klik-ceremonie: elke klik toont de volgende prijs, na de laatste begint de reeks opnieuw
+      const stap = D.prijsStap || 0;
+      if (!stap) {
+        prijzenHtml = '<div class="prijs-leeg">🏆 De prijzenkast staat klaar.<br>Klik om de eerste prijs te tonen.</div>';
+      } else {
+        const spot = D.juryPrizes[stap - 1];
+        const rest = D.juryPrizes.slice(0, stap - 1);
+        prijzenHtml = `<div class="prijs-spot${spot.is_grand_prize ? ' groot' : ''}">
+            <div class="pr-label">${spot.is_grand_prize ? '🦌 De Grote Sluitingsprijs' : `🏆 Prijs ${stap} van ${D.juryPrizes.length}`}</div>
+            <div class="pr-naam">${esc(spot.name)}</div>
+            ${spot.description ? `<div class="pr-omschr">${esc(spot.description)}</div>` : ''}
+            <div class="pr-winnaar">${esc(spot.winner_text || '…')}</div>
+          </div>
+          ${rest.length ? `<div class="prijs-rest">${rest.map(p => `<div class="prijs-kaart">
+            <div class="pk-naam">${p.is_grand_prize ? '🦌 ' : ''}${esc(p.name)}</div>
+            <div class="pk-winnaar">${esc(p.winner_text || '…')}</div>
+          </div>`).join('')}</div>` : ''}
+          <div class="prijs-hint">klik voor de ${stap >= D.juryPrizes.length ? 'herstart van de reeks' : 'volgende prijs'}</div>`;
+      }
+    } else if (!onthuldePrijzen.length) {
       prijzenHtml = '<div class="prijs-leeg">De prijzenkast is nog op slot. De spanning is opzettelijk.</div>';
     } else {
       const spot = onthuldePrijzen.find(p => p.id === D.spotId) || onthuldePrijzen[onthuldePrijzen.length - 1];
@@ -393,6 +421,17 @@ function render() {
 }
 
 function klok() { document.getElementById('h-klok').textContent = new Date().toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }); }
+
+/* de klik-ceremonie: ook met spatie, pijltje of presentatie-klikker */
+function prijsKlik() {
+  if (!D.juryPrizes || !D.juryPrizes.length) return;
+  D.prijsStap = (D.prijsStap || 0) >= D.juryPrizes.length ? 1 : (D.prijsStap || 0) + 1;
+  render();
+}
+document.addEventListener('keydown', e => {
+  if (D.tab !== 'prijzen') return;
+  if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); prijsKlik(); }
+});
 
 // de waarnemer rijdt af en toe. niet teveel. maar toch.
 const cyc = document.querySelector('.cyclone-baan');

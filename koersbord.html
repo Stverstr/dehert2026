@@ -60,6 +60,19 @@ header .klok{margin-left:auto;font-family:'Special Elite',monospace;font-size:1.
 .ploeg-rij:first-of-type .pos{color:var(--amber)}
 .ploeg-rij .hesje{width:1.15em;height:1.15em;border-radius:.25em;flex:none;border:1px solid rgba(0,0,0,.4)}
 .ploeg-rij .ploeglogo{width:2.6rem;height:2.6rem;object-fit:cover;flex:none;border:1px solid #131c23}
+.bordtabs{display:flex;gap:.6rem;margin-top:.9rem}
+.bordtabs button{font-family:'Special Elite',monospace;font-size:.85rem;letter-spacing:.18em;text-transform:uppercase;background:#0d1319;border:1px solid var(--kader2);color:var(--inkt);padding:.55em 1.2em;cursor:pointer}
+.bordtabs button.aan{border-color:var(--amber);color:var(--amber)}
+.ploegen-groot{display:none;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:1rem}
+@media(max-width:70rem){.ploegen-groot{grid-template-columns:1fr}}
+.pgk{background:linear-gradient(175deg,#10151b,#0b1015);border:1px solid var(--kader);border-top:5px solid var(--pk,#455965);padding:1.2rem 1.3rem}
+.pgk .plogo{float:right;width:8.5rem;height:8.5rem;object-fit:cover;border:1px solid var(--kader);margin:0 0 .6rem .9rem}
+.pgk .pnaam{font-family:'Abril Fatface',serif;font-size:1.65rem;color:#e9e2d0;line-height:1.15}
+.pgk .pslogan{font-style:italic;color:var(--amber);margin:.3rem 0 .9rem;font-size:1.15rem}
+.pgk .ppt{font-family:'Special Elite',monospace;color:var(--amber);font-size:1rem;margin-left:.4em}
+.pgk .lid{font-size:1.3rem;padding:.26em 0;border-bottom:1px solid #131c23}
+.pgk .lid:last-child{border-bottom:none}
+.pgk .lid .echt{color:var(--grijs);font-size:.85rem;font-style:italic;margin-left:.55em}
 .ploeg-rij .naam{flex:1;font-size:1.35rem}
 .ploeg-rij .pt{font-family:'Abril Fatface',serif;font-size:1.7rem;color:var(--amber)}
 
@@ -98,6 +111,13 @@ footer{text-align:center;margin-top:.9rem;font-family:'Special Elite',monospace;
 </header>
 <div id="h-notice"></div>
 <div id="h-koers"></div>
+
+<div class="bordtabs">
+  <button id="tab-bord" class="aan" onclick="D.tab='bord';render()">🏆 Klassement</button>
+  <button id="tab-ploegen" onclick="D.tab='ploegen';render()">🎽 De Ploegen</button>
+</div>
+
+<div id="ploegen-groot" class="ploegen-groot"></div>
 
 <div class="bord">
   <div class="paneel">
@@ -274,6 +294,26 @@ function render() {
   }
   // alleen hertekenen bij echte verandering, anders herstart de animatie elke 5 s
   if (koersNu !== D.vorigeKoersNu) { D.vorigeKoersNu = koersNu; document.getElementById('h-koers').innerHTML = koersNu; }
+
+  // tabblad: klassement of de ploegen in het groot
+  const ploegenTab = D.tab === 'ploegen';
+  document.getElementById('tab-bord').className = ploegenTab ? '' : 'aan';
+  document.getElementById('tab-ploegen').className = ploegenTab ? 'aan' : '';
+  document.querySelector('.bord').style.display = ploegenTab ? 'none' : '';
+  document.getElementById('ploegen-groot').style.display = ploegenTab ? 'grid' : 'none';
+  document.getElementById('ploegen-groot').innerHTML = !ploegenTab ? '' : D.teams
+    .map(t => ({ ...t, punten: teamTotaal(t.id) }))
+    .sort((a, b) => b.punten - a.punten || a.sort - b.sort)
+    .map(t => {
+      const leden = D.riders.filter(r => r.team_id === t.id)
+        .sort((a, b) => toon(a).localeCompare(toon(b)));
+      return `<div class="pgk" style="--pk:${esc(t.color)}">
+        ${t.logo_url ? `<img class="plogo" src="${esc(t.logo_url)}" alt="">` : ''}
+        <div class="pnaam"><span class="hesje" style="display:inline-block;width:.8em;height:.8em;border-radius:.2em;background:${esc(t.color)};margin-right:.35em"></span>${esc(t.name)}<span class="ppt">${t.punten} pt</span></div>
+        ${t.motto ? `<div class="pslogan">"${esc(t.motto)}"</div>` : '<div class="pslogan" style="color:var(--grijs)">nog geen slogan</div>'}
+        ${leden.map(r => `<div class="lid">${r.is_captain ? '👑 ' : '🚴 '}${esc(toon(r))}${toon(r) !== r.name ? `<span class="echt">${esc(r.name)}</span>` : ''}</div>`).join('')}
+      </div>`;
+    }).join('');
 
   const DIVSTIP = { baroudeur: 'var(--groen)', baroudelle: 'var(--paars)', supporter: 'var(--amber)', seingever: 'var(--mist)' };
   document.getElementById('p-ind').innerHTML = individueel().map((r, i) => {

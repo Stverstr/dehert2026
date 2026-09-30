@@ -367,7 +367,7 @@ function render() {
             <div class="pk-naam">${p.is_grand_prize ? '🦌 ' : ''}${esc(p.name)}</div>
             <div class="pk-winnaar">${esc(p.winner_text || '…')}</div>
           </div>`).join('')}</div>` : ''}
-          <div class="prijs-hint">klik voor de ${stap >= D.juryPrizes.length ? 'herstart van de reeks' : 'volgende prijs'}</div>`;
+          <div class="prijs-hint">${stap >= D.juryPrizes.length ? 'klik om het doek te laten vallen' : 'klik voor de volgende prijs'}</div>`;
       }
     } else if (!onthuldePrijzen.length) {
       prijzenHtml = '<div class="prijs-leeg">De prijzenkast is nog op slot. De spanning is opzettelijk.</div>';
@@ -436,7 +436,8 @@ function prijsKlik() {
     if (c) { D.code = c.trim().toUpperCase(); laad().then(render).catch(() => {}); }
     return;
   }
-  D.prijsStap = (D.prijsStap || 0) >= D.juryPrizes.length ? 1 : (D.prijsStap || 0) + 1;
+  // na de laatste prijs eerst terug naar het donkere beginscherm, pas daarna opnieuw prijs 1
+  D.prijsStap = (D.prijsStap || 0) >= D.juryPrizes.length ? 0 : (D.prijsStap || 0) + 1;
   render();
 }
 document.addEventListener('keydown', e => {

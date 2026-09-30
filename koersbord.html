@@ -226,11 +226,18 @@ async function laad() {
   ]);
   D.prizes = prizes || [];
   D.secrets = secrets || [];
-  // met een jurycode in de URL (?code=…) kent het bord de hele prijzenkast en werkt de klik-ceremonie
-  if (D.code === undefined) D.code = new URLSearchParams(location.search).get('code') || null;
+  // met een jurycode (?code=… in de URL, of eenmalig ingetikt) kent het bord de hele prijzenkast en werkt de klik-ceremonie
+  if (D.code === undefined) {
+    let bewaard = null; try { bewaard = localStorage.hert_kb_code || null; } catch (e) {}
+    D.code = new URLSearchParams(location.search).get('code') || bewaard;
+  }
   if (D.code) {
-    try { const jv = await rpc('hert_jury_view', { p_code: D.code }); D.juryPrizes = (jv.prizes || []).slice().sort((a, b) => a.sort - b.sort); }
-    catch (e) { D.juryPrizes = null; D.code = null; }
+    try {
+      const jv = await rpc('hert_jury_view', { p_code: D.code });
+      D.juryPrizes = (jv.prizes || []).slice().sort((a, b) => a.sort - b.sort);
+      try { localStorage.hert_kb_code = D.code; } catch (e) {}
+    }
+    catch (e) { D.juryPrizes = null; D.code = null; try { delete localStorage.hert_kb_code; } catch (e2) {} }
   }
   const prefeed = await rpc('hert_prekoers_feed').catch(() => []);
   const prekoers = {}, aliassen = {};
@@ -424,7 +431,11 @@ function klok() { document.getElementById('h-klok').textContent = new Date().toL
 
 /* de klik-ceremonie: ook met spatie, pijltje of presentatie-klikker */
 function prijsKlik() {
-  if (!D.juryPrizes || !D.juryPrizes.length) return;
+  if (!D.juryPrizes || !D.juryPrizes.length) {
+    const c = prompt('Jurycode voor de prijzenkast:');
+    if (c) { D.code = c.trim().toUpperCase(); laad().then(render).catch(() => {}); }
+    return;
+  }
   D.prijsStap = (D.prijsStap || 0) >= D.juryPrizes.length ? 1 : (D.prijsStap || 0) + 1;
   render();
 }
